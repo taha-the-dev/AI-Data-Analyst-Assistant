@@ -1,0 +1,43 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.DataProtection.EntityFrameworkCore" Version="10.0.11" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.11" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.11" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.11">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.11" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
+    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="10.2.3" />
+  </ItemGroup>
+
+  <!--
+    Publishing one artefact that serves both halves. `npm run build` writes
+    frontend/dist; this copies it into the published wwwroot so the API serves
+    the app and the API from the same origin — no CORS, no VITE_API_BASE.
+
+    It is skipped silently when dist is absent, so `dotnet publish` on its own
+    still produces an API-only artefact. It never runs npm: what gets published
+    is whatever the frontend build last produced.
+  -->
+  <Target Name="PublishFrontend" AfterTargets="Publish">
+    <ItemGroup>
+      <FrontendBuild Include="$(MSBuildProjectDirectory)/../../frontend/dist/**/*" />
+    </ItemGroup>
+
+    <Message Condition="'@(FrontendBuild)' == ''" Importance="high" Text="No frontend/dist — publishing the API alone. Run 'npm --prefix frontend run build' first to bundle the app with it." />
+
+    <Message Condition="'@(FrontendBuild)' != ''" Importance="high" Text="Copying the built frontend into $(PublishDir)wwwroot" />
+
+    <Copy Condition="'@(FrontendBuild)' != ''" SourceFiles="@(FrontendBuild)" DestinationFiles="@(FrontendBuild->'$(PublishDir)wwwroot/%(RecursiveDir)%(Filename)%(Extension)')" />
+  </Target>
+
+</Project>

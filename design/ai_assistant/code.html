@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AI Assistant - DataMind AI</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;family=JetBrains+Mono:wght@400&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-tertiary-fixed": "#151c23",
+                        "tertiary-fixed-dim": "#c0c7d0",
+                        "secondary-fixed-dim": "#c0c6da",
+                        "on-primary": "#ffffff",
+                        "outline": "#737686",
+                        "on-secondary-fixed": "#151b2a",
+                        "inverse-on-surface": "#eff1f3",
+                        "primary-fixed-dim": "#b4c5ff",
+                        "secondary-fixed": "#dce2f6",
+                        "primary-container": "#2563eb",
+                        "on-secondary-fixed-variant": "#404757",
+                        "surface-container-highest": "#e0e3e5",
+                        "primary": "#004ac6",
+                        "secondary": "#585e6f",
+                        "on-tertiary-container": "#eaf1fa",
+                        "surface-tint": "#0053db",
+                        "on-secondary": "#ffffff",
+                        "surface": "#f7f9fb",
+                        "surface-bright": "#f7f9fb",
+                        "on-surface-variant": "#434655",
+                        "surface-dim": "#d8dadc",
+                        "error-container": "#ffdad6",
+                        "on-primary-fixed-variant": "#003ea8",
+                        "on-surface": "#191c1e",
+                        "surface-variant": "#e0e3e5",
+                        "on-tertiary": "#ffffff",
+                        "error": "#ba1a1a",
+                        "on-error": "#ffffff",
+                        "tertiary-fixed": "#dce3ec",
+                        "surface-container-low": "#f2f4f6",
+                        "secondary-container": "#d9dff4",
+                        "inverse-surface": "#2d3133",
+                        "inverse-primary": "#b4c5ff",
+                        "primary-fixed": "#dbe1ff",
+                        "on-secondary-container": "#5c6274",
+                        "background": "#f7f9fb",
+                        "on-primary-container": "#eeefff",
+                        "on-primary-fixed": "#00174b",
+                        "tertiary": "#4e565d",
+                        "outline-variant": "#c3c6d7",
+                        "on-background": "#191c1e",
+                        "on-error-container": "#93000a",
+                        "surface-container-high": "#e6e8ea",
+                        "surface-container": "#eceef0",
+                        "on-tertiary-fixed-variant": "#40484f",
+                        "tertiary-container": "#676e76",
+                        "surface-container-lowest": "#ffffff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "container-margin": "24px",
+                        "space-md": "12px",
+                        "space-sm": "8px",
+                        "space-xs": "4px",
+                        "space-lg": "16px",
+                        "space-xl": "24px",
+                        "gutter": "16px"
+                    },
+                    "fontFamily": {
+                        "body-md": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "mono-md": ["JetBrains Mono"],
+                        "headline-sm": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "label-md": ["Inter"],
+                        "body-lg": ["Inter"]
+                    },
+                    "fontSize": {
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "headline-lg": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "headline-md": ["20px", { "lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "label-sm": ["11px", { "lineHeight": "14px", "letterSpacing": "0.03em", "fontWeight": "600" }],
+                        "mono-md": ["13px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "headline-sm": ["16px", { "lineHeight": "24px", "fontWeight": "600" }],
+                        "body-sm": ["13px", { "lineHeight": "18px", "fontWeight": "400" }],
+                        "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.01em", "fontWeight": "500" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-background text-on-background font-body-md h-screen overflow-hidden flex">
+<!-- SideNavBar -->
+<nav class="bg-on-tertiary-fixed fixed left-0 top-0 h-full w-[280px] border-r border-on-tertiary-fixed-variant flex flex-col p-4 z-20">
+<div class="mb-8 px-4 flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center text-on-primary font-headline-md font-bold">
+                D
+            </div>
+<div>
+<h1 class="font-headline-sm text-headline-sm font-black text-on-primary">DataMind AI</h1>
+<p class="font-label-sm text-label-sm text-tertiary-fixed-dim">Premium Analytics</p>
+</div>
+</div>
+<div class="flex-1 flex flex-col gap-2">
+<a class="flex items-center gap-3 px-4 py-3 text-tertiary-fixed-dim hover:text-primary-fixed-dim hover:bg-on-tertiary-fixed-variant/50 transition-all duration-200 ease-in-out rounded-lg" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-label-md text-label-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-primary-fixed-dim bg-on-tertiary-fixed-variant rounded-lg font-bold transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="smart_toy" style="font-variation-settings: 'FILL' 1;">smart_toy</span>
+<span class="font-label-md text-label-md">AI Assistant</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-tertiary-fixed-dim hover:text-primary-fixed-dim hover:bg-on-tertiary-fixed-variant/50 transition-all duration-200 ease-in-out rounded-lg" href="#">
+<span class="material-symbols-outlined" data-icon="database">database</span>
+<span class="font-label-md text-label-md">Datasets</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-tertiary-fixed-dim hover:text-primary-fixed-dim hover:bg-on-tertiary-fixed-variant/50 transition-all duration-200 ease-in-out rounded-lg" href="#">
+<span class="material-symbols-outlined" data-icon="query_stats">query_stats</span>
+<span class="font-label-md text-label-md">Analytics</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-tertiary-fixed-dim hover:text-primary-fixed-dim hover:bg-on-tertiary-fixed-variant/50 transition-all duration-200 ease-in-out rounded-lg" href="#">
+<span class="material-symbols-outlined" data-icon="description">description</span>
+<span class="font-label-md text-label-md">Reports</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-tertiary-fixed-dim hover:text-primary-fixed-dim hover:bg-on-tertiary-fixed-variant/50 transition-all duration-200 ease-in-out rounded-lg" href="#">
+<span class="material-symbols-outlined" data-icon="history">history</span>
+<span class="font-label-md text-label-md">History</span>
+</a>
+</div>
+<div class="mt-auto">
+<a class="flex items-center gap-3 px-4 py-3 text-tertiary-fixed-dim hover:text-primary-fixed-dim hover:bg-on-tertiary-fixed-variant/50 transition-all duration-200 ease-in-out rounded-lg" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-label-md text-label-md">Settings</span>
+</a>
+</div>
+</nav>
+<!-- TopAppBar -->
+<header class="bg-surface fixed top-0 right-0 w-[calc(100%-280px)] h-16 border-b border-outline-variant flex justify-between items-center px-6 z-10">
+<div class="flex items-center gap-4">
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant" data-icon="search">search</span>
+<input class="pl-10 pr-4 py-2 bg-surface-container-low border border-surface-container-highest rounded-lg font-body-sm text-body-sm w-64 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary-container transition-shadow" placeholder="Search datasets..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<nav class="hidden md:flex items-center gap-6">
+<a class="text-on-surface-variant font-body-md hover:bg-surface-container-low transition-colors px-2 py-1 rounded" href="#">Sales_2026.csv</a>
+<a class="text-on-surface-variant font-body-md hover:bg-surface-container-low transition-colors px-2 py-1 rounded" href="#">Marketing_Q3.csv</a>
+</nav>
+<div class="flex items-center gap-3 border-l border-outline-variant pl-6">
+<button class="p-2 text-on-surface-variant hover:bg-surface-container-low rounded-full transition-colors scale-95 active:scale-100 transition-transform">
+<span class="material-symbols-outlined" data-icon="calendar_today">calendar_today</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:bg-surface-container-low rounded-full transition-colors scale-95 active:scale-100 transition-transform relative">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-error rounded-full"></span>
+</button>
+<div class="h-8 w-8 rounded-full bg-surface-container-highest overflow-hidden border border-outline-variant ml-2">
+<img alt="Analyst Avatar" class="w-full h-full object-cover" data-alt="Professional headshot of a data analyst, facing forward, neutral expression, modern office background, soft bright lighting, corporate professional style" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDqSIFDxsucBLxqzWXVvyG-wWWfIm60J91Wyb_pZSQPtjYghy_07YM-yAtG06CMPf4M5KEKxN8MaDOBM1P8nRf0O2PSCm4GQyzqj08Xt0TqNJPWxKP6VGITJLjxvXQQLV7WQDuIHwE6Caluwsf3LIkv8T2iv2FCxENRWUzQ9ezUKEK-o9Dnhs0S2LXaTB8TDto046B7Xf4mW4ESrsuApxfX12rdDWd73bMQS17Ae9INjFyb4D9_I-x6DQ"/>
+</div>
+<button class="px-4 py-2 bg-surface border border-outline-variant text-on-surface font-label-md text-label-md rounded-lg hover:bg-surface-container-low transition-colors ml-2">Filter</button>
+<button class="px-4 py-2 bg-primary-container text-on-primary font-label-md text-label-md rounded-lg hover:bg-primary transition-colors">Export</button>
+</div>
+</div>
+</header>
+<!-- Main Content -->
+<main class="ml-[280px] mt-16 flex-1 flex flex-col h-[calc(100vh-64px)] w-[calc(100%-280px)]">
+<!-- Workspace Header -->
+<div class="px-8 py-6 border-b border-surface-variant bg-surface">
+<h2 class="font-headline-lg text-headline-lg text-on-surface mb-1">AI Assistant</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Ask questions about your data. Get answers, charts, SQL and insights.</p>
+</div>
+<!-- Two Column Layout -->
+<div class="flex-1 flex overflow-hidden">
+<!-- Left Column: Conversation Flow -->
+<div class="w-1/2 flex flex-col border-r border-surface-variant bg-surface-bright relative">
+<div class="flex-1 overflow-y-auto p-8 space-y-8 pb-32">
+<!-- AI Welcome -->
+<div class="flex gap-4">
+<div class="w-8 h-8 rounded bg-primary-container flex-shrink-0 flex items-center justify-center text-on-primary">
+<span class="material-symbols-outlined text-sm" data-icon="smart_toy" style="font-variation-settings: 'FILL' 1;">smart_toy</span>
+</div>
+<div class="flex-1 pt-1">
+<p class="font-body-md text-body-md text-on-surface">Hello! I'm ready to analyze your active datasets (<span class="font-mono-md text-mono-md text-primary bg-primary-fixed/30 px-1 rounded">Sales_2026.csv</span>, <span class="font-mono-md text-mono-md text-primary bg-primary-fixed/30 px-1 rounded">Marketing_Q3.csv</span>). What would you like to know?</p>
+</div>
+</div>
+<!-- User Message -->
+<div class="flex gap-4 justify-end">
+<div class="flex-1 pt-1 text-right">
+<div class="inline-block bg-surface-container-low border border-surface-variant px-4 py-3 rounded-2xl rounded-tr-sm">
+<p class="font-body-md text-body-md text-on-surface">What are my top 10 products by revenue this quarter?</p>
+</div>
+</div>
+<div class="w-8 h-8 rounded-full bg-surface-container-highest overflow-hidden border border-outline-variant flex-shrink-0">
+<img class="w-full h-full object-cover" data-alt="Professional headshot of a data analyst, facing forward, neutral expression, modern office background, soft bright lighting, corporate professional style" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBiNqqIiyVicq7_qvDfdnk0gqNkZfey7GfG1pIPr4ds42Lfc00_LqNJ4jlEUcXqULCYLTfzvbF3-eQ8y-WOaENMK57ecT03L3H0gTQUBqiQBHHxDnckfzFgs8vejTqBeHMZ3kxkkpBwM0MaYb8PhlGKauKzrkpCV6kdKMfL6PG8Peg6Yj95z74S1ZM9-jfBXhJ80q5KEtuTO55d1DJDWFrsXwH1IftNhE9OFofEn6VzIdy-y79csRUf2A"/>
+</div>
+</div>
+<!-- AI Processing/Response -->
+<div class="flex gap-4">
+<div class="w-8 h-8 rounded bg-primary-container flex-shrink-0 flex items-center justify-center text-on-primary">
+<span class="material-symbols-outlined text-sm" data-icon="smart_toy" style="font-variation-settings: 'FILL' 1;">smart_toy</span>
+</div>
+<div class="flex-1 pt-1">
+<div class="p-[1px] bg-gradient-to-r from-primary-fixed-dim via-primary-container to-secondary-fixed rounded-xl inline-block mb-2">
+<div class="bg-surface px-4 py-3 rounded-xl rounded-tl-sm h-full w-full">
+<p class="font-body-md text-body-md text-on-surface">Based on <span class="font-mono-md text-mono-md text-primary bg-primary-fixed/30 px-1 rounded">Sales_2026.csv</span>, your top product by revenue this quarter is <strong>Enterprise Suite Pro</strong>, generating $1.24M, followed closely by <strong>Cloud Storage Tier 3</strong> at $980k.</p>
+<p class="font-body-md text-body-md text-on-surface mt-2 text-on-surface-variant">I've generated the detailed breakdown, SQL query, and a visualization in the analysis panel.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Fixed Input Bar -->
+<div class="absolute bottom-0 left-0 w-full p-6 bg-gradient-to-t from-surface-bright via-surface-bright to-transparent pt-12">
+<div class="relative flex items-center bg-surface border border-outline-variant rounded-xl shadow-[0_4px_12px_rgba(0,0,0,0.02)] overflow-hidden focus-within:border-primary focus-within:ring-1 focus-within:ring-primary-container transition-all">
+<button class="p-3 text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="attach_file">attach_file</span>
+</button>
+<input class="flex-1 bg-transparent border-none focus:ring-0 font-body-md text-body-md py-4 text-on-surface placeholder:text-outline h-12" placeholder="Ask anything about your dataset..." type="text"/>
+<button class="p-2 mr-2 bg-primary-container text-on-primary rounded-lg hover:bg-primary transition-colors">
+<span class="material-symbols-outlined text-sm" data-icon="arrow_upward">arrow_upward</span>
+</button>
+</div>
+<div class="flex gap-2 mt-3 px-1">
+<button class="text-[10px] font-semibold tracking-wider uppercase bg-surface-container-low border border-surface-variant text-on-surface-variant px-2 py-1 rounded hover:bg-surface-variant transition-colors">Suggest Metrics</button>
+<button class="text-[10px] font-semibold tracking-wider uppercase bg-surface-container-low border border-surface-variant text-on-surface-variant px-2 py-1 rounded hover:bg-surface-variant transition-colors">Generate Report</button>
+</div>
+</div>
+</div>
+<!-- Right Column: Analysis Details -->
+<div class="w-1/2 bg-surface-container-lowest overflow-y-auto p-6 space-y-6">
+<div class="flex items-center justify-between border-b border-surface-variant pb-4 mb-2">
+<h3 class="font-headline-sm text-headline-sm text-on-surface flex items-center gap-2">
+<span class="material-symbols-outlined text-primary" data-icon="analytics">analytics</span>
+                        Analysis Results
+                    </h3>
+<div class="flex gap-2">
+<button class="p-1.5 text-on-surface-variant hover:bg-surface-container-low rounded border border-transparent hover:border-surface-variant transition-all">
+<span class="material-symbols-outlined text-sm" data-icon="download">download</span>
+</button>
+<button class="p-1.5 text-on-surface-variant hover:bg-surface-container-low rounded border border-transparent hover:border-surface-variant transition-all">
+<span class="material-symbols-outlined text-sm" data-icon="more_vert">more_vert</span>
+</button>
+</div>
+</div>
+<!-- Data Table Section -->
+<div class="border border-surface-variant rounded-lg bg-surface overflow-hidden">
+<div class="bg-surface-container-low px-4 py-2 border-b border-surface-variant flex justify-between items-center cursor-pointer hover:bg-surface-variant/50 transition-colors">
+<h4 class="font-label-sm text-label-sm uppercase text-on-surface-variant tracking-wider">Results (Top 10)</h4>
+<span class="material-symbols-outlined text-on-surface-variant text-sm" data-icon="expand_less">expand_less</span>
+</div>
+<div class="p-0 overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-bright border-b border-surface-variant">
+<th class="py-2 px-4 font-label-sm text-label-sm uppercase text-outline">Product Name</th>
+<th class="py-2 px-4 font-label-sm text-label-sm uppercase text-outline text-right">Revenue</th>
+<th class="py-2 px-4 font-label-sm text-label-sm uppercase text-outline text-right">Growth</th>
+</tr>
+</thead>
+<tbody class="font-body-sm text-body-sm text-on-surface">
+<tr class="border-b border-surface-variant/50 hover:bg-surface-container-lowest transition-colors h-10">
+<td class="py-2 px-4 font-medium">Enterprise Suite Pro</td>
+<td class="py-2 px-4 text-right font-mono-md text-mono-md">$1,245,000</td>
+<td class="py-2 px-4 text-right text-[#166534] bg-[#DCFCE7]/30">+14.2%</td>
+</tr>
+<tr class="border-b border-surface-variant/50 hover:bg-surface-container-lowest transition-colors h-10 bg-surface-bright/30">
+<td class="py-2 px-4 font-medium">Cloud Storage Tier 3</td>
+<td class="py-2 px-4 text-right font-mono-md text-mono-md">$980,500</td>
+<td class="py-2 px-4 text-right text-[#166534] bg-[#DCFCE7]/30">+8.5%</td>
+</tr>
+<tr class="border-b border-surface-variant/50 hover:bg-surface-container-lowest transition-colors h-10">
+<td class="py-2 px-4 font-medium">Data Pipeline Starter</td>
+<td class="py-2 px-4 text-right font-mono-md text-mono-md">$754,200</td>
+<td class="py-2 px-4 text-right text-[#991B1B] bg-[#FEE2E2]/30">-2.1%</td>
+</tr>
+<tr class="hover:bg-surface-container-lowest transition-colors h-10 bg-surface-bright/30">
+<td class="py-2 px-4 font-medium text-on-surface-variant">... (7 more rows)</td>
+<td class="py-2 px-4 text-right"></td>
+<td class="py-2 px-4 text-right"></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Visualization Section -->
+<div class="border border-surface-variant rounded-lg bg-surface overflow-hidden">
+<div class="bg-surface-container-low px-4 py-2 border-b border-surface-variant flex justify-between items-center cursor-pointer hover:bg-surface-variant/50 transition-colors">
+<h4 class="font-label-sm text-label-sm uppercase text-on-surface-variant tracking-wider">Visualization</h4>
+<span class="material-symbols-outlined text-on-surface-variant text-sm" data-icon="expand_less">expand_less</span>
+</div>
+<div class="p-4 h-64 w-full bg-surface-bright relative">
+<div class="absolute inset-4 border-l border-b border-surface-variant flex items-end gap-2 pt-4 px-2">
+<!-- Dummy Bar Chart -->
+<div class="flex-1 bg-primary-container rounded-t-sm h-[90%] hover:opacity-80 transition-opacity relative group">
+<div class="absolute -top-6 left-1/2 -translate-x-1/2 bg-inverse-surface text-inverse-on-surface text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 whitespace-nowrap">$1.24M</div>
+</div>
+<div class="flex-1 bg-primary-fixed-dim rounded-t-sm h-[75%] hover:opacity-80 transition-opacity"></div>
+<div class="flex-1 bg-primary-fixed rounded-t-sm h-[60%] hover:opacity-80 transition-opacity"></div>
+<div class="flex-1 bg-surface-variant rounded-t-sm h-[45%] hover:opacity-80 transition-opacity"></div>
+<div class="flex-1 bg-surface-variant rounded-t-sm h-[30%] hover:opacity-80 transition-opacity"></div>
+</div>
+</div>
+</div>
+<!-- SQL Query Section -->
+<div class="border border-surface-variant rounded-lg bg-surface overflow-hidden">
+<div class="bg-surface-container-low px-4 py-2 border-b border-surface-variant flex justify-between items-center cursor-pointer hover:bg-surface-variant/50 transition-colors">
+<h4 class="font-label-sm text-label-sm uppercase text-on-surface-variant tracking-wider">SQL Query</h4>
+<div class="flex gap-2 items-center">
+<span class="text-[10px] font-mono-md bg-surface-variant px-1 rounded text-on-surface-variant">PostgreSQL</span>
+<span class="material-symbols-outlined text-on-surface-variant text-sm" data-icon="expand_less">expand_less</span>
+</div>
+</div>
+<div class="p-4 bg-[#1E1E1E] text-[#D4D4D4] font-mono-md text-mono-md overflow-x-auto text-xs leading-relaxed">
+<pre><code><span class="text-[#569CD6]">SELECT</span>
+  product_name,
+  <span class="text-[#DCDCAA]">SUM</span>(revenue) <span class="text-[#569CD6]">AS</span> total_revenue,
+  (<span class="text-[#DCDCAA]">SUM</span>(revenue) - <span class="text-[#DCDCAA]">LAG</span>(<span class="text-[#DCDCAA]">SUM</span>(revenue)) <span class="text-[#569CD6]">OVER</span> (<span class="text-[#569CD6]">PARTITION BY</span> product_id <span class="text-[#569CD6]">ORDER BY</span> quarter)) / 
+  <span class="text-[#DCDCAA]">LAG</span>(<span class="text-[#DCDCAA]">SUM</span>(revenue)) <span class="text-[#569CD6]">OVER</span> (<span class="text-[#569CD6]">PARTITION BY</span> product_id <span class="text-[#569CD6]">ORDER BY</span> quarter) <span class="text-[#569CD6]">AS</span> growth_pct
+<span class="text-[#569CD6]">FROM</span>
+  sales_data
+<span class="text-[#569CD6]">WHERE</span>
+  quarter = <span class="text-[#CE9178]">'Q3_2026'</span>
+<span class="text-[#569CD6]">GROUP BY</span>
+  product_id, product_name
+<span class="text-[#569CD6]">ORDER BY</span>
+  total_revenue <span class="text-[#569CD6]">DESC</span>
+<span class="text-[#569CD6]">LIMIT</span> <span class="text-[#B5CEA8]">10</span>;</code></pre>
+</div>
+</div>
+<!-- Insights Section -->
+<div class="border border-surface-variant rounded-lg bg-surface overflow-hidden relative">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-primary to-primary-fixed-dim"></div>
+<div class="bg-surface-container-low px-4 py-2 border-b border-surface-variant flex justify-between items-center cursor-pointer pl-6 hover:bg-surface-variant/50 transition-colors">
+<h4 class="font-label-sm text-label-sm uppercase text-on-surface-variant tracking-wider flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]" data-icon="lightbulb">lightbulb</span>
+                            Key Findings
+                        </h4>
+<span class="material-symbols-outlined text-on-surface-variant text-sm" data-icon="expand_less">expand_less</span>
+</div>
+<div class="p-4 pl-6 space-y-3 font-body-sm text-body-sm text-on-surface">
+<p>Enterprise products continue to drive the majority of top-line revenue, showing strong resilience.</p>
+<p class="text-error-container bg-error px-2 py-1 rounded inline-block"><strong>Warning:</strong> Data Pipeline Starter saw a 2.1% contraction, requiring marketing review.</p>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>

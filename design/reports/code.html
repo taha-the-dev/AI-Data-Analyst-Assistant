@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Reports - DataMind AI</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;family=JetBrains+Mono:wght@400&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container": "#eceef0",
+                        "primary-fixed": "#dbe1ff",
+                        "on-primary-fixed-variant": "#003ea8",
+                        "surface-tint": "#0053db",
+                        "error": "#ba1a1a",
+                        "on-secondary": "#ffffff",
+                        "on-surface-variant": "#434655",
+                        "surface-variant": "#e0e3e5",
+                        "error-container": "#ffdad6",
+                        "on-background": "#191c1e",
+                        "on-tertiary-container": "#eaf1fa",
+                        "tertiary-container": "#676e76",
+                        "outline-variant": "#c3c6d7",
+                        "surface-container-high": "#e6e8ea",
+                        "on-error-container": "#93000a",
+                        "on-primary-container": "#eeefff",
+                        "surface-container-highest": "#e0e3e5",
+                        "on-primary": "#ffffff",
+                        "inverse-primary": "#b4c5ff",
+                        "surface-bright": "#f7f9fb",
+                        "on-secondary-container": "#5c6274",
+                        "surface-container-lowest": "#ffffff",
+                        "inverse-surface": "#2d3133",
+                        "secondary-fixed-dim": "#c0c6da",
+                        "on-secondary-fixed": "#151b2a",
+                        "secondary-fixed": "#dce2f6",
+                        "surface-container-low": "#f2f4f6",
+                        "surface": "#f7f9fb",
+                        "inverse-on-surface": "#eff1f3",
+                        "background": "#f7f9fb",
+                        "on-primary-fixed": "#00174b",
+                        "primary": "#004ac6",
+                        "on-error": "#ffffff",
+                        "primary-container": "#2563eb",
+                        "tertiary-fixed-dim": "#c0c7d0",
+                        "tertiary-fixed": "#dce3ec",
+                        "primary-fixed-dim": "#b4c5ff",
+                        "outline": "#737686",
+                        "on-tertiary-fixed-variant": "#40484f",
+                        "secondary": "#585e6f",
+                        "secondary-container": "#d9dff4",
+                        "on-secondary-fixed-variant": "#404757",
+                        "surface-dim": "#d8dadc",
+                        "on-surface": "#191c1e",
+                        "tertiary": "#4e565d",
+                        "on-tertiary": "#ffffff",
+                        "on-tertiary-fixed": "#151c23"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "gutter": "16px",
+                        "container-margin": "24px",
+                        "space-lg": "16px",
+                        "space-xl": "24px",
+                        "space-xs": "4px",
+                        "space-sm": "8px",
+                        "space-md": "12px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "body-md": ["Inter"],
+                        "headline-sm": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "mono-md": ["jetbrainsMono"],
+                        "body-sm": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "label-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "headline-md": ["20px", { "lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "headline-sm": ["16px", { "lineHeight": "24px", "fontWeight": "600" }],
+                        "label-sm": ["11px", { "lineHeight": "14px", "letterSpacing": "0.03em", "fontWeight": "600" }],
+                        "mono-md": ["13px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "body-sm": ["13px", { "lineHeight": "18px", "fontWeight": "400" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.01em", "fontWeight": "500" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { background-color: #F8FAFC; }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body-md antialiased overflow-hidden flex h-screen">
+<!-- SideNavBar -->
+<nav class="fixed left-0 top-0 h-full w-[280px] bg-on-tertiary-fixed border-r border-on-tertiary-fixed-variant flex flex-col p-4 z-50">
+<div class="mb-8 px-4 flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center text-on-primary">
+<span class="material-symbols-outlined" data-icon="data_exploration">data_exploration</span>
+</div>
+<div>
+<h1 class="font-headline-md text-headline-md font-bold text-primary-fixed-dim">DataMind AI</h1>
+<p class="font-label-md text-label-md text-tertiary-fixed-dim">Premium Analytics</p>
+</div>
+</div>
+<div class="flex-1 overflow-y-auto space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 text-tertiary-fixed-dim hover:text-primary-fixed-dim hover:bg-on-tertiary-fixed-variant/50 transition-all duration-200 ease-in-out rounded-lg font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+                Dashboard
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 text-tertiary-fixed-dim hover:text-primary-fixed-dim hover:bg-on-tertiary-fixed-variant/50 transition-all duration-200 ease-in-out rounded-lg font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="smart_toy">smart_toy</span>
+                AI Assistant
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 text-tertiary-fixed-dim hover:text-primary-fixed-dim hover:bg-on-tertiary-fixed-variant/50 transition-all duration-200 ease-in-out rounded-lg font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="database">database</span>
+                Datasets
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 text-tertiary-fixed-dim hover:text-primary-fixed-dim hover:bg-on-tertiary-fixed-variant/50 transition-all duration-200 ease-in-out rounded-lg font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="query_stats">query_stats</span>
+                Analytics
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 text-primary-fixed-dim bg-on-tertiary-fixed-variant rounded-lg font-bold font-label-md text-label-md transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="description" data-weight="fill" style="font-variation-settings: 'FILL' 1;">description</span>
+                Reports
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 text-tertiary-fixed-dim hover:text-primary-fixed-dim hover:bg-on-tertiary-fixed-variant/50 transition-all duration-200 ease-in-out rounded-lg font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="history">history</span>
+                History
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 text-tertiary-fixed-dim hover:text-primary-fixed-dim hover:bg-on-tertiary-fixed-variant/50 transition-all duration-200 ease-in-out rounded-lg font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+                Settings
+            </a>
+</div>
+<div class="mt-auto pt-4 border-t border-on-tertiary-fixed-variant/50 flex items-center gap-3 px-4">
+<img alt="User Profile" class="w-8 h-8 rounded-full object-cover" data-alt="A professional headshot of a business analyst in a bright, modern corporate office. High key lighting, clean background, conveying trust and expertise." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDwHEA4iRljWVW439UrR8u8KZ61kAiUoAIKu6OdVig7k0ltIxVqvHsZ3SE3O6Cw3kea9iD4ZFak63N3_SXONKsL02NB3mlCSgRc7AuUZ5kD-x7K9zpx7nZbcDcCfuO4mPl3YR7QmiuMMeKMNjgxGYIJcmDsNdjEW-H9SbeQrSmqPcz90xpv0pB-lZJDuaeTLvanoRa8ScGwk4fEWJyRCO-OwOJZtMgnRPZcKNZZ8M_oZ72ZhTpTVoA2nA"/>
+<div>
+<p class="font-label-md text-label-md text-primary-fixed-dim font-bold">Muhammad</p>
+<p class="font-label-sm text-label-sm text-tertiary-fixed-dim">Lead Analyst</p>
+</div>
+</div>
+</nav>
+<!-- TopAppBar & Main Content Area -->
+<div class="flex-1 ml-[280px] flex flex-col min-w-0">
+<!-- TopAppBar -->
+<header class="h-16 bg-surface border-b border-outline-variant flex justify-between items-center px-6 w-full shrink-0 z-40">
+<div class="flex items-center gap-4 flex-1">
+<div class="relative w-64">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]" data-icon="search">search</span>
+<input class="w-full bg-surface-container-low border border-outline-variant rounded-lg py-1.5 pl-9 pr-3 font-body-sm text-on-surface focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all" placeholder="Search reports..." type="text"/>
+</div>
+<div class="h-4 w-px bg-outline-variant mx-2"></div>
+<div class="flex gap-4">
+<a class="text-on-surface-variant font-body-md hover:bg-surface-container-low transition-colors px-2 py-1 rounded" href="#">Sales_2026.csv</a>
+<a class="text-on-surface-variant font-body-md hover:bg-surface-container-low transition-colors px-2 py-1 rounded" href="#">Marketing_Q3.csv</a>
+</div>
+</div>
+<div class="flex items-center gap-3 shrink-0">
+<button class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface-container-low text-on-surface-variant transition-colors">
+<span class="material-symbols-outlined text-[20px]" data-icon="calendar_today">calendar_today</span>
+</button>
+<button class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface-container-low text-on-surface-variant transition-colors relative">
+<span class="material-symbols-outlined text-[20px]" data-icon="notifications">notifications</span>
+<span class="absolute top-1 right-1 w-2 h-2 bg-error rounded-full"></span>
+</button>
+<div class="h-6 w-px bg-outline-variant mx-2"></div>
+<button class="bg-surface border border-outline-variant text-on-surface font-label-md text-label-md px-4 py-1.5 rounded-lg hover:bg-surface-container-low transition-colors h-[32px] flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]" data-icon="filter_list">filter_list</span>
+                    Filter
+                </button>
+<button class="bg-surface border border-outline-variant text-on-surface font-label-md text-label-md px-4 py-1.5 rounded-lg hover:bg-surface-container-low transition-colors h-[32px] flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]" data-icon="download">download</span>
+                    Export
+                </button>
+</div>
+</header>
+<!-- Main Content -->
+<main class="flex-1 overflow-y-auto p-container-margin bg-background">
+<div class="max-w-6xl mx-auto">
+<!-- Page Header -->
+<div class="flex justify-between items-center mb-space-xl">
+<div>
+<h2 class="font-headline-lg text-headline-lg text-on-surface">Reports Directory</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">Manage and share your analytical outputs.</p>
+</div>
+<button class="bg-primary-container text-on-primary font-label-md text-label-md px-4 py-2 rounded-lg hover:bg-primary transition-colors flex items-center gap-2 h-[40px]">
+<span class="material-symbols-outlined text-[18px]" data-icon="add">add</span>
+                        Create Report
+                    </button>
+</div>
+<!-- Reports List (Bento-ish List Approach) -->
+<div class="bg-surface border border-outline-variant rounded-xl overflow-hidden">
+<!-- Table Header -->
+<div class="grid grid-cols-[2fr_1fr_1fr_1fr_auto] gap-4 px-space-lg py-space-sm bg-surface-container-lowest border-b border-outline-variant font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">
+<div>Report Title</div>
+<div>Updated Date</div>
+<div>Owner</div>
+<div>Status</div>
+<div class="w-32 text-right">Actions</div>
+</div>
+<!-- Row 1 -->
+<div class="grid grid-cols-[2fr_1fr_1fr_1fr_auto] gap-4 px-space-lg py-space-md border-b border-outline-variant items-center hover:bg-surface-container-low/50 transition-colors group">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded bg-primary-fixed/20 flex items-center justify-center text-primary-container">
+<span class="material-symbols-outlined text-[18px]" data-icon="monitoring">monitoring</span>
+</div>
+<span class="font-body-md text-body-md text-on-surface font-medium">Revenue Performance Q3</span>
+</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant">Oct 24, 2023</div>
+<div class="flex items-center gap-2">
+<img alt="Muhammad" class="w-6 h-6 rounded-full object-cover" data-alt="A small circular avatar of a professional analyst in a bright office." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAvGu7CrkIV65I6B2xFZS2MJepBi4PRynvh7R4Z508SPUOFR0IK-lQ-_XGFJLflkMABwX6n6t4Gla1f4Li7Q5ID-lBLmdpyT2eWzIY0w1PqjnMAYEz3IGkiG3GWH0tnp4GSH-yW1Km1fQfDb-ofgqISeEY_iuMUX-BRf586Enh-fG-xIYaMoyr4R7Dfb0DedbRDD7WpwHxwd9JazibY7YLdoLtUfRfOC6uA1rPQs9xhBlTEkvHlSjibww"/>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Muhammad</span>
+</div>
+<div>
+<span class="inline-flex items-center px-2 py-0.5 rounded-full bg-[#DCFCE7] text-[#166534] font-label-sm text-label-sm">Ready</span>
+</div>
+<div class="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="w-8 h-8 flex items-center justify-center rounded text-on-surface-variant hover:text-primary hover:bg-surface-container-high transition-colors" title="Open">
+<span class="material-symbols-outlined text-[18px]" data-icon="open_in_new">open_in_new</span>
+</button>
+<button class="w-8 h-8 flex items-center justify-center rounded text-on-surface-variant hover:text-primary hover:bg-surface-container-high transition-colors" title="Edit">
+<span class="material-symbols-outlined text-[18px]" data-icon="edit">edit</span>
+</button>
+<button class="w-8 h-8 flex items-center justify-center rounded text-on-surface-variant hover:text-primary hover:bg-surface-container-high transition-colors" title="Share">
+<span class="material-symbols-outlined text-[18px]" data-icon="share">share</span>
+</button>
+<button class="w-8 h-8 flex items-center justify-center rounded text-on-surface-variant hover:text-primary hover:bg-surface-container-high transition-colors" title="Export">
+<span class="material-symbols-outlined text-[18px]" data-icon="download">download</span>
+</button>
+</div>
+</div>
+<!-- Row 2 -->
+<div class="grid grid-cols-[2fr_1fr_1fr_1fr_auto] gap-4 px-space-lg py-space-md border-b border-outline-variant items-center hover:bg-surface-container-low/50 transition-colors group">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded bg-primary-fixed/20 flex items-center justify-center text-primary-container">
+<span class="material-symbols-outlined text-[18px]" data-icon="pie_chart">pie_chart</span>
+</div>
+<span class="font-body-md text-body-md text-on-surface font-medium">Customer Segmentation 2023</span>
+</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant">Oct 20, 2023</div>
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center font-label-sm text-label-sm font-bold">AL</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Alice Lee</span>
+</div>
+<div>
+<span class="inline-flex items-center px-2 py-0.5 rounded-full bg-[#FEF08A] text-[#854D0E] font-label-sm text-label-sm">Draft</span>
+</div>
+<div class="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="w-8 h-8 flex items-center justify-center rounded text-on-surface-variant hover:text-primary hover:bg-surface-container-high transition-colors" title="Open">
+<span class="material-symbols-outlined text-[18px]" data-icon="open_in_new">open_in_new</span>
+</button>
+<button class="w-8 h-8 flex items-center justify-center rounded text-on-surface-variant hover:text-primary hover:bg-surface-container-high transition-colors" title="Edit">
+<span class="material-symbols-outlined text-[18px]" data-icon="edit">edit</span>
+</button>
+<button class="w-8 h-8 flex items-center justify-center rounded text-on-surface-variant hover:text-primary hover:bg-surface-container-high transition-colors" title="Share">
+<span class="material-symbols-outlined text-[18px]" data-icon="share">share</span>
+</button>
+<button class="w-8 h-8 flex items-center justify-center rounded text-on-surface-variant hover:text-primary hover:bg-surface-container-high transition-colors" title="Export">
+<span class="material-symbols-outlined text-[18px]" data-icon="download">download</span>
+</button>
+</div>
+</div>
+<!-- Row 3 (AI Generated highlight) -->
+<div class="grid grid-cols-[2fr_1fr_1fr_1fr_auto] gap-4 px-space-lg py-space-md items-center hover:bg-surface-container-low/50 transition-colors group relative overflow-hidden">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-primary-container to-inverse-primary"></div>
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded bg-gradient-to-br from-primary-container/20 to-inverse-primary/20 flex items-center justify-center text-primary-container border border-primary-container/20">
+<span class="material-symbols-outlined text-[18px]" data-icon="auto_awesome">auto_awesome</span>
+</div>
+<div>
+<span class="font-body-md text-body-md text-on-surface font-medium block">Churn Prediction Model Eval</span>
+<span class="font-label-sm text-label-sm text-primary-container">AI Generated Summary</span>
+</div>
+</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant">Oct 18, 2023</div>
+<div class="flex items-center gap-2">
+<span class="font-body-sm text-body-sm text-on-surface-variant">System</span>
+</div>
+<div>
+<span class="inline-flex items-center px-2 py-0.5 rounded-full bg-[#DCFCE7] text-[#166534] font-label-sm text-label-sm">Ready</span>
+</div>
+<div class="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="w-8 h-8 flex items-center justify-center rounded text-on-surface-variant hover:text-primary hover:bg-surface-container-high transition-colors" title="Open">
+<span class="material-symbols-outlined text-[18px]" data-icon="open_in_new">open_in_new</span>
+</button>
+<button class="w-8 h-8 flex items-center justify-center rounded text-on-surface-variant hover:text-primary hover:bg-surface-container-high transition-colors" title="Edit">
+<span class="material-symbols-outlined text-[18px]" data-icon="edit">edit</span>
+</button>
+<button class="w-8 h-8 flex items-center justify-center rounded text-on-surface-variant hover:text-primary hover:bg-surface-container-high transition-colors" title="Share">
+<span class="material-symbols-outlined text-[18px]" data-icon="share">share</span>
+</button>
+<button class="w-8 h-8 flex items-center justify-center rounded text-on-surface-variant hover:text-primary hover:bg-surface-container-high transition-colors" title="Export">
+<span class="material-symbols-outlined text-[18px]" data-icon="download">download</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

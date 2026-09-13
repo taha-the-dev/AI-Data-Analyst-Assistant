@@ -1,0 +1,41 @@
+namespace AnalystAI.Api.Endpoints;
+
+/// <summary>
+/// The failures this API returns, written once.
+///
+/// Every screen shows the server's title and detail verbatim, so the wording is
+/// part of the product: each one says what happened and what to do next.
+/// </summary>
+public static class Problems
+{
+    public static IResult NoDataset(int? requested) => requested is > 0
+        ? Results.Problem(
+            title: "Dataset not found",
+            detail: $"No dataset with id {requested}. It may have been deleted — pick one from /api/datasets.",
+            statusCode: StatusCodes.Status404NotFound)
+        : Results.Problem(
+            title: "There are no datasets yet",
+            detail: "Upload a CSV to /api/datasets/upload and every screen will read from it.",
+            statusCode: StatusCodes.Status404NotFound);
+
+    public static IResult NoRows(int datasetId) => Results.Problem(
+        title: "That dataset has no rows",
+        detail: $"Dataset {datasetId} was profiled but holds no queryable rows. Upload a file whose columns "
+              + "include a value column (revenue, amount or total) so figures can be computed from it.",
+        statusCode: StatusCodes.Status404NotFound);
+
+    public static IResult NotFound(string what, int id) => Results.Problem(
+        title: $"{what} not found",
+        detail: $"No {what.ToLowerInvariant()} with id {id}.",
+        statusCode: StatusCodes.Status404NotFound);
+
+    public static IResult BadRequest(string title, string detail) => Results.Problem(
+        title: title, detail: detail, statusCode: StatusCodes.Status400BadRequest);
+
+    public static IResult Conflict(string title, string detail) => Results.Problem(
+        title: title, detail: detail, statusCode: StatusCodes.Status409Conflict);
+
+    public static IResult UnknownColumn(string what, string value, IEnumerable<string> allowed) => BadRequest(
+        $"Unknown {what}",
+        $"'{value}' is not a column. Available: {string.Join(", ", allowed)}.");
+}

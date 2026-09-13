@@ -1,0 +1,26 @@
+<!doctype html>
+<html class="light" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <!-- Blocking and first, so the theme class is on <html> before paint. A file rather
+         than inline, so the Content-Security-Policy can refuse all inline script. -->
+    <script src="/theme-init.js"></script>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>DataMind AI</title>
+    <meta name="description" content="Upload, explore and question your datasets. Every figure is computed server-side." />
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin href="https://fonts.gstatic.com" rel="preconnect" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

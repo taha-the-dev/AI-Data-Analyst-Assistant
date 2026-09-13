@@ -1,0 +1,41 @@
+# Render Blueprint: the API on a free web service, with a free PostgreSQL
+# database for its accounts, data and session keys.
+#
+# Free-plan limits worth knowing: the web service sleeps after 15 minutes
+# without traffic and takes about a minute to wake, and Render deletes a free
+# database 30 days after it is created.
+services:
+  - type: web
+    name: datamind-api
+    runtime: docker
+    plan: free
+    region: singapore
+    dockerfilePath: ./backend/AnalystAI.Api/Dockerfile
+    dockerContext: ./backend/AnalystAI.Api
+    healthCheckPath: /api/health
+    autoDeployTrigger: commit
+    envVars:
+      - key: PORT
+        value: "8080"
+      - key: ConnectionStrings__Default
+        fromDatabase:
+          name: datamind-db
+          property: connectionString
+      # The Vercel site that proxies /api to this service.
+      - key: Security__TrustedOrigins__0
+        value: https://datamind-ai-nine.vercel.app
+      # Two proxies stand in front of the API: Vercel, then Render's own.
+      - key: Security__TrustForwardedHeaders
+        value: "true"
+      - key: Security__ForwardLimit
+        value: "2"
+
+databases:
+  - name: datamind-db
+    plan: free
+    region: singapore
+    databaseName: datamind
+    user: datamind
+    postgresMajorVersion: "17"
+    # No connections from outside Render: only the web service reaches it.
+    ipAllowList: []

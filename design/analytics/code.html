@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+
+<html class="h-full" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>DataMind AI - Analytics Workspace</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;family=JetBrains+Mono:wght@400&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container": "#eceef0",
+                        "primary-fixed": "#dbe1ff",
+                        "on-primary-fixed-variant": "#003ea8",
+                        "surface-tint": "#0053db",
+                        "error": "#ba1a1a",
+                        "on-secondary": "#ffffff",
+                        "on-surface-variant": "#434655",
+                        "surface-variant": "#e0e3e5",
+                        "error-container": "#ffdad6",
+                        "on-background": "#191c1e",
+                        "on-tertiary-container": "#eaf1fa",
+                        "tertiary-container": "#676e76",
+                        "outline-variant": "#c3c6d7",
+                        "surface-container-high": "#e6e8ea",
+                        "on-error-container": "#93000a",
+                        "on-primary-container": "#eeefff",
+                        "surface-container-highest": "#e0e3e5",
+                        "on-primary": "#ffffff",
+                        "inverse-primary": "#b4c5ff",
+                        "surface-bright": "#f7f9fb",
+                        "on-secondary-container": "#5c6274",
+                        "surface-container-lowest": "#ffffff",
+                        "inverse-surface": "#2d3133",
+                        "secondary-fixed-dim": "#c0c6da",
+                        "on-secondary-fixed": "#151b2a",
+                        "secondary-fixed": "#dce2f6",
+                        "surface-container-low": "#f2f4f6",
+                        "surface": "#f7f9fb",
+                        "inverse-on-surface": "#eff1f3",
+                        "background": "#f7f9fb",
+                        "on-primary-fixed": "#00174b",
+                        "primary": "#004ac6",
+                        "on-error": "#ffffff",
+                        "primary-container": "#2563eb",
+                        "tertiary-fixed-dim": "#c0c7d0",
+                        "tertiary-fixed": "#dce3ec",
+                        "primary-fixed-dim": "#b4c5ff",
+                        "outline": "#737686",
+                        "on-tertiary-fixed-variant": "#40484f",
+                        "secondary": "#585e6f",
+                        "secondary-container": "#d9dff4",
+                        "on-secondary-fixed-variant": "#404757",
+                        "surface-dim": "#d8dadc",
+                        "on-surface": "#191c1e",
+                        "tertiary": "#4e565d",
+                        "on-tertiary": "#ffffff",
+                        "on-tertiary-fixed": "#151c23"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "gutter": "16px",
+                        "container-margin": "24px",
+                        "space-lg": "16px",
+                        "space-xl": "24px",
+                        "space-xs": "4px",
+                        "space-sm": "8px",
+                        "space-md": "12px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "body-md": ["Inter"],
+                        "headline-sm": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "mono-md": ["jetbrainsMono"],
+                        "body-sm": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "label-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "headline-md": ["20px", { "lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "headline-sm": ["16px", { "lineHeight": "24px", "fontWeight": "600" }],
+                        "label-sm": ["11px", { "lineHeight": "14px", "letterSpacing": "0.03em", "fontWeight": "600" }],
+                        "mono-md": ["13px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "body-sm": ["13px", { "lineHeight": "18px", "fontWeight": "400" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.01em", "fontWeight": "500" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; background-color: #F8FAFC; color: #191c1e; }
+        .data-table-row { border-bottom: 1px solid #E5E7EB; }
+        .data-table-row:last-child { border-bottom: none; }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-background text-on-background h-full font-body-md overflow-hidden flex">
+<!-- SideNavBar -->
+<nav class="hidden md:flex bg-on-tertiary-fixed text-primary-fixed-dim fixed left-0 top-0 h-full w-[280px] border-r border-on-tertiary-fixed-variant flex-col p-4 z-20">
+<div class="mb-8 px-2 flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-primary-container flex items-center justify-center text-on-primary font-bold text-lg">
+                DM
+            </div>
+<div>
+<h1 class="font-headline-md text-headline-md font-bold text-primary-fixed-dim">DataMind AI</h1>
+<p class="font-label-sm text-label-sm text-tertiary-fixed-dim">Premium Analytics</p>
+</div>
+</div>
+<ul class="flex flex-col gap-1 flex-grow overflow-y-auto scrollbar-hide">
+<li>
+<a class="flex items-center gap-3 px-4 py-3 text-tertiary-fixed-dim hover:text-primary-fixed-dim hover:bg-on-tertiary-fixed-variant/50 transition-colors rounded-lg font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">dashboard</span>
+                    Dashboard
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-4 py-3 text-tertiary-fixed-dim hover:text-primary-fixed-dim hover:bg-on-tertiary-fixed-variant/50 transition-colors rounded-lg font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">smart_toy</span>
+                    AI Assistant
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-4 py-3 text-tertiary-fixed-dim hover:text-primary-fixed-dim hover:bg-on-tertiary-fixed-variant/50 transition-colors rounded-lg font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">database</span>
+                    Datasets
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-4 py-3 text-primary-fixed-dim bg-on-tertiary-fixed-variant rounded-lg font-bold font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">query_stats</span>
+                    Analytics
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-4 py-3 text-tertiary-fixed-dim hover:text-primary-fixed-dim hover:bg-on-tertiary-fixed-variant/50 transition-colors rounded-lg font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">description</span>
+                    Reports
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-4 py-3 text-tertiary-fixed-dim hover:text-primary-fixed-dim hover:bg-on-tertiary-fixed-variant/50 transition-colors rounded-lg font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">history</span>
+                    History
+                </a>
+</li>
+<li class="mt-auto">
+<a class="flex items-center gap-3 px-4 py-3 text-tertiary-fixed-dim hover:text-primary-fixed-dim hover:bg-on-tertiary-fixed-variant/50 transition-colors rounded-lg font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">settings</span>
+                    Settings
+                </a>
+</li>
+</ul>
+<div class="mt-4 pt-4 border-t border-on-tertiary-fixed-variant flex items-center gap-3 px-2">
+<img alt="User Profile" class="w-8 h-8 rounded-full object-cover" data-alt="A professional headshot of a female data analyst with glasses, wearing a sleek modern navy blazer against a minimalist light gray studio background. The lighting is soft and corporate." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCLAc2XVZ4gRCmM6NPstK1hOMY9lT1XOj43zbx2d9IV9XQ8wqnDOdhyMFbVejyl66HVeIA1Pi8HydW3nbwJFVxXByu3Jhmc_XYouFuU5AomMfz51DwPefBif9-AOn4oUTDjXQFXEJrbvb8pwm8H0eUSYSMWni673SOmOUg0MGT3Wi-vyX5H0JZBFdkOTf6YXu2mq1HRC1f45jGZM_GKyB8Gz1lTNw9i9PtZOcka6FXXK5-UEAKMzumUvw"/>
+<div class="flex-1 truncate">
+<p class="font-label-md text-label-md font-medium text-primary-fixed-dim truncate">Sarah Jenkins</p>
+<p class="font-label-sm text-label-sm text-tertiary-fixed-dim truncate">Lead Analyst</p>
+</div>
+</div>
+</nav>
+<!-- Main Content Area -->
+<div class="flex-1 flex flex-col md:ml-[280px] h-full overflow-hidden bg-background">
+<!-- TopAppBar -->
+<header class="bg-surface border-b border-outline-variant h-16 flex justify-between items-center px-6 w-full flex-shrink-0 z-10">
+<div class="flex items-center gap-6">
+<h2 class="font-headline-sm text-headline-sm font-black text-on-surface md:hidden">DataMind AI</h2>
+<div class="hidden md:flex items-center gap-4">
+<a class="text-on-surface-variant font-body-md hover:bg-surface-container-low transition-colors px-3 py-1.5 rounded-md" href="#">Sales_2026.csv</a>
+<a class="text-on-surface-variant font-body-md hover:bg-surface-container-low transition-colors px-3 py-1.5 rounded-md" href="#">Marketing_Q3.csv</a>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<button class="w-8 h-8 flex items-center justify-center text-on-surface-variant hover:bg-surface-container-low rounded-full transition-colors scale-95 active:scale-100">
+<span class="material-symbols-outlined">calendar_today</span>
+</button>
+<button class="w-8 h-8 flex items-center justify-center text-on-surface-variant hover:bg-surface-container-low rounded-full transition-colors scale-95 active:scale-100 relative">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-1 right-1 w-2 h-2 bg-error rounded-full"></span>
+</button>
+<div class="h-6 w-px bg-outline-variant mx-2"></div>
+<button class="px-4 py-1.5 bg-surface text-on-surface border border-outline-variant rounded-lg font-label-md text-label-md hover:bg-surface-container-low transition-colors">
+                    Filter
+                </button>
+<button class="px-4 py-1.5 bg-primary-container text-on-primary rounded-lg font-label-md text-label-md hover:opacity-90 transition-opacity">
+                    Export
+                </button>
+<img alt="Analyst Avatar" class="w-8 h-8 rounded-full object-cover ml-2 md:hidden" data-alt="A professional headshot of a female data analyst with glasses, wearing a sleek modern navy blazer against a minimalist light gray studio background. The lighting is soft and corporate." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDf8lxtpnstB-T8oPTuTc1QTbund9xFX82HN5Cfb4xrtc3Xu0DQTIKI-t8Z_jnxcAZj2RInrKaM1qO3JhW8c5ptn45JjPpoXzoAL1gXPGTHWdRNtA0K8dsXBsaUc6tjtwlrMyMw6VRS0gNEyrOikuff_jFW6WlLA3KCAWb6pttWnjVey8le_VMDy-oZsWK2PJaeXB3TeZmTdmME3yPkxqE6heHsRh1cogTMY9lMD1c3oCDmMFxeoG8j0w"/>
+</div>
+</header>
+<!-- Workspace Controls (Toolbar) -->
+<div class="bg-surface border-b border-outline-variant px-6 py-3 flex flex-wrap gap-4 items-center flex-shrink-0 z-10 shadow-sm">
+<div class="flex items-center gap-2">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Metric</span>
+<select class="h-8 pl-3 pr-8 py-1 text-sm bg-surface border border-outline-variant rounded-md focus:border-primary-container focus:ring-1 focus:ring-primary-container text-on-surface font-body-sm">
+<option>Revenue</option>
+<option>User Acquisition</option>
+<option>Churn Rate</option>
+<option>LTV</option>
+</select>
+</div>
+<div class="flex items-center gap-2">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Dimension</span>
+<select class="h-8 pl-3 pr-8 py-1 text-sm bg-surface border border-outline-variant rounded-md focus:border-primary-container focus:ring-1 focus:ring-primary-container text-on-surface font-body-sm">
+<option>Month</option>
+<option>Quarter</option>
+<option>Year</option>
+<option>Day</option>
+</select>
+</div>
+<div class="flex items-center gap-2">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Filter</span>
+<select class="h-8 pl-3 pr-8 py-1 text-sm bg-surface border border-outline-variant rounded-md focus:border-primary-container focus:ring-1 focus:ring-primary-container text-on-surface font-body-sm">
+<option>Region: All</option>
+<option>North America</option>
+<option>EMEA</option>
+<option>APAC</option>
+</select>
+</div>
+<div class="flex-grow"></div>
+<div class="flex items-center bg-surface border border-outline-variant rounded-md overflow-hidden">
+<button class="h-8 px-3 bg-surface-container-low text-primary flex items-center justify-center border-r border-outline-variant" title="Line Chart">
+<span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 1;">show_chart</span>
+</button>
+<button class="h-8 px-3 text-on-surface-variant hover:bg-surface-container-low transition-colors flex items-center justify-center border-r border-outline-variant" title="Bar Chart">
+<span class="material-symbols-outlined text-[18px]">bar_chart</span>
+</button>
+<button class="h-8 px-3 text-on-surface-variant hover:bg-surface-container-low transition-colors flex items-center justify-center border-r border-outline-variant" title="Pie Chart">
+<span class="material-symbols-outlined text-[18px]">pie_chart</span>
+</button>
+<button class="h-8 px-3 text-on-surface-variant hover:bg-surface-container-low transition-colors flex items-center justify-center" title="Scatter Plot">
+<span class="material-symbols-outlined text-[18px]">scatter_plot</span>
+</button>
+</div>
+<button class="h-8 px-3 flex items-center gap-2 text-primary-container bg-surface border border-primary-container/30 rounded-md hover:bg-primary-container/5 transition-colors font-label-md text-label-md">
+<span class="material-symbols-outlined text-[16px]">auto_awesome</span>
+                AI Insights
+            </button>
+</div>
+<!-- Main Scrollable Canvas -->
+<main class="flex-1 overflow-y-auto p-4 md:p-6 space-y-6">
+<!-- Chart Area -->
+<div class="bg-surface border border-outline-variant rounded-lg p-4 flex flex-col h-[400px]">
+<div class="flex justify-between items-start mb-4">
+<div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Revenue Trend Analysis</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">Aggregated monthly revenue across all regions (Jan - Dec 2026)</p>
+</div>
+<div class="flex items-center gap-2">
+<span class="flex items-center gap-1 font-label-sm text-label-sm text-on-surface-variant">
+<span class="w-3 h-3 rounded-sm bg-primary-container block"></span>
+                            Actual
+                        </span>
+<span class="flex items-center gap-1 font-label-sm text-label-sm text-on-surface-variant ml-2">
+<span class="w-3 h-3 rounded-sm bg-outline-variant block"></span>
+                            Forecast
+                        </span>
+</div>
+</div>
+<div class="flex-1 relative w-full border-b border-l border-outline-variant/50 pb-2 pl-2">
+<!-- Placeholder for Chart Canvas -->
+<div aria-hidden="true" class="absolute inset-0 flex items-end justify-between px-4 pb-2">
+<!-- Y-Axis Lines -->
+<div class="absolute inset-0 flex flex-col justify-between pt-4 pb-8 border-l border-outline-variant/30">
+<div class="w-full border-t border-outline-variant/20 border-dashed relative"><span class="absolute -left-10 -top-2 text-[10px] text-on-surface-variant">100k</span></div>
+<div class="w-full border-t border-outline-variant/20 border-dashed relative"><span class="absolute -left-10 -top-2 text-[10px] text-on-surface-variant">75k</span></div>
+<div class="w-full border-t border-outline-variant/20 border-dashed relative"><span class="absolute -left-10 -top-2 text-[10px] text-on-surface-variant">50k</span></div>
+<div class="w-full border-t border-outline-variant/20 border-dashed relative"><span class="absolute -left-10 -top-2 text-[10px] text-on-surface-variant">25k</span></div>
+<div class="w-full border-t border-outline-variant/30 relative"><span class="absolute -left-10 -top-2 text-[10px] text-on-surface-variant">0</span></div>
+</div>
+<!-- Mock Line Graph Data Points -->
+<div class="relative w-full h-full pb-8 z-10 flex items-end justify-between px-2">
+<div class="w-2 h-[30%] bg-primary-container rounded-t-sm opacity-80 hover:opacity-100 cursor-pointer transition-opacity relative group">
+<div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-inverse-surface text-inverse-on-surface text-xs px-2 py-1 rounded hidden group-hover:block">$32k</div>
+</div>
+<div class="w-2 h-[45%] bg-primary-container rounded-t-sm opacity-80 hover:opacity-100 cursor-pointer transition-opacity relative group">
+<div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-inverse-surface text-inverse-on-surface text-xs px-2 py-1 rounded hidden group-hover:block">$45k</div>
+</div>
+<div class="w-2 h-[40%] bg-primary-container rounded-t-sm opacity-80 hover:opacity-100 cursor-pointer transition-opacity relative group"></div>
+<div class="w-2 h-[60%] bg-primary-container rounded-t-sm opacity-80 hover:opacity-100 cursor-pointer transition-opacity relative group"></div>
+<div class="w-2 h-[75%] bg-primary-container rounded-t-sm opacity-80 hover:opacity-100 cursor-pointer transition-opacity relative group"></div>
+<div class="w-2 h-[70%] bg-primary-container rounded-t-sm opacity-80 hover:opacity-100 cursor-pointer transition-opacity relative group"></div>
+<div class="w-2 h-[85%] bg-primary-container rounded-t-sm opacity-80 hover:opacity-100 cursor-pointer transition-opacity relative group"></div>
+<div class="w-2 h-[95%] bg-primary-container rounded-t-sm opacity-80 hover:opacity-100 cursor-pointer transition-opacity relative group"></div>
+<!-- Forecast -->
+<div class="w-2 h-[88%] bg-outline-variant rounded-t-sm opacity-80 border border-dashed border-tertiary"></div>
+<div class="w-2 h-[92%] bg-outline-variant rounded-t-sm opacity-80 border border-dashed border-tertiary"></div>
+<div class="w-2 h-[98%] bg-outline-variant rounded-t-sm opacity-80 border border-dashed border-tertiary"></div>
+<div class="w-2 h-[100%] bg-outline-variant rounded-t-sm opacity-80 border border-dashed border-tertiary"></div>
+</div>
+<!-- X-Axis Labels -->
+<div class="absolute bottom-0 left-0 right-0 flex justify-between px-6 pt-2">
+<span class="text-[10px] text-on-surface-variant">Jan</span>
+<span class="text-[10px] text-on-surface-variant">Feb</span>
+<span class="text-[10px] text-on-surface-variant">Mar</span>
+<span class="text-[10px] text-on-surface-variant">Apr</span>
+<span class="text-[10px] text-on-surface-variant">May</span>
+<span class="text-[10px] text-on-surface-variant">Jun</span>
+<span class="text-[10px] text-on-surface-variant">Jul</span>
+<span class="text-[10px] text-on-surface-variant">Aug</span>
+<span class="text-[10px] text-on-surface-variant italic">Sep</span>
+<span class="text-[10px] text-on-surface-variant italic">Oct</span>
+<span class="text-[10px] text-on-surface-variant italic">Nov</span>
+<span class="text-[10px] text-on-surface-variant italic">Dec</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Data Table -->
+<div class="bg-surface border border-outline-variant rounded-lg overflow-hidden flex flex-col">
+<div class="px-4 py-3 border-b border-outline-variant bg-surface-bright flex justify-between items-center">
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Tabular Data</h3>
+<div class="flex items-center gap-2">
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[18px]">search</span>
+</button>
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[18px]">more_vert</span>
+</button>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-lowest border-b border-outline-variant">
+<th class="py-2 px-4 font-label-sm text-label-sm text-tertiary-container uppercase tracking-wider font-bold">Month</th>
+<th class="py-2 px-4 font-label-sm text-label-sm text-tertiary-container uppercase tracking-wider font-bold text-right">Revenue</th>
+<th class="py-2 px-4 font-label-sm text-label-sm text-tertiary-container uppercase tracking-wider font-bold text-right">Users</th>
+<th class="py-2 px-4 font-label-sm text-label-sm text-tertiary-container uppercase tracking-wider font-bold text-right">Avg. Order Value</th>
+<th class="py-2 px-4 font-label-sm text-label-sm text-tertiary-container uppercase tracking-wider font-bold text-center">Variance</th>
+</tr>
+</thead>
+<tbody class="font-mono-md text-mono-md text-on-surface">
+<tr class="data-table-row hover:bg-surface-container-low transition-colors">
+<td class="py-2 px-4 font-body-sm">Jan 2026</td>
+<td class="py-2 px-4 text-right">$32,450.00</td>
+<td class="py-2 px-4 text-right">1,245</td>
+<td class="py-2 px-4 text-right">$26.06</td>
+<td class="py-2 px-4 text-center">
+<span class="inline-flex items-center justify-center px-2 py-0.5 rounded text-[11px] font-medium bg-[#DCFCE7] text-[#166534]">+4.2%</span>
+</td>
+</tr>
+<tr class="data-table-row hover:bg-surface-container-low transition-colors">
+<td class="py-2 px-4 font-body-sm">Feb 2026</td>
+<td class="py-2 px-4 text-right">$45,120.00</td>
+<td class="py-2 px-4 text-right">1,412</td>
+<td class="py-2 px-4 text-right">$31.95</td>
+<td class="py-2 px-4 text-center">
+<span class="inline-flex items-center justify-center px-2 py-0.5 rounded text-[11px] font-medium bg-[#DCFCE7] text-[#166534]">+12.5%</span>
+</td>
+</tr>
+<tr class="data-table-row hover:bg-surface-container-low transition-colors">
+<td class="py-2 px-4 font-body-sm">Mar 2026</td>
+<td class="py-2 px-4 text-right">$40,890.00</td>
+<td class="py-2 px-4 text-right">1,350</td>
+<td class="py-2 px-4 text-right">$30.28</td>
+<td class="py-2 px-4 text-center">
+<span class="inline-flex items-center justify-center px-2 py-0.5 rounded text-[11px] font-medium bg-[#FEE2E2] text-[#991B1B]">-2.1%</span>
+</td>
+</tr>
+<tr class="data-table-row hover:bg-surface-container-low transition-colors">
+<td class="py-2 px-4 font-body-sm">Apr 2026</td>
+<td class="py-2 px-4 text-right">$60,200.00</td>
+<td class="py-2 px-4 text-right">1,820</td>
+<td class="py-2 px-4 text-right">$33.07</td>
+<td class="py-2 px-4 text-center">
+<span class="inline-flex items-center justify-center px-2 py-0.5 rounded text-[11px] font-medium bg-[#DCFCE7] text-[#166534]">+15.8%</span>
+</td>
+</tr>
+<tr class="data-table-row hover:bg-surface-container-low transition-colors">
+<td class="py-2 px-4 font-body-sm">May 2026</td>
+<td class="py-2 px-4 text-right">$75,400.00</td>
+<td class="py-2 px-4 text-right">2,100</td>
+<td class="py-2 px-4 text-right">$35.90</td>
+<td class="py-2 px-4 text-center">
+<span class="inline-flex items-center justify-center px-2 py-0.5 rounded text-[11px] font-medium bg-[#DCFCE7] text-[#166534]">+8.4%</span>
+</td>
+</tr>
+<tr class="data-table-row hover:bg-surface-container-low transition-colors bg-surface-container-lowest border-l-2 border-l-outline-variant">
+<td class="py-2 px-4 font-body-sm italic text-on-surface-variant">Jun 2026 (Est)</td>
+<td class="py-2 px-4 text-right italic text-on-surface-variant">$70,000.00</td>
+<td class="py-2 px-4 text-right italic text-on-surface-variant">2,050</td>
+<td class="py-2 px-4 text-right italic text-on-surface-variant">$34.14</td>
+<td class="py-2 px-4 text-center">
+<span class="inline-flex items-center justify-center px-2 py-0.5 rounded text-[11px] font-medium bg-surface-container-high text-on-surface-variant">Proj</span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="px-4 py-2 border-t border-outline-variant bg-surface-container-lowest flex justify-between items-center text-xs text-on-surface-variant">
+<span>Showing 1 to 6 of 12 entries</span>
+<div class="flex items-center gap-1">
+<button class="p-1 hover:bg-surface-container-high rounded disabled:opacity-50" disabled=""><span class="material-symbols-outlined text-[16px]">chevron_left</span></button>
+<span class="px-2">1</span>
+<button class="p-1 hover:bg-surface-container-high rounded"><span class="material-symbols-outlined text-[16px]">chevron_right</span></button>
+</div>
+</div>
+</div>
+<!-- Spacer for bottom margin -->
+<div class="h-6"></div>
+</main>
+</div>
+</body></html>

@@ -1,0 +1,381 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+  The colour system, as channels rather than colours.
+
+  Every Tailwind colour in this app resolves to one of these custom properties
+  (see tailwind.config.js), so a theme is a single block of overrides rather
+  than a `dark:` variant on several hundred class lists. Values are
+  space-separated RGB channels, which is what lets `bg-nav-deep/60` and friends
+  keep working.
+
+  Light is the default. `.dark` on <html> repaints the same tokens; the class is
+  stamped by src/lib/theme.js and, before first paint, by the inline script in
+  index.html.
+*/
+@layer base {
+  :root {
+    --outline: 95 100 114;
+    --outline-variant: 199 204 214;
+    --background: 237 241 246;
+    --on-background: 33 40 48;
+    --surface: 237 241 246;
+    --surface-dim: 213 219 227;
+    --surface-bright: 255 255 255;
+    --surface-variant: 221 226 234;
+    --surface-tint: 11 78 209;
+    --primary-hover: 23 73 184;
+    --focus-ring: 37 99 235;
+    --surface-container-lowest: 255 255 255;
+    --surface-container-low: 244 247 250;
+    --surface-container: 232 237 243;
+    --surface-container-high: 225 231 239;
+    --surface-container-highest: 217 224 233;
+    --on-surface: 33 40 48;
+    --on-surface-variant: 74 83 97;
+    --inverse-surface: 44 51 59;
+    --inverse-on-surface: 237 241 246;
+    --primary: 11 78 209;
+    --on-primary: 255 255 255;
+    --primary-container: 37 99 235;
+    --on-primary-container: 238 242 255;
+    --inverse-primary: 180 197 255;
+    --primary-fixed: 222 230 255;
+    --primary-fixed-dim: 180 197 255;
+    --on-primary-fixed: 0 23 75;
+    --on-primary-fixed-variant: 0 62 168;
+    --secondary: 77 95 125;
+    --on-secondary: 255 255 255;
+    --secondary-container: 200 219 254;
+    --on-secondary-container: 58 74 102;
+    --secondary-fixed: 214 227 255;
+    --secondary-fixed-dim: 181 199 234;
+    --on-secondary-fixed: 7 28 54;
+    --on-secondary-fixed-variant: 54 71 100;
+    --tertiary: 0 91 124;
+    --on-tertiary: 255 255 255;
+    --tertiary-container: 0 117 159;
+    --on-tertiary-container: 225 242 255;
+    --tertiary-fixed: 196 231 255;
+    --tertiary-fixed-dim: 123 208 255;
+    --on-tertiary-fixed: 0 30 44;
+    --on-tertiary-fixed-variant: 0 76 105;
+    --error: 196 33 33;
+    --on-error: 255 255 255;
+    --error-container: 255 218 214;
+    --on-error-container: 147 0 10;
+    --nav: 21 28 35;
+    --on-nav: 230 236 243;
+    --nav-deep: 16 22 28;
+    --nav-raised: 26 34 42;
+    --nav-hover: 33 42 51;
+    --nav-active: 43 52 61;
+    --nav-line: 38 46 54;
+    --accent: 56 189 248;
+    --success: 15 122 56;
+    --success-container: 220 252 231;
+    --warning: 161 98 7;
+    --warning-container: 254 240 138;
+    --on-warning-container: 133 77 14;
+    --danger: 196 33 33;
+    --danger-container: 254 226 226;
+    --chart-grid: 217 224 233;
+    --chart-line: 37 99 235;
+    --chart-dot: 255 255 255;
+    --chart-track: 221 226 234;
+    --chart-1: 37 99 235;
+    --chart-2: 14 116 144;
+    --chart-3: 124 58 237;
+    --chart-4: 180 83 9;
+    --scrollbar-thumb: 199 204 214;
+    --scrollbar-thumb-hover: 166 173 187;
+    --drop-border: 37 99 235;
+    --drop-fill: 225 231 239;
+    color-scheme: light;
+  }
+
+  /*
+    Dark is the rail's charcoal expanded to the whole canvas. The rail itself
+    drops a step deeper than the page so it still reads as the frame rather
+    than dissolving into it, and text tops out near #DDE3EA instead of white so
+    a full screen of figures does not glare.
+  */
+  .dark {
+    --outline: 140 150 164;
+    --outline-variant: 51 62 73;
+    --background: 20 27 34;
+    --on-background: 221 227 234;
+    --surface: 20 27 34;
+    --surface-dim: 14 20 26;
+    --surface-bright: 35 44 53;
+    --surface-variant: 42 52 62;
+    --surface-tint: 168 199 255;
+    --primary-hover: 30 90 232;
+    --focus-ring: 127 176 255;
+    --surface-container-lowest: 26 34 43;
+    --surface-container-low: 30 39 47;
+    --surface-container: 35 44 53;
+    --surface-container-high: 42 52 62;
+    --surface-container-highest: 49 60 71;
+    --on-surface: 221 227 234;
+    --on-surface-variant: 168 178 191;
+    --inverse-surface: 221 227 234;
+    --inverse-on-surface: 20 27 34;
+    --primary: 127 176 255;
+    --on-primary: 255 255 255;
+    --primary-container: 37 99 235;
+    --on-primary-container: 238 242 255;
+    --inverse-primary: 11 78 209;
+    --primary-fixed: 30 58 110;
+    --primary-fixed-dim: 127 176 255;
+    --on-primary-fixed: 222 230 255;
+    --on-primary-fixed-variant: 180 197 255;
+    --secondary: 169 187 216;
+    --on-secondary: 20 27 34;
+    --secondary-container: 44 59 82;
+    --on-secondary-container: 200 219 254;
+    --secondary-fixed: 214 227 255;
+    --secondary-fixed-dim: 181 199 234;
+    --on-secondary-fixed: 7 28 54;
+    --on-secondary-fixed-variant: 54 71 100;
+    --tertiary: 123 208 255;
+    --on-tertiary: 20 27 34;
+    --tertiary-container: 0 80 110;
+    --on-tertiary-container: 196 231 255;
+    --tertiary-fixed: 196 231 255;
+    --tertiary-fixed-dim: 123 208 255;
+    --on-tertiary-fixed: 0 30 44;
+    --on-tertiary-fixed-variant: 0 76 105;
+    --error: 255 138 128;
+    --on-error: 20 27 34;
+    --error-container: 59 20 20;
+    --on-error-container: 255 180 171;
+    --nav: 14 20 26;
+    --on-nav: 230 236 243;
+    --nav-deep: 10 15 20;
+    --nav-raised: 24 32 40;
+    --nav-hover: 30 39 47;
+    --nav-active: 42 52 62;
+    --nav-line: 30 39 47;
+    --accent: 56 189 248;
+    --success: 74 222 128;
+    --success-container: 15 46 28;
+    --warning: 250 204 21;
+    --warning-container: 58 46 5;
+    --on-warning-container: 253 230 138;
+    --danger: 248 113 113;
+    --danger-container: 59 20 20;
+    --chart-grid: 42 52 62;
+    --chart-line: 127 176 255;
+    --chart-dot: 26 34 43;
+    --chart-track: 42 52 62;
+    --chart-1: 127 176 255;
+    --chart-2: 94 234 212;
+    --chart-3: 196 181 253;
+    --chart-4: 252 211 77;
+    --scrollbar-thumb: 51 62 73;
+    --scrollbar-thumb-hover: 74 86 99;
+    --drop-border: 127 176 255;
+    --drop-fill: 30 39 47;
+    color-scheme: dark;
+  }
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-background font-body-main text-body-main text-on-background antialiased;
+    /* Wide tables scroll inside their own container, never the page. */
+    overflow-x: hidden;
+  }
+
+  .material-symbols-outlined {
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    /* Keeps the ligature from flashing as raw text before the font arrives. */
+    font-family: 'Material Symbols Outlined';
+    font-weight: normal;
+    font-style: normal;
+    line-height: 1;
+    letter-spacing: normal;
+    text-transform: none;
+    display: inline-block;
+    white-space: nowrap;
+    word-wrap: normal;
+    direction: ltr;
+    -webkit-font-feature-settings: 'liga';
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .icon-fill {
+    font-variation-settings: 'FILL' 1;
+  }
+
+  :focus-visible {
+    outline: 2px solid rgb(var(--focus-ring));
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* #2563EB is invisible against the dark blue rail, so anything inside it
+     focuses in the accent instead. */
+  .on-dark :focus-visible {
+    outline-color: theme('colors.accent');
+    outline-offset: 1px;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: theme('colors.scrollbar-thumb');
+    border-radius: 10px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: theme('colors.scrollbar-thumb-hover');
+  }
+}
+
+@layer components {
+  /* The single ambient shadow the system allows on Level 2 surfaces. */
+  .ambient-shadow {
+    box-shadow: 0px 1px 3px rgba(15, 23, 42, 0.08), 0px 4px 6px rgba(15, 23, 42, 0.05);
+  }
+  /* A drop shadow on a dark canvas just muddies the edge it is meant to
+     define, so depth there comes from a hairline instead. */
+  .dark .ambient-shadow {
+    box-shadow: 0 0 0 1px rgb(var(--outline-variant) / 0.6);
+  }
+
+  /* Keyboard users reach the page content without walking the whole rail. */
+  .skip-link {
+    @apply fixed left-md top-md z-[100] -translate-y-[200%] rounded-lg bg-primary-container px-md py-sm font-label-bold text-label-bold text-on-primary shadow-ambient transition-transform;
+  }
+  .skip-link:focus {
+    @apply translate-y-0;
+  }
+
+  /* The rail is one flat charcoal, as in the source screens. The only
+     lift on it is the active nav row. */
+  .nav-surface {
+    background-color: theme('colors.nav');
+  }
+
+  /* Canvas for the two screens that pin to the viewport and scroll internally.
+     Written here rather than as an arbitrary utility so the dvh fallback works:
+     dvh tracks the collapsing mobile browser chrome, vh does not. */
+  .fixed-canvas {
+    height: calc(100vh - theme('spacing.topbar'));
+    height: calc(100dvh - theme('spacing.topbar'));
+  }
+
+  /* Dropzone drag state, lifted from the Stitch export. */
+  .drag-active {
+    border-color: theme('colors.drop-border') !important;
+    background-color: theme('colors.drop-fill') !important;
+  }
+
+  /* Data Explorer keeps its own scrollbar treatment and frozen first column. */
+  .table-container::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  .table-container::-webkit-scrollbar-track {
+    background: theme('colors.surface-container-low');
+    border-radius: 4px;
+  }
+  .table-container::-webkit-scrollbar-thumb {
+    background: theme('colors.surface-variant');
+    border-radius: 4px;
+  }
+  .table-container::-webkit-scrollbar-thumb:hover {
+    background: theme('colors.outline');
+  }
+  /* Where the two scrollbars meet. Left unstyled it paints a white square in
+     the corner of the grid, which is loud on a dark canvas. */
+  .table-container::-webkit-scrollbar-corner,
+  ::-webkit-scrollbar-corner {
+    background: theme('colors.surface-container-low');
+  }
+
+  .sticky-col {
+    position: sticky;
+    left: 0;
+    background-color: theme('colors.surface-container-lowest');
+    z-index: 10;
+  }
+  .sticky-col-header {
+    z-index: 20 !important;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  /* Entrance stagger. A screen sets --step on a wrapper and each child gets its
+     own delay, so a page assembles itself top-down instead of snapping in all
+     at once. Capped at ten steps: past that the last row waits on the animation
+     rather than on the data, which reads as slowness. */
+  .stagger > * {
+    animation: fade-up 260ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  .stagger > *:nth-child(1) { animation-delay: 0ms; }
+  .stagger > *:nth-child(2) { animation-delay: 40ms; }
+  .stagger > *:nth-child(3) { animation-delay: 80ms; }
+  .stagger > *:nth-child(4) { animation-delay: 120ms; }
+  .stagger > *:nth-child(5) { animation-delay: 160ms; }
+  .stagger > *:nth-child(6) { animation-delay: 200ms; }
+  .stagger > *:nth-child(7) { animation-delay: 240ms; }
+  .stagger > *:nth-child(8) { animation-delay: 280ms; }
+  .stagger > *:nth-child(9) { animation-delay: 320ms; }
+  .stagger > *:nth-child(n + 10) { animation-delay: 360ms; }
+
+  /* Pressable controls give way slightly under the pointer. */
+  button:not(:disabled),
+  a[role='button'] {
+    transition-property: color, background-color, border-color, box-shadow, transform, opacity;
+    transition-duration: 150ms;
+  }
+  button:not(:disabled):active {
+    transform: translateY(0.5px) scale(0.99);
+  }
+
+  .skeleton {
+    @apply relative overflow-hidden rounded bg-surface-container-low;
+  }
+  .skeleton::after {
+    content: '';
+    @apply absolute inset-0 animate-shimmer;
+    background: linear-gradient(90deg, transparent, theme('colors.surface-container-high'), transparent);
+    transform: translateX(-100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .skeleton::after {
+    display: none;
+  }
+  .stagger > * {
+    animation-delay: 0ms !important;
+  }
+}

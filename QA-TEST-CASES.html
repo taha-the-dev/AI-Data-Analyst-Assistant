@@ -1,0 +1,1165 @@
+<title>DataMind AI Test Sheet</title>
+<meta name="description" content="QA cases for the DataMind AI analytics console, grouped by screen with steps and expected results." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@500;600;700&family=Geist+Mono:wght@400;500&family=Inter:wght@400;500&display=swap" />
+
+<style>
+  /* Tokens taken from the product's own palette: the rail charcoal, the #2563EB
+     action blue, and a neutral carrying a trace of that blue. */
+  :root {
+    --ink: #151c23;
+    --ink-soft: #4a5361;
+    --ink-faint: #79828f;
+    --ground: #f6f8fb;
+    --surface: #ffffff;
+    --rule: #e3e8ef;
+    --rule-soft: #eef2f7;
+    --accent: #2563eb;
+    --accent-soft: #e8effd;
+    --pass: #15803d;
+    --pass-soft: #dcfce7;
+    --warn: #92400e;
+    --warn-soft: #fef3c7;
+    --crit: #b91c1c;
+    --crit-soft: #fee2e2;
+    --shadow: 0 1px 2px rgba(21, 28, 35, .05), 0 8px 24px -16px rgba(21, 28, 35, .25);
+  }
+
+  :root:not([data-theme="light"]) {
+    @media (prefers-color-scheme: dark) {
+      --ink: #e7ebf1;
+      --ink-soft: #a5aebc;
+      --ink-faint: #7b8593;
+      --ground: #10151b;
+      --surface: #171d25;
+      --rule: #2a323d;
+      --rule-soft: #212832;
+      --accent: #7ba4f9;
+      --accent-soft: #1c2942;
+      --pass: #86efac;
+      --pass-soft: #14321f;
+      --warn: #fcd34d;
+      --warn-soft: #37290d;
+      --crit: #fca5a5;
+      --crit-soft: #3a1717;
+      --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px -16px rgba(0, 0, 0, .8);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ink: #e7ebf1;
+    --ink-soft: #a5aebc;
+    --ink-faint: #7b8593;
+    --ground: #10151b;
+    --surface: #171d25;
+    --rule: #2a323d;
+    --rule-soft: #212832;
+    --accent: #7ba4f9;
+    --accent-soft: #1c2942;
+    --pass: #86efac;
+    --pass-soft: #14321f;
+    --warn: #fcd34d;
+    --warn-soft: #37290d;
+    --crit: #fca5a5;
+    --crit-soft: #3a1717;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px -16px rgba(0, 0, 0, .8);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: Inter, -apple-system, "Segoe UI", sans-serif;
+    font-size: 14px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 40px 24px 96px;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+  }
+
+  header.masthead {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding-bottom: 24px;
+    border-bottom: 2px solid var(--ink);
+  }
+
+  .eyebrow {
+    font-family: "Geist Mono", ui-monospace, monospace;
+    font-size: 11px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  h1 {
+    font-family: Geist, Inter, sans-serif;
+    font-weight: 700;
+    font-size: clamp(28px, 4vw, 40px);
+    line-height: 1.1;
+    letter-spacing: -.025em;
+    margin: 0;
+    text-wrap: balance;
+  }
+
+  .lede {
+    margin: 0;
+    max-width: 62ch;
+    color: var(--ink-soft);
+    font-size: 15px;
+  }
+
+  .counts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 28px;
+    margin-top: 6px;
+    font-family: "Geist Mono", ui-monospace, monospace;
+    font-size: 12px;
+    color: var(--ink-faint);
+    font-variant-numeric: tabular-nums;
+  }
+  .counts b { color: var(--ink); font-weight: 500; }
+
+  .setup {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    padding: 20px 22px;
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .setup h2 { margin: 0; font-family: Geist, sans-serif; font-size: 15px; letter-spacing: -.01em; }
+
+  .setup dl {
+    margin: 0;
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 6px 18px;
+    font-size: 13px;
+  }
+  .setup dt { color: var(--ink-faint); }
+  .setup dd { margin: 0; font-family: "Geist Mono", ui-monospace, monospace; }
+
+  .note {
+    margin: 0;
+    padding-left: 12px;
+    border-left: 2px solid var(--accent);
+    color: var(--ink-soft);
+    font-size: 13px;
+  }
+
+  section { display: flex; flex-direction: column; gap: 12px; }
+
+  .section-head {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .section-head h2 {
+    margin: 0;
+    font-family: Geist, sans-serif;
+    font-size: 19px;
+    letter-spacing: -.02em;
+  }
+
+  .section-key {
+    font-family: "Geist Mono", ui-monospace, monospace;
+    font-size: 11px;
+    color: var(--accent);
+    background: var(--accent-soft);
+    padding: 2px 7px;
+    border-radius: 4px;
+    letter-spacing: .06em;
+  }
+
+  .section-head p { margin: 0; color: var(--ink-faint); font-size: 13px; }
+
+  .table-scroll {
+    overflow-x: auto;
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    box-shadow: var(--shadow);
+  }
+
+  table { border-collapse: collapse; width: 100%; min-width: 860px; }
+
+  thead th {
+    text-align: left;
+    font-family: "Geist Mono", ui-monospace, monospace;
+    font-weight: 500;
+    font-size: 10.5px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    padding: 11px 16px;
+    border-bottom: 1px solid var(--rule);
+    white-space: nowrap;
+  }
+
+  tbody td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--rule-soft);
+    vertical-align: top;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+
+  td.id {
+    font-family: "Geist Mono", ui-monospace, monospace;
+    font-size: 12px;
+    color: var(--ink-soft);
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+
+  td.step { width: 40%; }
+  td.expect { width: 40%; color: var(--ink-soft); }
+  td.expect b { color: var(--ink); font-weight: 500; }
+
+  code {
+    font-family: "Geist Mono", ui-monospace, monospace;
+    font-size: 12px;
+    background: var(--rule-soft);
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+
+  .p {
+    display: inline-block;
+    font-family: "Geist Mono", ui-monospace, monospace;
+    font-size: 10px;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    padding: 2px 7px;
+    border-radius: 4px;
+    white-space: nowrap;
+  }
+  .p-crit { background: var(--crit-soft); color: var(--crit); }
+  .p-high { background: var(--warn-soft); color: var(--warn); }
+  .p-med  { background: var(--rule-soft); color: var(--ink-faint); }
+  .p-reg  { background: var(--pass-soft); color: var(--pass); }
+
+  footer {
+    border-top: 1px solid var(--rule);
+    padding-top: 20px;
+    color: var(--ink-faint);
+    font-size: 12.5px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  a { color: var(--accent); }
+
+  @media (max-width: 640px) {
+    .wrap { padding: 28px 14px 64px; }
+  }
+</style>
+
+<div class="wrap">
+  <header class="masthead">
+    <span class="eyebrow">QA · DataMind AI</span>
+    <h1>Test sheet</h1>
+    <p class="lede">
+      Every case a tester should work through on the analytics console: the six screens, the API behind
+      them, and the failures that have actually happened here. Each row is one action with one expected
+      result — if the result differs, that is a defect worth filing with the case ID.
+    </p>
+    <div class="counts">
+      <span><b>112</b> cases</span>
+      <span><b>15</b> areas</span>
+      <span><b>10</b> regressions</span>
+      <span>Build: empty database, no accounts, no seeded content</span>
+    </div>
+  </header>
+
+  <div class="setup">
+    <h2>Before you start</h2>
+    <dl>
+      <dt>App</dt><dd>http://localhost:5173 &nbsp;·&nbsp; preview build on :4173</dd>
+      <dt>API</dt><dd>http://localhost:5180/api</dd>
+      <dt>API reference</dt><dd>http://localhost:5173/swagger</dd>
+      <dt>Test file</dt><dd>a CSV of your own with a date column, a revenue-like column and a few text columns &nbsp;(the project ships no sample file)</dd>
+      <dt>Accounts</dt><dd>create one at first launch; the isolation cases need a second, in another browser or a private window</dd>
+      <dt>Reset</dt><dd>delete backend/AnalystAI.Api/analystai.db and restart the API — accounts go with it</dd>
+    </dl>
+    <p class="note">
+      The database starts empty by design, with no accounts either. Cases marked <span class="p p-reg">Regression</span> cover bugs
+      that were found and fixed here — they are the ones most worth re-running after any change.
+    </p>
+  </div>
+
+  <section>
+    <div class="section-head">
+      <h2>Accounts and sessions</h2>
+      <span class="section-key">ACC</span>
+      <p>Nothing is visible before signing in, and an account only ever sees its own data.</p>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr><th>ID</th><th>Priority</th><th>Steps</th><th>Expected</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="id">ACC-01</td><td><span class="p p-crit">Critical</span></td>
+            <td class="step">In a private window, open the app, then open <code>/datasets</code> directly.</td>
+            <td class="expect">Both land on Sign in without showing a frame of any screen; the tab title reads “Sign in — DataMind AI”. After signing in, the second visit returns to Datasets.</td>
+          </tr>
+          <tr>
+            <td class="id">ACC-02</td><td><span class="p p-crit">Critical</span></td>
+            <td class="step">Create an account with a new email and a password of 12 or more characters.</td>
+            <td class="expect">Lands on the empty dashboard. The foot of the rail and <b>Settings → Account</b> both name the email.</td>
+          </tr>
+          <tr>
+            <td class="id">ACC-03</td><td><span class="p p-high">High</span></td>
+            <td class="step">On Create an account, press the button with a short password, then with a confirmation that does not match.</td>
+            <td class="expect">Each time a message under the field names the fix and focus moves to that field. No request is sent until both pass.</td>
+          </tr>
+          <tr>
+            <td class="id">ACC-04</td><td><span class="p p-high">High</span></td>
+            <td class="step">Create an account with an email that already has one.</td>
+            <td class="expect">“An account with this email already exists”, and no second account.</td>
+          </tr>
+          <tr>
+            <td class="id">ACC-05</td><td><span class="p p-high">High</span></td>
+            <td class="step">Sign in with a wrong password five times, then with the right one.</td>
+            <td class="expect">Every failure reads “Email or password is incorrect”. After the fifth, the right password is refused with the same message for 15 minutes.</td>
+          </tr>
+          <tr>
+            <td class="id">ACC-06</td><td><span class="p p-crit">Critical</span></td>
+            <td class="step">Account A uploads a file. Account B, in another browser, opens Datasets, then requests A's dataset id at <code>/api/datasets/{id}</code>.</td>
+            <td class="expect">B's library is empty and the direct request is <b>404</b>. The same holds for A's reports and conversations.</td>
+          </tr>
+          <tr>
+            <td class="id">ACC-07</td><td><span class="p p-high">High</span></td>
+            <td class="step">Sign out from the foot of the rail, then press the browser's Back button.</td>
+            <td class="expect">Sign in, both times. Back does not show the previous screen or its data.</td>
+          </tr>
+          <tr>
+            <td class="id">ACC-08</td><td><span class="p p-high">High</span></td>
+            <td class="step">Sign in in two tabs. Sign out in one, then use the other.</td>
+            <td class="expect">The other tab's next action lands it on Sign in.</td>
+          </tr>
+          <tr>
+            <td class="id">ACC-09</td><td><span class="p p-med">Medium</span></td>
+            <td class="step"><b>Settings → Account → Delete account</b>: enter a wrong password, then the right one.</td>
+            <td class="expect">Wrong: “The password is incorrect” and nothing is deleted. Right: signed out to Sign in, and that email and password no longer sign in.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>First run and empty states</h2>
+      <span class="section-key">ENV</span>
+      <p>What a tester sees before anything has been uploaded.</p>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr><th>ID</th><th>Priority</th><th>Steps</th><th>Expected</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="id">ENV-01</td><td><span class="p p-crit">Critical</span></td>
+            <td class="step">Start the API with no database file, then open the app.</td>
+            <td class="expect">Every screen loads. Dashboard shows <b>“No project yet”</b> with an Upload a file button — <b>not</b> a red error box.</td>
+          </tr>
+          <tr>
+            <td class="id">ENV-02</td><td><span class="p p-high">High</span></td>
+            <td class="step">With the API stopped, open the app and click through all screens.</td>
+            <td class="expect">Each screen shows “Cannot reach the API” with the command to start it and a Try again button. No blank screens, no stack traces.</td>
+          </tr>
+          <tr>
+            <td class="id">ENV-03</td><td><span class="p p-high">High</span></td>
+            <td class="step">Start the API while the app is showing that error. Press Try again.</td>
+            <td class="expect">The screen recovers in place. No manual reload needed.</td>
+          </tr>
+          <tr>
+            <td class="id">ENV-04</td><td><span class="p p-med">Medium</span></td>
+            <td class="step">Run <code>npm run dev</code> with the API stopped.</td>
+            <td class="expect">Terminal prints a warning naming the API URL and the command to start it, once — not a stack trace per request.</td>
+          </tr>
+          <tr>
+            <td class="id">ENV-05</td><td><span class="p p-med">Medium</span></td>
+            <td class="step">Visit <code>/nope</code> and any other unknown path.</td>
+            <td class="expect">The not-found screen renders inside the normal frame, with a way back.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>Upload and the dataset library</h2>
+      <span class="section-key">DS</span>
+      <p>Where data enters the product. Every other screen depends on this working.</p>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr><th>ID</th><th>Priority</th><th>Steps</th><th>Expected</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="id">DS-01</td><td><span class="p p-crit">Critical</span></td>
+            <td class="step">Datasets → drag your test file onto the dropzone.</td>
+            <td class="expect">Toast names the file and row count. It appears in the library and becomes the selected project.</td>
+          </tr>
+          <tr>
+            <td class="id">DS-02</td><td><span class="p p-crit">Critical</span></td>
+            <td class="step">Open the uploaded file's detail panel.</td>
+            <td class="expect">Rows, Columns and Missing values are populated; the preview table shows the first 8 rows oldest-first; the column profile lists every column in the file with its kind. The header reads “Updated …” and names no owner.</td>
+          </tr>
+          <tr>
+            <td class="id">DS-03</td><td><span class="p p-high">High</span></td>
+            <td class="step">Upload a CSV whose headers are named differently — e.g. <code>Client</code>, <code>Item</code>, <code>Total</code>, <code>Country</code>.</td>
+            <td class="expect">The response maps them onto customer / product / revenue / region. Dashboard and Analytics compute from it without further setup.</td>
+          </tr>
+          <tr>
+            <td class="id">DS-04</td><td><span class="p p-high">High</span></td>
+            <td class="step">Upload a CSV with no revenue-like column but with units and unit price.</td>
+            <td class="expect">Revenue is derived as units × price. Nothing is invented; unmatched text fields read <code>Unspecified</code>.</td>
+          </tr>
+          <tr>
+            <td class="id">DS-05</td><td><span class="p p-high">High</span></td>
+            <td class="step">Upload a file with no parseable date column.</td>
+            <td class="expect">Rows import. Time-bucketed charts group them as <code>Undated</code> rather than inventing dates.</td>
+          </tr>
+          <tr>
+            <td class="id">DS-06</td><td><span class="p p-high">High</span></td>
+            <td class="step">Attempt to upload an <code>.xlsx</code> or <code>.json</code> file.</td>
+            <td class="expect"><b>415</b> with a message naming the formats that do parse. The screen shows it and offers to choose another file.</td>
+          </tr>
+          <tr>
+            <td class="id">DS-07</td><td><span class="p p-med">Medium</span></td>
+            <td class="step">Upload a file whose first line is data, not headers.</td>
+            <td class="expect"><b>422</b> — “The file has no header row.”</td>
+          </tr>
+          <tr>
+            <td class="id">DS-08</td><td><span class="p p-med">Medium</span></td>
+            <td class="step">Upload an empty file, and a CSV with headers but zero rows.</td>
+            <td class="expect">Empty file rejected with 400. Headers-only file imports with 0 rows and screens say so rather than erroring.</td>
+          </tr>
+          <tr>
+            <td class="id">DS-09</td><td><span class="p p-high">High</span></td>
+            <td class="step">Hover a row in the library and press its delete control; confirm.</td>
+            <td class="expect">Deleted without needing to select it first. The row disappears; the confirm dialog names the file and row count.</td>
+          </tr>
+          <tr>
+            <td class="id">DS-10</td><td><span class="p p-high">High</span></td>
+            <td class="step">Delete the <b>only</b> remaining project.</td>
+            <td class="expect"><b>204.</b> The app returns to its empty state. <span class="p p-reg">Regression</span> — this used to be refused with 409.</td>
+          </tr>
+          <tr>
+            <td class="id">DS-11</td><td><span class="p p-med">Medium</span></td>
+            <td class="step">Press the library's filter control and type part of a file name, then clear it.</td>
+            <td class="expect">The list narrows as you type, says what matched nothing, and restores fully when cleared.</td>
+          </tr>
+          <tr>
+            <td class="id">DS-12</td><td><span class="p p-med">Medium</span></td>
+            <td class="step">Upload the same file twice.</td>
+            <td class="expect">Two separate projects with distinct ids. Neither overwrites the other.</td>
+          </tr>
+          <tr>
+            <td class="id">DS-13</td><td><span class="p p-med">Medium</span></td>
+            <td class="step">Delete a project, then press Export in the top bar.</td>
+            <td class="expect">The exported CSV matches the library as shown — the deleted file is absent.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>Project selection</h2>
+      <span class="section-key">PRJ</span>
+      <p>One choice drives every screen, so it has to survive reloads and deletions.</p>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr><th>ID</th><th>Priority</th><th>Steps</th><th>Expected</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="id">PRJ-01</td><td><span class="p p-crit">Critical</span></td>
+            <td class="step">Upload two files. On the Dashboard, open the Project picker and switch between them.</td>
+            <td class="expect">KPIs, charts, Top Products and insights all re-query. Row and column counts in the subtitle change with the file.</td>
+          </tr>
+          <tr>
+            <td class="id">PRJ-02</td><td><span class="p p-high">High</span></td>
+            <td class="step">Switch project, then reload the browser.</td>
+            <td class="expect">The same project is still selected.</td>
+          </tr>
+          <tr>
+            <td class="id">PRJ-03</td><td><span class="p p-high">High</span></td>
+            <td class="step">Switch project, then visit Analytics, Data Explorer and the AI Assistant.</td>
+            <td class="expect">All three read from the same project — the picker, the top-bar tabs and the assistant's greeting agree.</td>
+          </tr>
+          <tr>
+            <td class="id">PRJ-04</td><td><span class="p p-high">High</span></td>
+            <td class="step">With the Dashboard open, delete the selected project from another tab or via the API. Press Try again.</td>
+            <td class="expect">The app drops the dead selection and lands on a project that exists — no permanent “Dataset not found”. <span class="p p-reg">Regression</span></td>
+          </tr>
+          <tr>
+            <td class="id">PRJ-05</td><td><span class="p p-med">Medium</span></td>
+            <td class="step">Open the picker with no projects uploaded.</td>
+            <td class="expect">Reads “No projects yet. Upload a file to start one.” and offers the upload link.</td>
+          </tr>
+          <tr>
+            <td class="id">PRJ-06</td><td><span class="p p-med">Medium</span></td>
+            <td class="step">Use the top-bar file tabs instead of the picker.</td>
+            <td class="expect">Identical effect — the two controls are one selection, and both show the current project.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>Dashboard</h2>
+      <span class="section-key">DASH</span>
+      <p>Six KPIs, two charts, three panels — all computed server-side.</p>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr><th>ID</th><th>Priority</th><th>Steps</th><th>Expected</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="id">DASH-01</td><td><span class="p p-crit">Critical</span></td>
+            <td class="step">Open the Dashboard with a project selected.</td>
+            <td class="expect">All six KPI tiles, both charts, Top Products, Order Volume and AI Insights render. No error boundary. <span class="p p-reg">Regression</span> — Top Products once crashed the whole screen.</td>
+          </tr>
+          <tr>
+            <td class="id">DASH-02</td><td><span class="p p-high">High</span></td>
+            <td class="step">Compare Top Products shares against the Analytics table grouped by product.</td>
+            <td class="expect">Same figures, same order. Share percentages sum to 100% across the rows shown.</td>
+          </tr>
+          <tr>
+            <td class="id">DASH-03</td><td><span class="p p-high">High</span></td>
+            <td class="step">Read the delta chip on Revenue, then hover it.</td>
+            <td class="expect">Tooltip explains it is the latest period against the one before. A file with one month of data shows <b>no</b> delta rather than a fabricated one.</td>
+          </tr>
+          <tr>
+            <td class="id">DASH-04</td><td><span class="p p-med">Medium</span></td>
+            <td class="step">Hover along the Revenue Performance line.</td>
+            <td class="expect">A crosshair and a readable value for each month; the label matches the axis.</td>
+          </tr>
+          <tr>
+            <td class="id">DASH-05</td><td><span class="p p-med">Medium</span></td>
+            <td class="step">Check the AI Insights panel against the data.</td>
+            <td class="expect">Each insight states figures that appear elsewhere on the screen. Nothing speculates about causes.</td>
+          </tr>
+          <tr>
+            <td class="id">DASH-06</td><td><span class="p p-high">High</span></td>
+            <td class="step">Press Export in the top bar.</td>
+            <td class="expect">A CSV of revenue by month downloads, named after the project, and its rows match the chart.</td>
+          </tr>
+          <tr>
+            <td class="id">DASH-07</td><td><span class="p p-med">Medium</span></td>
+            <td class="step">Click View All on Top Products.</td>
+            <td class="expect">Data Explorer opens on the same project.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>Analytics</h2>
+      <span class="section-key">AN</span>
+      <p>The toolbar builds a query spec; the API runs it. Every combination should be legal or clearly refused.</p>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr><th>ID</th><th>Priority</th><th>Steps</th><th>Expected</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="id">AN-01</td><td><span class="p p-crit">Critical</span></td>
+            <td class="step">Cycle Dimension through all seven values with Metric = Revenue.</td>
+            <td class="expect">Each produces a chart and a table. Month and Quarter draw a time series; the rest rank by value.</td>
+          </tr>
+          <tr>
+            <td class="id">AN-02</td><td><span class="p p-high">High</span></td>
+            <td class="step">Cycle Aggregate through Sum, Average, Row count, Maximum.</td>
+            <td class="expect">Values change accordingly. Row count shows counts, not currency, and the header names what is measured.</td>
+          </tr>
+          <tr>
+            <td class="id">AN-03</td><td><span class="p p-high">High</span></td>
+            <td class="step">Switch the chart type across all four buttons.</td>
+            <td class="expect">Columns, trend line, share donut and ranked bars each render the same figures. The active button is visibly selected.</td>
+          </tr>
+          <tr>
+            <td class="id">AN-04</td><td><span class="p p-high">High</span></td>
+            <td class="step">Press Filter in the top bar, choose a region, then Clear filter.</td>
+            <td class="expect">Row counts drop and the subtitle names the region; clearing restores the full set. Only regions present in the file are offered.</td>
+          </tr>
+          <tr>
+            <td class="id">AN-05</td><td><span class="p p-med">Medium</span></td>
+            <td class="step">Page through Tabular Data.</td>
+            <td class="expect">Six rows per page, the summary counts correctly, and the arrows disable at each end.</td>
+          </tr>
+          <tr>
+            <td class="id">AN-06</td><td><span class="p p-med">Medium</span></td>
+            <td class="step">Check “Share of total” and “vs previous row” for a month series.</td>
+            <td class="expect">Shares sum to 100%; the first row's comparison reads “—” rather than a made-up number.</td>
+          </tr>
+          <tr>
+            <td class="id">AN-07</td><td><span class="p p-med">Medium</span></td>
+            <td class="step">Press AI Insights.</td>
+            <td class="expect">The assistant opens and asks about the current view, carrying the filter if one is set.</td>
+          </tr>
+          <tr>
+            <td class="id">AN-08</td><td><span class="p p-med">Medium</span></td>
+            <td class="step">Export the current view.</td>
+            <td class="expect">The CSV matches the table on screen, including the grouping column name.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>AI Assistant</h2>
+      <span class="section-key">AI</span>
+      <p>Three stages — plan, compute, explain. The figures must always be the engine's, never the model's.</p>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr><th>ID</th><th>Priority</th><th>Steps</th><th>Expected</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="id">AI-01</td><td><span class="p p-crit">Critical</span></td>
+            <td class="step">Ask “Revenue by region”.</td>
+            <td class="expect">The answer streams in. The analysis panel fills with the results table, a chart and the query plan, and states rows scanned and compute time.</td>
+          </tr>
+          <tr>
+            <td class="id">AI-02</td><td><span class="p p-crit">Critical</span></td>
+            <td class="step">Cross-check the numbers in the sentence against the analysis panel and against Analytics.</td>
+            <td class="expect">Identical. No figure appears in the prose that is not in the computed results.</td>
+          </tr>
+          <tr>
+            <td class="id">AI-03</td><td><span class="p p-high">High</span></td>
+            <td class="step">Ask “How many orders are in processing?” (use a status your file actually contains).</td>
+            <td class="expect">The plan filters on that status rather than counting everything. <span class="p p-reg">Regression</span> — truncated plans used to drop the filter silently.</td>
+          </tr>
+          <tr>
+            <td class="id">AI-04</td><td><span class="p p-high">High</span></td>
+            <td class="step">Type a question and press Enter.</td>
+            <td class="expect">It sends. Shift+Enter inserts a newline instead. <span class="p p-reg">Regression</span></td>
+          </tr>
+          <tr>
+            <td class="id">AI-05</td><td><span class="p p-high">High</span></td>
+            <td class="step">Open the AI Assistant with a project selected.</td>
+            <td class="expect">The composer stands alone — no pre-written suggestion chips. The greeting names the active file and its row count.</td>
+          </tr>
+          <tr>
+            <td class="id">AI-06</td><td><span class="p p-high">High</span></td>
+            <td class="step">Press Save, name the conversation, confirm. Then open History.</td>
+            <td class="expect">Toast confirms the name; History lists it under that name with the first question as its summary.</td>
+          </tr>
+          <tr>
+            <td class="id">AI-07</td><td><span class="p p-high">High</span></td>
+            <td class="step">Save with an empty name.</td>
+            <td class="expect">The save button stays disabled; the API refuses a blank title with 400 if called directly.</td>
+          </tr>
+          <tr>
+            <td class="id">AI-08</td><td><span class="p p-high">High</span></td>
+            <td class="step">Press Delete on a conversation and confirm.</td>
+            <td class="expect">It is removed, the screen lands on a remaining conversation, and History no longer lists it.</td>
+          </tr>
+          <tr>
+            <td class="id">AI-09</td><td><span class="p p-med">Medium</span></td>
+            <td class="step">Delete the last remaining conversation.</td>
+            <td class="expect">The screen empties cleanly and New still works.</td>
+          </tr>
+          <tr>
+            <td class="id">AI-10</td><td><span class="p p-med">Medium</span></td>
+            <td class="step">Press Stop while an answer is streaming.</td>
+            <td class="expect">Streaming halts, the partial answer is kept, and the composer is usable again.</td>
+          </tr>
+          <tr>
+            <td class="id">AI-11</td><td><span class="p p-high">High</span></td>
+            <td class="step">In Settings, select a provider with no key configured, then ask a question.</td>
+            <td class="expect">An answer still arrives, computed by the built-in planner. <b>No error screen.</b> The Query plan badge reads <code>keyword/rules-v1</code>, not the provider picked in Settings. <span class="p p-reg">Regression</span> — the badge used to name the selected provider even when it had not answered.</td>
+          </tr>
+          <tr>
+            <td class="id">AI-12</td><td><span class="p p-high">High</span></td>
+            <td class="step">Ask several questions in quick succession to provoke a rate limit.</td>
+            <td class="expect">Answers keep coming — the templated writer takes over when the model is unavailable. Never raw JSON or a model's internal reasoning on screen. <span class="p p-reg">Regression</span></td>
+          </tr>
+          <tr>
+            <td class="id">AI-13</td><td><span class="p p-med">Medium</span></td>
+            <td class="step">Switch conversations with the picker, then reload the page.</td>
+            <td class="expect">The URL carries the conversation; reloading returns to the same one with its turns intact.</td>
+          </tr>
+          <tr>
+            <td class="id">AI-14</td><td><span class="p p-med">Medium</span></td>
+            <td class="step">Export the figures behind the last answer.</td>
+            <td class="expect">CSV matches the analysis panel's table.</td>
+          </tr>
+          <tr>
+            <td class="id">AI-15</td><td><span class="p p-med">Medium</span></td>
+            <td class="step">Ask something the data cannot answer, e.g. “Which sales rep is underperforming?”</td>
+            <td class="expect">A grounded answer about what was computed, or an honest “no rows matched”. No invented columns or people.</td>
+          </tr>
+          <tr>
+            <td class="id">AI-16</td><td><span class="p p-med">Medium</span></td>
+            <td class="step">Expand the Query plan block.</td>
+            <td class="expect">Valid JSON spec naming groupBy, metric, aggregate and any filters, with the planner and model in the badge.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>Reports</h2>
+      <span class="section-key">RPT</span>
+      <p>A report stores a title and a source file; the body is composed on every read.</p>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr><th>ID</th><th>Priority</th><th>Steps</th><th>Expected</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="id">RPT-01</td><td><span class="p p-crit">Critical</span></td>
+            <td class="step">Press Create Report, accept the suggested title, confirm.</td>
+            <td class="expect">The report is written and opens. Toast states how many live figures it was composed from.</td>
+          </tr>
+          <tr>
+            <td class="id">RPT-02</td><td><span class="p p-high">High</span></td>
+            <td class="step">Open a report, note a figure, upload more rows to the same project, reopen the report.</td>
+            <td class="expect">The figures have moved with the data — the body is composed at read time, not stored.</td>
+          </tr>
+          <tr>
+            <td class="id">RPT-03</td><td><span class="p p-high">High</span></td>
+            <td class="step">Press Export while a report is open.</td>
+            <td class="expect">A Markdown file downloads containing the headings, prose and a table per figure.</td>
+          </tr>
+          <tr>
+            <td class="id">RPT-04</td><td><span class="p p-med">Medium</span></td>
+            <td class="step">Press Copy link, then paste the URL in a new tab.</td>
+            <td class="expect">The same report opens directly.</td>
+          </tr>
+          <tr>
+            <td class="id">RPT-05</td><td><span class="p p-high">High</span></td>
+            <td class="step">Delete a report from the list and confirm.</td>
+            <td class="expect">Removed from the directory; the data it described is untouched.</td>
+          </tr>
+          <tr>
+            <td class="id">RPT-06</td><td><span class="p p-med">Medium</span></td>
+            <td class="step">Delete every report.</td>
+            <td class="expect">The empty state explains what a report is and offers to create the first one.</td>
+          </tr>
+          <tr>
+            <td class="id">RPT-07</td><td><span class="p p-med">Medium</span></td>
+            <td class="step">Create a report, then delete the project it names, then open the report.</td>
+            <td class="expect">The list marks it <b>Source deleted</b>. Opening it says the file it was written for is gone, with no Try again button — it must <b>never</b> show another project's figures under the deleted file's name. <span class="p p-reg">Regression</span> — it used to fall back to whatever project was loaded.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>History</h2>
+      <span class="section-key">HIST</span>
+      <p>Every stored conversation, with the working behind each answer still attached.</p>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr><th>ID</th><th>Priority</th><th>Steps</th><th>Expected</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="id">HIST-01</td><td><span class="p p-high">High</span></td>
+            <td class="step">Ask two questions, then open History.</td>
+            <td class="expect">The conversation is listed with its turn count and last-updated time.</td>
+          </tr>
+          <tr>
+            <td class="id">HIST-02</td><td><span class="p p-high">High</span></td>
+            <td class="step">Open a conversation from History.</td>
+            <td class="expect">The assistant reopens it with all turns, and the analysis panel repopulates from the stored spec and figures.</td>
+          </tr>
+          <tr>
+            <td class="id">HIST-03</td><td><span class="p p-med">Medium</span></td>
+            <td class="step">Press Search and filter by title.</td>
+            <td class="expect">The list narrows; a term matching nothing says so.</td>
+          </tr>
+          <tr>
+            <td class="id">HIST-04</td><td><span class="p p-med">Medium</span></td>
+            <td class="step">Create seven or more conversations and page through.</td>
+            <td class="expect">Six per page, the summary counts correctly, arrows disable at the ends.</td>
+          </tr>
+          <tr>
+            <td class="id">HIST-05</td><td><span class="p p-high">High</span></td>
+            <td class="step">Delete a conversation from History and confirm.</td>
+            <td class="expect">Removed here and in the assistant's picker.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>Data Explorer</h2>
+      <span class="section-key">EXP</span>
+      <p>The grid where filters are typed by hand, so bad input has to be explained.</p>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr><th>ID</th><th>Priority</th><th>Steps</th><th>Expected</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="id">EXP-01</td><td><span class="p p-high">High</span></td>
+            <td class="step">Open the Explorer and sort by each column, ascending and descending.</td>
+            <td class="expect">Rows reorder; the sorted header shows its direction.</td>
+          </tr>
+          <tr>
+            <td class="id">EXP-02</td><td><span class="p p-high">High</span></td>
+            <td class="step">Add a rule <code>revenue &gt; 1000</code>, then a second rule on a text column.</td>
+            <td class="expect">Both apply together; the matched count updates; each rule can be removed independently.</td>
+          </tr>
+          <tr>
+            <td class="id">EXP-03</td><td><span class="p p-high">High</span></td>
+            <td class="step">Filter a text column using the <b>wrong case</b>, e.g. <code>status = shipped</code>.</td>
+            <td class="expect">It matches. <span class="p p-reg">Regression</span> — case-sensitive matching used to return zero rows and look like missing data.</td>
+          </tr>
+          <tr>
+            <td class="id">EXP-04</td><td><span class="p p-med">Medium</span></td>
+            <td class="step">Call the API with <code>?filter=nope:eq:1</code>, <code>?filter=malformed</code> and <code>?sort=bogus</code>.</td>
+            <td class="expect">Each returns <b>400</b> naming the columns that do exist — never a 500.</td>
+          </tr>
+          <tr>
+            <td class="id">EXP-05</td><td><span class="p p-med">Medium</span></td>
+            <td class="step">Page to the end of a large file.</td>
+            <td class="expect">Counts stay correct, the last page is not empty, and the table scrolls inside its own container — the page never scrolls sideways.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>Settings and providers</h2>
+      <span class="section-key">SET</span>
+      <p>The model picker is enforced server-side, so invalid combinations must be refused.</p>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr><th>ID</th><th>Priority</th><th>Steps</th><th>Expected</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="id">SET-01</td><td><span class="p p-high">High</span></td>
+            <td class="step">Switch provider between Built-in, OpenRouter and Gemini, saving each time.</td>
+            <td class="expect">Saves succeed; the model list changes with the provider; the rail footer and the bell popover update to match. Ollama is not offered. A provider without a key shows that provider’s own key link and environment variable.</td>
+          </tr>
+          <tr>
+            <td class="id">SET-02</td><td><span class="p p-high">High</span></td>
+            <td class="step">Via Swagger, PUT a model the selected provider does not serve.</td>
+            <td class="expect"><b>400</b> naming the models it does serve.</td>
+          </tr>
+          <tr>
+            <td class="id">SET-03</td><td><span class="p p-med">Medium</span></td>
+            <td class="step">Via Swagger, PUT <code>{"providerId":"ollama","modelName":"llama3.1:8b"}</code>. Then read the Settings screen.</td>
+            <td class="expect">400 naming the providers on offer. Settings shows Account, Appearance and Model provider only — no email, rows-per-page, date-format, profile-on-upload or show-the-working controls.</td>
+          </tr>
+          <tr>
+            <td class="id">SET-04</td><td><span class="p p-med">Medium</span></td>
+            <td class="step">Read the Account panel in Settings.</td>
+            <td class="expect">It names the signed-in email and offers Sign out and Delete account. There is no Service row and no API reference row.</td>
+          </tr>
+          <tr>
+            <td class="id">SET-05</td><td><span class="p p-med">Medium</span></td>
+            <td class="step">Save OpenRouter as the provider in one account, then sign in as another.</td>
+            <td class="expect">The second account keeps its own choice — the built-in planner, for a new account.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>Frame, navigation and top bar</h2>
+      <span class="section-key">NAV</span>
+      <p>Controls that appear on every screen — including the ones that must stay disabled.</p>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr><th>ID</th><th>Priority</th><th>Steps</th><th>Expected</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="id">NAV-01</td><td><span class="p p-high">High</span></td>
+            <td class="step">Visit all seven rail destinations in turn.</td>
+            <td class="expect">Each loads, the rail marks the current screen, and the browser tab title names it.</td>
+          </tr>
+          <tr>
+            <td class="id">NAV-02</td><td><span class="p p-high">High</span></td>
+            <td class="step">Look at the top bar, then press ⌘K / Ctrl+K.</td>
+            <td class="expect">There is no search box, and the shortcut opens nothing. The sidebar under the product name carries no tagline.</td>
+          </tr>
+          <tr>
+            <td class="id">NAV-03</td><td><span class="p p-med">Medium</span></td>
+            <td class="step">Open the calendar popover.</td>
+            <td class="expect">Reports the period the active file covers, read from its first and last row, plus the row count.</td>
+          </tr>
+          <tr>
+            <td class="id">NAV-04</td><td><span class="p p-med">Medium</span></td>
+            <td class="step">Open the bell popover with a provider that has no key.</td>
+            <td class="expect">A dot marks it, and the panel names the API state, what this account has loaded, and which planner will answer.</td>
+          </tr>
+          <tr>
+            <td class="id">NAV-05</td><td><span class="p p-med">Medium</span></td>
+            <td class="step">Visit a screen with nothing to filter, such as the Dashboard.</td>
+            <td class="expect">Filter is disabled and its tooltip says why, rather than doing nothing when pressed.</td>
+          </tr>
+          <tr>
+            <td class="id">NAV-06</td><td><span class="p p-med">Medium</span></td>
+            <td class="step">Use browser Back and Forward across several screens.</td>
+            <td class="expect">History behaves normally; no screen loses its data or double-loads.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>API contract</h2>
+      <span class="section-key">API</span>
+      <p>Run these against Swagger or with curl. <code>bash backend/smoke-test.sh</code> covers all 107 automatically.</p>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr><th>ID</th><th>Priority</th><th>Steps</th><th>Expected</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="id">API-01</td><td><span class="p p-crit">Critical</span></td>
+            <td class="step">Run <code>bash backend/smoke-test.sh</code>, then again a minute later.</td>
+            <td class="expect">107 passed, 0 failed both times, and no accounts, files, reports or conversations are left behind. Straight after the first run, the second can be refused with 429 by the sign-in rate limit.</td>
+          </tr>
+          <tr>
+            <td class="id">API-02</td><td><span class="p p-crit">Critical</span></td>
+            <td class="step">Run <code>bash link-audit.sh</code> with both servers up.</td>
+            <td class="expect">33 linked, 0 broken — every call the frontend makes resolves through the proxy, signed in.</td>
+          </tr>
+          <tr>
+            <td class="id">API-03</td><td><span class="p p-high">High</span></td>
+            <td class="step">Request any dataset-scoped endpoint with <code>datasetId=9999</code>.</td>
+            <td class="expect"><b>404</b> ProblemDetails naming the missing id — never another file's figures.</td>
+          </tr>
+          <tr>
+            <td class="id">API-04</td><td><span class="p p-high">High</span></td>
+            <td class="step">PUT a settings or session body containing malformed JSON.</td>
+            <td class="expect"><b>400</b> “The request body could not be read”. <span class="p p-reg">Regression</span> — this used to be a 500.</td>
+          </tr>
+          <tr>
+            <td class="id">API-05</td><td><span class="p p-high">High</span></td>
+            <td class="step">POST <code>/api/query/run</code> with an unknown groupBy, metric and aggregate in turn.</td>
+            <td class="expect">400 each, naming the valid columns or aggregates.</td>
+          </tr>
+          <tr>
+            <td class="id">API-06</td><td><span class="p p-med">Medium</span></td>
+            <td class="step">Open <code>/swagger</code>, call <code>GET /api/datasets</code>, then sign in with Try it out on <code>POST /api/auth/login</code> and call it again.</td>
+            <td class="expect"><b>401</b> before signing in, <b>200</b> after — the session cookie goes with Try it out.</td>
+          </tr>
+          <tr>
+            <td class="id">API-07</td><td><span class="p p-med">Medium</span></td>
+            <td class="step">Ask a question through <code>/api/chat/sessions/{id}/stream</code>.</td>
+            <td class="expect">Server-sent events arrive in order: plan, figures, tokens, done.</td>
+          </tr>
+          <tr>
+            <td class="id">API-08</td><td><span class="p p-med">Medium</span></td>
+            <td class="step">Delete a dataset and confirm its rows are gone.</td>
+            <td class="expect">Row count in <code>/api/status</code> drops by that file's rows — no orphans left behind.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>Accessibility, responsive and motion</h2>
+      <span class="section-key">AX</span>
+      <p>The quality floor. Cheap to check, expensive to discover late.</p>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr><th>ID</th><th>Priority</th><th>Steps</th><th>Expected</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="id">AX-01</td><td><span class="p p-high">High</span></td>
+            <td class="step">Resize to 375, 768 and 1440 px on every screen.</td>
+            <td class="expect">Nothing is clipped, the page never scrolls sideways, and the rail becomes a drawer below 768.</td>
+          </tr>
+          <tr>
+            <td class="id">AX-02</td><td><span class="p p-high">High</span></td>
+            <td class="step">Navigate the app with Tab only.</td>
+            <td class="expect">Every control is reachable with a visible focus ring; dialogs trap focus; the skip link works.</td>
+          </tr>
+          <tr>
+            <td class="id">AX-03</td><td><span class="p p-med">Medium</span></td>
+            <td class="step">Turn on the OS “reduce motion” setting and reload.</td>
+            <td class="expect">Entrance animations, chart draw-in and stagger are all suppressed; nothing becomes invisible.</td>
+          </tr>
+          <tr>
+            <td class="id">AX-04</td><td><span class="p p-med">Medium</span></td>
+            <td class="step">Open every dialog and dismiss it with Escape.</td>
+            <td class="expect">Closes without saving, and focus returns to the control that opened it.</td>
+          </tr>
+          <tr>
+            <td class="id">AX-05</td><td><span class="p p-med">Medium</span></td>
+            <td class="step">Check delete controls on touch or with a narrow window.</td>
+            <td class="expect">They are visible without hover — a touch device has no hover state to reveal them with.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>Exposure and data safety</h2>
+      <span class="section-key">SEC</span>
+      <p>Accounts protect the data; these check the edges around them.</p>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr><th>ID</th><th>Priority</th><th>Steps</th><th>Expected</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="id">SEC-01</td><td><span class="p p-crit">Critical</span></td>
+            <td class="step">Without signing in, request <code>GET /api/datasets</code> and <code>DELETE /api/datasets/1</code> with curl.</td>
+            <td class="expect"><b>401</b> for the first. The second is refused before it reaches the endpoint, and nothing is deleted.</td>
+          </tr>
+          <tr>
+            <td class="id">SEC-02</td><td><span class="p p-crit">Critical</span></td>
+            <td class="step">With a valid session cookie, POST <code>/api/chat/sessions</code> with curl: once without the <code>X-DataMind-Csrf</code> header, once with <code>Sec-Fetch-Site: cross-site</code>.</td>
+            <td class="expect"><b>403</b> both times, each naming the reason.</td>
+          </tr>
+          <tr>
+            <td class="id">SEC-03</td><td><span class="p p-high">High</span></td>
+            <td class="step">Request <code>/swagger</code> from a published production build.</td>
+            <td class="expect">Not served outside development.</td>
+          </tr>
+          <tr>
+            <td class="id">SEC-04</td><td><span class="p p-high">High</span></td>
+            <td class="step">Upload a CSV containing quotes, commas, newlines in quoted fields and non-ASCII text.</td>
+            <td class="expect">Parsed correctly; values display as written; nothing is executed or reinterpreted.</td>
+          </tr>
+          <tr>
+            <td class="id">SEC-05</td><td><span class="p p-med">Medium</span></td>
+            <td class="step">Upload a CSV with a cell such as <code>=1+1</code> or <code>&lt;script&gt;alert(1)&lt;/script&gt;</code>, then export it.</td>
+            <td class="expect">Displayed as text, never rendered as markup. In the exported CSV the <code>=1+1</code> cell starts with an apostrophe, so a spreadsheet shows it as text.</td>
+          </tr>
+          <tr>
+            <td class="id">SEC-06</td><td><span class="p p-high">High</span></td>
+            <td class="step">In a published production build, inspect the response headers of the page and of any <code>/api</code> call.</td>
+            <td class="expect">Content-Security-Policy, <code>X-Frame-Options: DENY</code>, <code>nosniff</code> and <code>no-referrer</code> on both; <code>Cache-Control: no-store</code> on <code>/api</code>; no <code>Server</code> header; no console CSP violations on any screen.</td>
+          </tr>
+          <tr>
+            <td class="id">SEC-07</td><td><span class="p p-med">Medium</span></td>
+            <td class="step">Upload a file larger than 25 MB.</td>
+            <td class="expect">Refused with “That upload is too large”, naming the limit.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>Filing a defect</h2>
+      <span class="section-key">HOW</span>
+      <p>What makes a report actionable here.</p>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr><th>Include</th><th>Why it matters</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="step"><b>Case ID and the exact steps</b></td>
+            <td class="expect">Ties the report to a known expectation instead of an impression.</td>
+          </tr>
+          <tr>
+            <td class="step"><b>The project and its row count</b></td>
+            <td class="expect">Figures depend entirely on the uploaded file; a bug on 400 rows may not appear on 40,000.</td>
+          </tr>
+          <tr>
+            <td class="step"><b>Screenshot, plus the browser console</b></td>
+            <td class="expect">The app catches render failures in an error boundary — the console holds the actual cause.</td>
+          </tr>
+          <tr>
+            <td class="step"><b>The API's response</b></td>
+            <td class="expect">Every failure returns ProblemDetails with a title and a detail. Paste both; they usually name the fix.</td>
+          </tr>
+          <tr>
+            <td class="step"><b>Which provider was selected</b></td>
+            <td class="expect">Assistant behaviour varies by model, and the built-in planner is the fallback for all of them.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer>
+    <span>112 cases across 15 areas · 10 marked as regressions of defects already fixed in this build.</span>
+    <span>Automated coverage: <code>backend/smoke-test.sh</code> (107 API cases) and <code>link-audit.sh</code> (33 frontend-to-API links). Run both before manual testing — they catch the breakages that make manual cases fail for the wrong reason.</span>
+  </footer>
+</div>

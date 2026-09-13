@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+
+<html class="h-full" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>History - DataMind AI</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;family=JetBrains+Mono:wght@400&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "surface-container": "#eceef0",
+                      "primary-fixed": "#dbe1ff",
+                      "on-primary-fixed-variant": "#003ea8",
+                      "surface-tint": "#0053db",
+                      "error": "#ba1a1a",
+                      "on-secondary": "#ffffff",
+                      "on-surface-variant": "#434655",
+                      "surface-variant": "#e0e3e5",
+                      "error-container": "#ffdad6",
+                      "on-background": "#191c1e",
+                      "on-tertiary-container": "#eaf1fa",
+                      "tertiary-container": "#676e76",
+                      "outline-variant": "#c3c6d7",
+                      "surface-container-high": "#e6e8ea",
+                      "on-error-container": "#93000a",
+                      "on-primary-container": "#eeefff",
+                      "surface-container-highest": "#e0e3e5",
+                      "on-primary": "#ffffff",
+                      "inverse-primary": "#b4c5ff",
+                      "surface-bright": "#f7f9fb",
+                      "on-secondary-container": "#5c6274",
+                      "surface-container-lowest": "#ffffff",
+                      "inverse-surface": "#2d3133",
+                      "secondary-fixed-dim": "#c0c6da",
+                      "on-secondary-fixed": "#151b2a",
+                      "secondary-fixed": "#dce2f6",
+                      "surface-container-low": "#f2f4f6",
+                      "surface": "#f7f9fb",
+                      "inverse-on-surface": "#eff1f3",
+                      "background": "#f7f9fb",
+                      "on-primary-fixed": "#00174b",
+                      "primary": "#004ac6",
+                      "on-error": "#ffffff",
+                      "primary-container": "#2563eb",
+                      "tertiary-fixed-dim": "#c0c7d0",
+                      "tertiary-fixed": "#dce3ec",
+                      "primary-fixed-dim": "#b4c5ff",
+                      "outline": "#737686",
+                      "on-tertiary-fixed-variant": "#40484f",
+                      "secondary": "#585e6f",
+                      "secondary-container": "#d9dff4",
+                      "on-secondary-fixed-variant": "#404757",
+                      "surface-dim": "#d8dadc",
+                      "on-surface": "#191c1e",
+                      "tertiary": "#4e565d",
+                      "on-tertiary": "#ffffff",
+                      "on-tertiary-fixed": "#151c23"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "gutter": "16px",
+                      "container-margin": "24px",
+                      "space-lg": "16px",
+                      "space-xl": "24px",
+                      "space-xs": "4px",
+                      "space-sm": "8px",
+                      "space-md": "12px"
+              },
+              "fontFamily": {
+                      "headline-lg": ["Inter"],
+                      "headline-md": ["Inter"],
+                      "body-md": ["Inter"],
+                      "headline-sm": ["Inter"],
+                      "label-sm": ["Inter"],
+                      "mono-md": ["jetbrainsMono"],
+                      "body-sm": ["Inter"],
+                      "body-lg": ["Inter"],
+                      "label-md": ["Inter"]
+              },
+              "fontSize": {
+                      "headline-lg": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+                      "headline-md": ["20px", {"lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                      "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                      "headline-sm": ["16px", {"lineHeight": "24px", "fontWeight": "600"}],
+                      "label-sm": ["11px", {"lineHeight": "14px", "letterSpacing": "0.03em", "fontWeight": "600"}],
+                      "mono-md": ["13px", {"lineHeight": "20px", "fontWeight": "400"}],
+                      "body-sm": ["13px", {"lineHeight": "18px", "fontWeight": "400"}],
+                      "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                      "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.01em", "fontWeight": "500"}]
+              }
+            }
+          }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined.fill {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background h-full font-body-md overflow-hidden flex">
+<!-- SideNavBar -->
+<nav class="bg-on-tertiary-fixed dark:bg-on-tertiary-fixed fixed left-0 top-0 h-full w-[280px] border-r border-on-tertiary-fixed-variant z-20 flex flex-col p-4 transition-all duration-200 ease-in-out hidden md:flex">
+<div class="mb-8 px-4 flex items-center gap-3">
+<img alt="User Profile" class="w-10 h-10 rounded-full object-cover" data-alt="A small, high-resolution profile avatar of a professional data analyst in a clean corporate setting. The lighting is crisp and even. Light mode aesthetic with a subtle blue tint." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBXrPyJEHvkP9Vw1eXiWRkev_rh2TFtjCM3RC1X9rlJqTjuxHV1GVXUsQTeV6PX-apZ2xfHwZ2Z2a9mw5QkKv39sYdcigeg7Rpw5yRNl_xwbThJFCgl68lJyIqs8kGeUp51A1jmb6wMx9bQxPxmfkJIMD5uhMzWPoCTAZdb_T_i5z6FIItENxCu0i3FWHgIHqsbRLo7xvl7ZReEFIbM_Z4ZHRiYcFpZNGQGMLX9M6QyJvp6BXNdQp0kjQ"/>
+<div>
+<h1 class="font-headline-md text-headline-md font-bold text-primary-fixed-dim">DataMind AI</h1>
+<p class="font-label-sm text-label-sm text-tertiary-fixed-dim">Premium Analytics</p>
+</div>
+</div>
+<div class="flex flex-col gap-2 flex-grow">
+<!-- Inactive -->
+<a class="flex items-center gap-3 px-4 py-3 text-tertiary-fixed-dim hover:text-primary-fixed-dim hover:bg-on-tertiary-fixed-variant/50 transition-colors rounded-lg" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-label-md text-label-md">Dashboard</span>
+</a>
+<!-- Inactive -->
+<a class="flex items-center gap-3 px-4 py-3 text-tertiary-fixed-dim hover:text-primary-fixed-dim hover:bg-on-tertiary-fixed-variant/50 transition-colors rounded-lg" href="#">
+<span class="material-symbols-outlined" data-icon="smart_toy">smart_toy</span>
+<span class="font-label-md text-label-md">AI Assistant</span>
+</a>
+<!-- Inactive -->
+<a class="flex items-center gap-3 px-4 py-3 text-tertiary-fixed-dim hover:text-primary-fixed-dim hover:bg-on-tertiary-fixed-variant/50 transition-colors rounded-lg" href="#">
+<span class="material-symbols-outlined" data-icon="database">database</span>
+<span class="font-label-md text-label-md">Datasets</span>
+</a>
+<!-- Inactive -->
+<a class="flex items-center gap-3 px-4 py-3 text-tertiary-fixed-dim hover:text-primary-fixed-dim hover:bg-on-tertiary-fixed-variant/50 transition-colors rounded-lg" href="#">
+<span class="material-symbols-outlined" data-icon="query_stats">query_stats</span>
+<span class="font-label-md text-label-md">Analytics</span>
+</a>
+<!-- Inactive -->
+<a class="flex items-center gap-3 px-4 py-3 text-tertiary-fixed-dim hover:text-primary-fixed-dim hover:bg-on-tertiary-fixed-variant/50 transition-colors rounded-lg" href="#">
+<span class="material-symbols-outlined" data-icon="description">description</span>
+<span class="font-label-md text-label-md">Reports</span>
+</a>
+<!-- Active -->
+<a class="flex items-center gap-3 px-4 py-3 text-primary-fixed-dim bg-on-tertiary-fixed-variant rounded-lg font-bold" href="#">
+<span class="material-symbols-outlined fill" data-icon="history" data-weight="fill">history</span>
+<span class="font-label-md text-label-md">History</span>
+</a>
+<!-- Inactive -->
+<a class="flex items-center gap-3 px-4 py-3 text-tertiary-fixed-dim hover:text-primary-fixed-dim hover:bg-on-tertiary-fixed-variant/50 transition-colors rounded-lg mt-auto" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-label-md text-label-md">Settings</span>
+</a>
+</div>
+</nav>
+<!-- Main Content Area -->
+<div class="flex-1 flex flex-col w-full md:w-[calc(100%-280px)] md:ml-[280px] h-full bg-surface">
+<!-- TopAppBar -->
+<header class="bg-surface dark:bg-surface-dim w-full h-16 border-b border-outline-variant flex justify-between items-center px-6 z-10 sticky top-0">
+<div class="flex items-center gap-6">
+<!-- Mobile Menu Trigger -->
+<button class="md:hidden text-on-surface-variant hover:bg-surface-container-low p-2 rounded-lg transition-colors">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<div class="hidden md:flex gap-4">
+<a class="text-on-surface-variant font-body-md hover:bg-surface-container-low transition-colors px-2 py-1 rounded" href="#">Sales_2026.csv</a>
+<a class="text-on-surface-variant font-body-md hover:bg-surface-container-low transition-colors px-2 py-1 rounded" href="#">Marketing_Q3.csv</a>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="text-on-surface-variant hover:bg-surface-container-low p-2 rounded-lg transition-colors scale-95 active:scale-100">
+<span class="material-symbols-outlined" data-icon="calendar_today">calendar_today</span>
+</button>
+<button class="text-on-surface-variant hover:bg-surface-container-low p-2 rounded-lg transition-colors scale-95 active:scale-100">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="bg-surface border border-outline-variant text-on-surface font-label-md text-label-md px-4 py-2 rounded-lg hover:bg-surface-container-low transition-colors h-8 flex items-center">Filter</button>
+<button class="bg-primary-container text-on-primary font-label-md text-label-md px-4 py-2 rounded-lg hover:bg-primary transition-colors h-8 flex items-center">Export</button>
+</div>
+</header>
+<!-- Canvas -->
+<main class="flex-1 overflow-y-auto p-container-margin">
+<div class="max-w-5xl mx-auto space-y-space-xl">
+<!-- Header -->
+<div>
+<h2 class="font-headline-lg text-headline-lg text-on-surface mb-2">Analysis History</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Review and manage your previously generated insights and reports.</p>
+</div>
+<!-- History List -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg flex flex-col">
+<!-- Item 1 -->
+<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between p-space-lg border-b border-outline-variant hover:bg-surface-container-low transition-colors group">
+<div class="flex items-start gap-space-md mb-space-md sm:mb-0">
+<div class="bg-surface-container p-2 rounded-lg text-primary flex-shrink-0 mt-1">
+<span class="material-symbols-outlined">analytics</span>
+</div>
+<div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface mb-1">Revenue Analysis</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant flex items-center gap-2">
+<span class="font-mono-md text-mono-md text-secondary">Sales_2026.csv</span>
+<span class="w-1 h-1 bg-outline rounded-full"></span>
+<span>Today, 14:30</span>
+</p>
+</div>
+</div>
+<div class="flex items-center gap-space-sm opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity w-full sm:w-auto justify-end">
+<button class="text-on-surface-variant hover:text-primary p-2 rounded transition-colors" title="Open">
+<span class="material-symbols-outlined text-[20px]">open_in_new</span>
+</button>
+<button class="text-on-surface-variant hover:text-primary p-2 rounded transition-colors" title="Save">
+<span class="material-symbols-outlined text-[20px]">bookmark</span>
+</button>
+<button class="text-on-surface-variant hover:text-primary p-2 rounded transition-colors" title="Share">
+<span class="material-symbols-outlined text-[20px]">share</span>
+</button>
+<button class="text-on-surface-variant hover:text-error p-2 rounded transition-colors" title="Delete">
+<span class="material-symbols-outlined text-[20px]">delete</span>
+</button>
+</div>
+</div>
+<!-- Item 2 -->
+<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between p-space-lg border-b border-outline-variant hover:bg-surface-container-low transition-colors group">
+<div class="flex items-start gap-space-md mb-space-md sm:mb-0">
+<div class="bg-surface-container p-2 rounded-lg text-primary flex-shrink-0 mt-1">
+<span class="material-symbols-outlined">leaderboard</span>
+</div>
+<div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface mb-1">Top Products Performance</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant flex items-center gap-2">
+<span class="font-mono-md text-mono-md text-secondary">Sales_2026.csv</span>
+<span class="w-1 h-1 bg-outline rounded-full"></span>
+<span>Yesterday, 09:15</span>
+</p>
+</div>
+</div>
+<div class="flex items-center gap-space-sm opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity w-full sm:w-auto justify-end">
+<button class="text-on-surface-variant hover:text-primary p-2 rounded transition-colors" title="Open">
+<span class="material-symbols-outlined text-[20px]">open_in_new</span>
+</button>
+<button class="text-on-surface-variant hover:text-primary p-2 rounded transition-colors" title="Save">
+<span class="material-symbols-outlined text-[20px]">bookmark</span>
+</button>
+<button class="text-on-surface-variant hover:text-primary p-2 rounded transition-colors" title="Share">
+<span class="material-symbols-outlined text-[20px]">share</span>
+</button>
+<button class="text-on-surface-variant hover:text-error p-2 rounded transition-colors" title="Delete">
+<span class="material-symbols-outlined text-[20px]">delete</span>
+</button>
+</div>
+</div>
+<!-- Item 3 -->
+<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between p-space-lg border-b border-outline-variant hover:bg-surface-container-low transition-colors group">
+<div class="flex items-start gap-space-md mb-space-md sm:mb-0">
+<div class="bg-surface-container p-2 rounded-lg text-tertiary flex-shrink-0 mt-1">
+<span class="material-symbols-outlined">pie_chart</span>
+</div>
+<div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface mb-1">Q3 Regional Distribution</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant flex items-center gap-2">
+<span class="font-mono-md text-mono-md text-secondary">Marketing_Q3.csv</span>
+<span class="w-1 h-1 bg-outline rounded-full"></span>
+<span>Oct 12, 11:00</span>
+</p>
+</div>
+</div>
+<div class="flex items-center gap-space-sm opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity w-full sm:w-auto justify-end">
+<button class="text-on-surface-variant hover:text-primary p-2 rounded transition-colors" title="Open">
+<span class="material-symbols-outlined text-[20px]">open_in_new</span>
+</button>
+<button class="text-on-surface-variant hover:text-primary p-2 rounded transition-colors" title="Save">
+<span class="material-symbols-outlined text-[20px]">bookmark</span>
+</button>
+<button class="text-on-surface-variant hover:text-primary p-2 rounded transition-colors" title="Share">
+<span class="material-symbols-outlined text-[20px]">share</span>
+</button>
+<button class="text-on-surface-variant hover:text-error p-2 rounded transition-colors" title="Delete">
+<span class="material-symbols-outlined text-[20px]">delete</span>
+</button>
+</div>
+</div>
+<!-- Item 4 (AI Generated) -->
+<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between p-space-lg hover:bg-surface-container-low transition-colors group border-l-4 border-l-primary">
+<div class="flex items-start gap-space-md mb-space-md sm:mb-0">
+<div class="bg-primary-fixed p-2 rounded-lg text-on-primary-fixed flex-shrink-0 mt-1">
+<span class="material-symbols-outlined">smart_toy</span>
+</div>
+<div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface mb-1 flex items-center gap-2">Anomaly Detection Report <span class="bg-primary/10 text-primary px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider">AI Generated</span></h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant flex items-center gap-2">
+<span class="font-mono-md text-mono-md text-secondary">Sales_2026.csv</span>
+<span class="w-1 h-1 bg-outline rounded-full"></span>
+<span>Oct 10, 16:45</span>
+</p>
+</div>
+</div>
+<div class="flex items-center gap-space-sm opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity w-full sm:w-auto justify-end">
+<button class="text-on-surface-variant hover:text-primary p-2 rounded transition-colors" title="Open">
+<span class="material-symbols-outlined text-[20px]">open_in_new</span>
+</button>
+<button class="text-on-surface-variant hover:text-primary p-2 rounded transition-colors" title="Save">
+<span class="material-symbols-outlined text-[20px]">bookmark</span>
+</button>
+<button class="text-on-surface-variant hover:text-primary p-2 rounded transition-colors" title="Share">
+<span class="material-symbols-outlined text-[20px]">share</span>
+</button>
+<button class="text-on-surface-variant hover:text-error p-2 rounded transition-colors" title="Delete">
+<span class="material-symbols-outlined text-[20px]">delete</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Pagination (Simple) -->
+<div class="flex justify-between items-center mt-space-lg text-on-surface-variant">
+<p class="font-body-sm text-body-sm">Showing 1-4 of 24 analyses</p>
+<div class="flex gap-2">
+<button class="p-1 rounded hover:bg-surface-container border border-outline-variant disabled:opacity-50" disabled="">
+<span class="material-symbols-outlined">chevron_left</span>
+</button>
+<button class="p-1 rounded hover:bg-surface-container border border-outline-variant">
+<span class="material-symbols-outlined">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

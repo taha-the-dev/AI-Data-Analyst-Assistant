@@ -1,0 +1,6 @@
+# Built and run on Linux (Render, CI): these must keep Unix line endings
+# whatever the checkout platform.
+*.sh text eol=lf
+Dockerfile text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
