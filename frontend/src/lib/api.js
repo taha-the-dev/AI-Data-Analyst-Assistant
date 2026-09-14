@@ -166,9 +166,4 @@ export const api = {
     remove: (id) => request(`/reports/${id}`, { method: 'DELETE' }),
   },
 
-  settings: {
-    get: () => request('/settings'),
-    save: (settings) => request('/settings', { method: 'PUT', body: settings }),
-    providers: () => request('/providers'),
-  },
 }

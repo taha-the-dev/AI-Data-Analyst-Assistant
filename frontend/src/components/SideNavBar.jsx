@@ -2,8 +2,6 @@ import { useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import Icon from './Icon'
 import { useToast } from './Toast'
-import { api } from '../lib/api'
-import { useResource } from '../hooks/useResource'
 import { useAuth } from '../context/AuthContext'
 
 const NAV_ITEMS = [
@@ -89,12 +87,6 @@ function AccountRow() {
 }
 
 export default function SideNavBar({ open, onClose }) {
-  const settings = useResource(() => api.settings.get(), [])
-  const providers = useResource(() => api.settings.providers(), [])
-
-  const provider = providers.data?.find((p) => p.id === settings.data?.providerId)
-  const connected = provider?.status === 'Connected'
-
   return (
     <>
       {open && (
@@ -148,31 +140,9 @@ export default function SideNavBar({ open, onClose }) {
           <NavItem item={SETTINGS_ITEM} onNavigate={onClose} className="mt-auto" />
         </nav>
 
-        {/* Footer connection status */}
-        <NavLink
-          to="/settings"
-          onClick={onClose}
-          className="mt-auto mx-md mb-xs flex items-center gap-md rounded-xl px-md py-sm border-t border-nav-line pt-md hover:bg-nav-hover transition-colors"
-        >
-          <span
-            aria-hidden="true"
-            className="w-7 h-7 rounded-full bg-nav-raised text-secondary-fixed-dim flex items-center justify-center shrink-0"
-          >
-            <Icon name={connected ? 'smart_toy' : 'power_off'} size={15} />
-          </span>
-          <span className="min-w-0 flex-1">
-            <span className="block font-label-bold text-label-bold text-white truncate">
-              {settings.loading ? 'Loading…' : (provider?.name ?? 'No planner')}
-            </span>
-            <span className="block font-body-sm text-body-sm text-secondary-fixed-dim truncate">
-              {settings.error
-                ? 'API unreachable'
-                : `${settings.data?.modelName ?? '—'} · ${provider?.status ?? '—'}`}
-            </span>
-          </span>
-        </NavLink>
-
-        <AccountRow />
+        <div className="border-t border-nav-line pt-xs">
+          <AccountRow />
+        </div>
       </aside>
     </>
   )

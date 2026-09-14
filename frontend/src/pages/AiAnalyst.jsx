@@ -13,7 +13,7 @@ import { downloadCsv } from '../lib/csv'
 import { bucketLabel, clock, compactMoney, int } from '../lib/format'
 
 /** One collapsible block in the analysis panel. */
-function Section({ title, badge, children, defaultOpen = true }) {
+function Section({ title, children, defaultOpen = true }) {
   const [open, setOpen] = useState(defaultOpen)
   return (
     <section className="border border-outline-variant rounded-xl overflow-hidden">
@@ -23,27 +23,15 @@ function Section({ title, badge, children, defaultOpen = true }) {
         className="w-full flex items-center justify-between gap-sm bg-surface-container-low px-md py-sm hover:bg-surface-container transition-colors"
       >
         <span className="font-label-bold text-stat-label uppercase text-on-surface-variant">{title}</span>
-        <span className="flex items-center gap-sm">
-          {badge && (
-            <span className="font-code text-[12px] text-on-surface-variant bg-surface-container-lowest border border-outline-variant rounded px-1.5 py-[1px]">
-              {badge}
-            </span>
-          )}
-          <Icon name={open ? 'expand_less' : 'expand_more'} size={18} className="text-on-surface-variant" />
-        </span>
+        <Icon name={open ? 'expand_less' : 'expand_more'} size={18} className="text-on-surface-variant" />
       </button>
       {open && <div className="p-md">{children}</div>}
     </section>
   )
 }
 
-/**
- * Right-hand panel: what the last answer was actually computed from — the
- * figures, a chart of them, and the plan the engine ran. The design shows SQL
- * here; this service plans a QuerySpec rather than SQL, so the spec is what is
- * shown. It is the thing that can be re-run.
- */
-function AnalysisPanel({ answer, onExport }) {
+/** Right-hand panel: the figures behind the last answer, and a chart of them. */
+function AnalysisPanel({ answer }) {
   if (!answer?.figures?.length) {
     return (
       <div className="flex flex-col items-center justify-center text-center h-full gap-sm px-lg">
@@ -52,7 +40,7 @@ function AnalysisPanel({ answer, onExport }) {
         </span>
         <p className="font-label-bold text-label-bold text-on-surface">No analysis yet</p>
         <p className="font-body-main text-body-main text-on-surface-variant">
-          Ask a question and the figures, the chart and the query behind the answer appear here.
+          Ask a question and the figures and chart behind the answer appear here.
         </p>
       </div>
     )
@@ -105,29 +93,6 @@ function AnalysisPanel({ answer, onExport }) {
 
       <Section title="Visualization">
         <MiniColumns points={top.slice(0, 6)} format={format} height={200} />
-      </Section>
-
-      {/* The badge names the planner that produced this spec, which the API
-          reports per answer. Settings record which planner was asked; a hosted
-          one falls back to keyword rules on a missing key, a rate limit or an
-          unusable reply, so the two are not the same fact. A turn reloaded from
-          History predates this and carries no attribution — it gets no badge
-          rather than a guessed one. */}
-      <Section title="Query plan" badge={answer.planner}>
-        <pre className="bg-nav text-on-nav rounded-lg p-md overflow-x-auto font-code text-[13px] leading-5">
-          {JSON.stringify(answer.spec ?? {}, null, 2)}
-        </pre>
-        <p className="font-body-sm text-body-sm text-on-surface-variant mt-sm">
-          {int(answer.rowsScanned ?? 0)} rows scanned
-          {answer.latencyMs != null ? ` · ${answer.latencyMs} ms` : ''}
-        </p>
-        <button
-          onClick={onExport}
-          className="mt-sm inline-flex items-center gap-sm font-label-bold text-label-bold text-primary hover:text-surface-tint transition-colors"
-        >
-          <Icon name="download" size={16} />
-          Export these figures
-        </button>
       </Section>
     </div>
   )
@@ -380,7 +345,7 @@ export default function AiAnalyst() {
         </h2>
         <div className="flex flex-wrap items-center gap-md mt-xs">
           <p className="font-body-main text-body-main text-on-surface-variant">
-            Every answer carries the figures and the query behind it.
+            Every answer carries the figures behind it.
           </p>
           <div className="flex items-center gap-sm ml-auto">
             <label className="sr-only" htmlFor="session-picker">
@@ -547,7 +512,7 @@ export default function AiAnalyst() {
           </div>
 
           <div className="flex-1 overflow-y-auto p-lg">
-            <AnalysisPanel answer={latest} onExport={exportFigures} />
+            <AnalysisPanel answer={latest} />
           </div>
         </aside>
       </div>

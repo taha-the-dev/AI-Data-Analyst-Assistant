@@ -279,8 +279,10 @@ A new account uses the **built-in planner**, which needs no key and no network:
 keyword rules pick the query and the figures are computed the same way they are
 everywhere else. Nothing here has to be configured to work.
 
-To have a hosted model read the questions instead, pick one under
-**Settings → Model provider** and give it a key through the environment:
+The app has no screen for choosing a hosted model. An account can still be
+switched to one through the API — `PUT /api/settings` with a `providerId`
+(`gemini` or `openrouter`) and a `modelName` from `GET /api/providers` — and the
+provider needs a key through the environment:
 
 ```bash
 setx OPENROUTER_API_KEY "your-key-here"
@@ -300,9 +302,8 @@ reason. If a key has ever sat in one of those files, rotate it —
 
 The model is never load-bearing. With no key, a rate limit, or a model that
 returns nonsense, the built-in planner answers instead and every screen keeps
-working. The assistant says which one it was: the badge on **Query plan** names
-the planner that produced that spec, not the one picked in Settings, so a
-fallback is visible rather than silent.
+working. Each answer from the chat stream still records which planner produced
+it, in the `plan` event's `planner` field.
 
 The same engine backs the rest of the product: Dashboard, Analytics and the
 report writer are saved `QuerySpec`s (`Query/SavedSpecs.cs`) run through it, and

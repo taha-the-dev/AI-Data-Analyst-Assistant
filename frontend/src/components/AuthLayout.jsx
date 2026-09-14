@@ -13,7 +13,7 @@ import Icon from './Icon'
 const STAGES = [
   ['Plan', 'Your question becomes a query: which column, which measure, which filter.'],
   ['Compute', 'The engine runs that query against your own stored rows. No figure is guessed.'],
-  ['Explain', 'The answer is written from the computed figures, with the query beside it.'],
+  ['Explain', 'The answer is written from the computed figures, with those figures beside it.'],
 ]
 
 function Brand({ onDark = false }) {
@@ -51,7 +51,7 @@ export default function AuthLayout({ title, description, children, footer }) {
             Ask it anything.
           </p>
           <p className="mt-md font-body-main text-body-main text-secondary-fixed-dim">
-            Every figure is computed from your own rows, and every answer carries the query that produced it.
+            Every figure is computed from your own rows, and every answer shows the figures behind it.
           </p>
 
           <ol className="mt-xl flex flex-col gap-md">
