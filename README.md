@@ -202,12 +202,13 @@ What the free plans mean for this app:
 
 - **The service sleeps** after 15 minutes without traffic and takes about a
   minute to wake. The first request after a quiet spell can show "Cannot reach
-  the API"; Try again recovers once it is up. To prevent that,
-  `.github/workflows/keep-api-awake.yml` requests `/api/health` every 5 minutes
-  from GitHub Actions. GitHub can start scheduled runs late, so an occasional
-  sleep can still slip through; an uptime monitor such as UptimeRobot pinging
-  the same URL is more punctual. Disable the workflow in the Actions tab to let
-  the service sleep again.
+  the API"; Try again recovers once it is up. To prevent that, an UptimeRobot
+  HTTP monitor requests `https://datamind-api-a908.onrender.com/api/health`
+  every 5 minutes. `.github/workflows/keep-api-awake.yml` does the same from
+  GitHub Actions as a backup, but GitHub starts scheduled runs late or skips
+  them when busy (on the first day it ran once in about 10 hours), so it cannot
+  keep the service awake on its own. Pause the monitor and disable the workflow
+  to let the service sleep again.
 - **There is no persistent disk**, which is why the API uses PostgreSQL there:
   anything written to the service's own filesystem is lost when it sleeps.
 - **Neon's free tier** suspends an idle database and resumes it on the next
