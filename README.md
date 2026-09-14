@@ -140,37 +140,71 @@ someone signs up.
 ### Frontend on Vercel, API on Render
 
 Vercel serves the static frontend and proxies `/api` to the API, so the browser
-still sees one origin. The API runs on Render from `render.yaml` at the root of
-the repository: a free Docker web service and a free PostgreSQL database.
+still sees one origin. The API runs on Render as a free Docker web service, and
+its data lives in a free PostgreSQL database on Neon.
 
-1. **Push this folder to a GitHub repository.** Render deploys from Git.
-2. **Create the Blueprint.** In Render, choose **New → Blueprint** and pick the
-   repository. `render.yaml` creates `datamind-api` and `datamind-db` on the
-   free plan, connects them, trusts the Vercel site at
-   `https://datamind-ai-nine.vercel.app`, and refuses database connections from
-   outside Render.
-3. **Point Vercel at the API.** In `frontend/vercel.json`, add this rewrite
-   first, before the catch-all, with the service's `onrender.com` address:
-   ```json
-   { "source": "/api/:path*", "destination": "https://<your-service>.onrender.com/api/:path*" }
-   ```
-4. **Redeploy the frontend** from `frontend/`:
+| Part | Where |
+|---|---|
+| Frontend | https://datamind-ai-nine.vercel.app (Vercel project `datamind-ai`) |
+| API | https://datamind-api-a908.onrender.com (Render service `datamind-api`, Singapore) |
+| Database | Neon project, AWS Asia Pacific (Singapore) |
+
+Why Neon and not a Render database: Render's free database needs a card on file
+and is deleted 30 days after it is created. Neon's free tier does not expire.
+Render still asks for a card to verify the account before it creates even a free
+web service; it places a temporary $1 authorization and charges nothing.
+
+To set it up from scratch:
+
+1. **Push this folder to a GitHub repository.** Render deploys from Git. A
+   public repository can be deployed without connecting GitHub to Render.
+2. **Create the database.** In Neon, create a project in the Singapore region.
+   Under **Connect**, turn **Connection pooling** off and copy the connection
+   string (`postgresql://...?sslmode=require`). Keep it out of the repository.
+3. **Create the API.** Either apply `render.yaml` in Render (**New → Blueprint**),
+   which asks for the connection string, or create a **New → Web Service** by
+   hand with the same settings:
+   - Runtime **Docker**, plan **Free**, region **Singapore**
+   - Dockerfile path `./backend/AnalystAI.Api/Dockerfile`, Docker build context
+     `./backend/AnalystAI.Api`, health check path `/api/health`
+   - Environment: `PORT=8080`, `ConnectionStrings__Default=<Neon string>`,
+     `Security__TrustedOrigins__0=https://datamind-ai-nine.vercel.app`,
+     `Security__TrustForwardedHeaders=true`, `Security__ForwardLimit=2`, and
+     optionally `OPENROUTER_API_KEY` or `GEMINI_API_KEY`
+
+   The live service was created by hand, so `render.yaml` does not manage it:
+   change its settings in the Render dashboard. Migrations create the tables on
+   first start.
+4. **Point Vercel at the API.** `frontend/vercel.json` rewrites `/api/*` to the
+   service's `onrender.com` address, before the catch-all. Change it if the
+   service address changes.
+5. **Deploy the frontend** from `frontend/`, signed in to the Vercel account that
+   owns the project (run `npx vercel link` first if it asks which project):
    ```bash
    npx vercel deploy --prod
    ```
+   Or run `npx vercel git connect` once, and every push deploys it.
 
-What the free plan means for this app:
+Render redeploys the API on every push to `main`. The frontend does not, unless
+Git is connected in Vercel.
+
+To check the deployment, `https://datamind-ai-nine.vercel.app/api/health` should
+return `{"status":"ok"}`: that response comes from Render, through Vercel.
+
+What the free plans mean for this app:
 
 - **The service sleeps** after 15 minutes without traffic and takes about a
   minute to wake. The first request after a quiet spell can show "Cannot reach
   the API"; Try again recovers once it is up.
-- **Render deletes a free database 30 days after it is created**, with every
-  account and file in it. Upgrade it, or point `ConnectionStrings__Default` at
-  another PostgreSQL provider, before then.
 - **There is no persistent disk**, which is why the API uses PostgreSQL there:
   anything written to the service's own filesystem is lost when it sleeps.
+- **Neon's free tier** suspends an idle database and resumes it on the next
+  connection, which adds a moment to the first request after a quiet spell.
+- **Changing the database password** in Neon means updating
+  `ConnectionStrings__Default` in the Render service's Environment tab, which
+  redeploys it.
 
-`frontend/vercel.json` already serves every app route from `index.html`, keeps
+`frontend/vercel.json` also serves every app route from `index.html`, keeps
 `/api` out of that rule, and sends the same Content-Security-Policy and security
 headers the API does.
 

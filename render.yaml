@@ -1,9 +1,13 @@
-# Render Blueprint: the API on a free web service, with a free PostgreSQL
-# database for its accounts, data and session keys.
+# Render Blueprint: the API on a free Docker web service. Its database is an
+# external PostgreSQL (Neon, free tier) rather than a Render one: a free Render
+# database needs a card on file and is deleted 30 days after it is created.
+#
+# The live service, https://datamind-api-a908.onrender.com, was created by hand
+# with these same settings, so this file does not manage it. Applying it as a
+# Blueprint creates a separate service.
 #
 # Free-plan limits worth knowing: the web service sleeps after 15 minutes
-# without traffic and takes about a minute to wake, and Render deletes a free
-# database 30 days after it is created.
+# without traffic and takes about a minute to wake.
 services:
   - type: web
     name: datamind-api
@@ -17,10 +21,11 @@ services:
     envVars:
       - key: PORT
         value: "8080"
+      # The Neon connection string, postgresql://...?sslmode=require. A secret:
+      # Render asks for it when the Blueprint is applied, and it is never
+      # committed. Use Neon's direct connection, not the pooled one.
       - key: ConnectionStrings__Default
-        fromDatabase:
-          name: datamind-db
-          property: connectionString
+        sync: false
       # The Vercel site that proxies /api to this service.
       - key: Security__TrustedOrigins__0
         value: https://datamind-ai-nine.vercel.app
@@ -29,13 +34,8 @@ services:
         value: "true"
       - key: Security__ForwardLimit
         value: "2"
-
-databases:
-  - name: datamind-db
-    plan: free
-    region: singapore
-    databaseName: datamind
-    user: datamind
-    postgresMajorVersion: "17"
-    # No connections from outside Render: only the web service reaches it.
-    ipAllowList: []
+      # Optional: a hosted model for questions. Unset, the built-in planner answers.
+      - key: OPENROUTER_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false

@@ -21,8 +21,9 @@ that belong to no one. The API moves it aside as
 `analystai.pre-accounts-<time>.db` — never deletes it — and creates a new one.
 
 Given a PostgreSQL connection string instead — key=value, or a `postgresql://`
-URL such as the one Render provides — the API runs on PostgreSQL, which is how
-it is hosted on Render (`render.yaml` at the repository root). The model is the
+URL such as the one Neon provides — the API runs on PostgreSQL, which is how
+it is hosted: on Render, with a Neon database (see "Frontend on Vercel, API on
+Render" in the repository's README, and `render.yaml`). The model is the
 same on both; migrations are not, so each provider has its own context type:
 `SqliteAppDbContext` with `Data/Migrations`, and `PostgresAppDbContext` with
 `Data/Migrations/Postgres`. The keys that encrypt sessions are stored in the
