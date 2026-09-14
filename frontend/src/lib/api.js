@@ -110,7 +110,6 @@ const qs = (params) => {
 export const api = {
   health: () => request('/health'),
   /** What the signed-in account has loaded, and which planner will answer. */
-  status: () => request('/status'),
 
   auth: {
     me: () => request('/auth/me'),

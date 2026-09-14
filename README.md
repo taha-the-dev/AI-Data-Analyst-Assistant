@@ -231,8 +231,6 @@ the same browser first — in the app, or with **Try it out** on
 `POST /api/auth/login` — and the cookie goes along with every call. Swagger adds
 the `X-DataMind-Csrf` header itself.
 
-The status popover behind the bell in the top bar links to it.
-
 ## Check the API
 
 ```bash

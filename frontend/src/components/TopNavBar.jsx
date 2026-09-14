@@ -117,101 +117,6 @@ function CoverageButton() {
 }
 
 /**
- * The bell carries service state rather than invented notifications: whether
- * the API answers, what it has loaded, and whether a model key is configured.
- * The dot appears only when something actually needs attention.
- */
-function StatusButton() {
-  const { open, setOpen, ref } = usePopover()
-  const [health, setHealth] = useState({ state: 'loading' })
-
-  useEffect(() => {
-    let cancelled = false
-    const check = () =>
-      api
-        .status()
-        .then((data) => !cancelled && setHealth({ state: 'ready', data }))
-        .catch((error) => !cancelled && setHealth({ state: 'error', error }))
-
-    check()
-    const timer = setInterval(check, 30000)
-    return () => {
-      cancelled = true
-      clearInterval(timer)
-    }
-  }, [])
-
-  // The dot means "something needs you", so it tracks whether the API answers
-  // and whether the selected assistant is actually usable — not whether some
-  // provider nobody chose has a key.
-  const needsAttention = health.state === 'error' || health.data?.assistant?.ready === false
-
-  return (
-    <div className="relative" ref={ref}>
-      <button
-        onClick={() => setOpen((v) => !v)}
-        aria-label="Service status"
-        aria-expanded={open}
-        className="w-7 h-7 flex items-center justify-center rounded-lg text-on-surface-variant hover:bg-surface-container-low transition-colors relative"
-      >
-        <Icon name="notifications" size={16} />
-        {needsAttention && (
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-danger border border-surface-container-lowest" />
-        )}
-      </button>
-
-      {open && (
-        <Panel>
-          <p className="font-label-bold text-label-bold text-on-surface">Service status</p>
-          {health.state === 'loading' && (
-            <p className="font-body-sm text-body-sm text-on-surface-variant mt-sm">Checking…</p>
-          )}
-          {health.state === 'error' && (
-            <p className="font-body-sm text-body-sm text-on-surface-variant mt-sm">
-              {health.error?.detail || 'The API is not responding.'}
-            </p>
-          )}
-          {health.state === 'ready' && (
-            <ul className="mt-sm flex flex-col gap-sm">
-              {[
-                ['API', health.data.status === 'ok' ? 'Responding' : health.data.status],
-                ['Datasets loaded', int(health.data.datasets)],
-                ['Rows stored', int(health.data.rows)],
-                ['Assistant', health.data.assistant?.provider ?? '—'],
-                ['Model', health.data.assistant?.ready ? health.data.assistant.model : 'Built-in fallback'],
-              ].map(([label, value]) => (
-                <li key={label} className="flex items-center justify-between gap-md">
-                  <span className="font-body-sm text-body-sm text-on-surface-variant shrink-0">{label}</span>
-                  {/* Model slugs run long; the full value stays available on hover. */}
-                  <span
-                    title={String(value)}
-                    className="font-code text-code text-on-surface tabular-nums truncate text-right"
-                  >
-                    {value}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )}
-
-          {/* Every screen here is a view of the API; this is the API itself. */}
-          <a
-            href="/swagger"
-            target="_blank"
-            rel="noreferrer"
-            className="mt-md flex items-center gap-sm rounded-lg border border-outline-variant px-sm py-[6px] font-label-bold text-label-bold text-primary hover:bg-surface-container-low transition-colors"
-          >
-            <Icon name="api" size={16} />
-            Open the API reference
-            <Icon name="open_in_new" size={14} className="ml-auto text-on-surface-variant" />
-          </a>
-        </Panel>
-      )}
-    </div>
-  )
-}
-
-/**
  * Docked bar. Names the files in the library as tabs — picking one switches
  * what every screen below reads from — and carries the two page-level actions
  * the current screen has registered.
@@ -261,7 +166,6 @@ export default function TopNavBar({ onOpenNav }) {
 
         <div className="flex items-center gap-sm ml-auto shrink-0">
           <CoverageButton />
-          <StatusButton />
 
           <div className="w-px h-6 bg-outline-variant mx-1 hidden sm:block" />
 

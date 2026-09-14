@@ -93,12 +93,6 @@ than one that is absent:
   figures are read.
 - **Calendar** reports the period the active file actually covers, read off its
   first and last row by date.
-- **Bell** carries the account's service state from `/api/status` — whether the
-  API answers, how much this account has loaded, and which planner will answer
-  the next question. The dot appears only when something needs attention, which
-  means the API being unreachable or the chosen provider having no key.
-- **The status popover** also links to the API reference — Swagger, served by the
-  API and proxied here, so it opens same-origin.
 - **Filter** and **Export** belong to the screen underneath. A page registers its
   handlers (`usePageActions`) and the bar renders them; Export writes a CSV of
   exactly the figures on screen. A screen with nothing to filter or export gets a
