@@ -200,7 +200,12 @@ What the free plans mean for this app:
 
 - **The service sleeps** after 15 minutes without traffic and takes about a
   minute to wake. The first request after a quiet spell can show "Cannot reach
-  the API"; Try again recovers once it is up.
+  the API"; Try again recovers once it is up. To prevent that,
+  `.github/workflows/keep-api-awake.yml` requests `/api/health` every 5 minutes
+  from GitHub Actions. GitHub can start scheduled runs late, so an occasional
+  sleep can still slip through; an uptime monitor such as UptimeRobot pinging
+  the same URL is more punctual. Disable the workflow in the Actions tab to let
+  the service sleep again.
 - **There is no persistent disk**, which is why the API uses PostgreSQL there:
   anything written to the service's own filesystem is lost when it sleeps.
 - **Neon's free tier** suspends an idle database and resumes it on the next
