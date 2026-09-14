@@ -139,12 +139,14 @@ public static class SettingsEndpoints
     }
 
     /// <summary>
-    /// Liveness, for load balancers and the development preflight. It is public,
-    /// so it says the service is up and nothing about what any account holds.
+    /// Liveness, for load balancers, uptime monitors and the development
+    /// preflight. It is public, so it says the service is up and nothing about
+    /// what any account holds. HEAD is answered too: uptime monitors such as
+    /// UptimeRobot check with HEAD, and a GET-only route told them 405.
     /// </summary>
     public static RouteGroupBuilder MapHealthEndpoint(this RouteGroupBuilder api)
     {
-        api.MapGet("/health", () => Results.Ok(new
+        api.MapMethods("/health", [HttpMethods.Get, HttpMethods.Head], () => Results.Ok(new
             {
                 status = "ok",
                 utc = DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture),
