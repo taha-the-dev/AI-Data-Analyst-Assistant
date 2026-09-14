@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useState } from 'react'
 import { PageCanvas, PageHeader } from '../components/AppShell'
 import { Button, Panel, PanelHeader, SegmentedControl } from '../components/ui'
 import Modal from '../components/Modal'
@@ -30,9 +30,7 @@ export default function Settings() {
   // null while the dialog is closed; otherwise what it is holding.
   const [deleting, setDeleting] = useState(null)
 
-  // Stable, because the dialog moves focus back to its first button whenever
-  // its close handler changes — which, inline, would be on every keystroke.
-  const closeDelete = useCallback(() => setDeleting((current) => (current?.pending ? current : null)), [])
+  const closeDelete = () => setDeleting((current) => (current?.pending ? current : null))
 
   const signOutNow = async () => {
     setSigningOut(true)

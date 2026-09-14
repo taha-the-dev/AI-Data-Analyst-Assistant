@@ -3,6 +3,11 @@ import Icon from './Icon'
 
 export default function Modal({ open, onClose, title, description, children, footer }) {
   const panel = useRef(null)
+  // Callers pass inline handlers, which are new on every render. Read through a
+  // ref so the effect below runs when the dialog opens, not on every keystroke —
+  // re-running it moved focus off the field being typed in.
+  const closeRef = useRef(onClose)
+  closeRef.current = onClose
 
   useEffect(() => {
     if (!open) return
@@ -10,7 +15,7 @@ export default function Modal({ open, onClose, title, description, children, foo
 
     const onKey = (e) => {
       if (e.key === 'Escape') {
-        onClose()
+        closeRef.current()
         return
       }
       if (e.key !== 'Tab' || !panel.current) return
@@ -31,14 +36,18 @@ export default function Modal({ open, onClose, title, description, children, foo
 
     document.addEventListener('keydown', onKey)
     document.body.style.overflow = 'hidden'
-    panel.current?.querySelector('button')?.focus()
+    // A dialog that asks for input starts in its field; one that only confirms
+    // starts on its first button.
+    const start =
+      panel.current?.querySelector('input, select, textarea') ?? panel.current?.querySelector('button')
+    start?.focus()
 
     return () => {
       document.removeEventListener('keydown', onKey)
       document.body.style.overflow = ''
       previous?.focus?.()
     }
-  }, [open, onClose])
+  }, [open])
 
   if (!open) return null
 
