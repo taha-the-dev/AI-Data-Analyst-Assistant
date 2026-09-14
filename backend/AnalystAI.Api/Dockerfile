@@ -15,9 +15,12 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 COPY AnalystAI.Api.csproj ./
-RUN dotnet restore
+RUN dotnet restore -r linux-x64
 COPY . ./
-RUN dotnet publish -c Release -o /app --no-restore
+# ReadyToRun compiles the app ahead of time, so a start on a small, throttled
+# instance (Render's free plan has 0.1 CPU) spends far less time in the JIT.
+RUN dotnet publish -c Release -o /app --no-restore -r linux-x64 --self-contained false \
+    -p:PublishReadyToRun=true
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0
 WORKDIR /app

@@ -4,6 +4,15 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <!--
+      Hosted on a tiny, CPU-throttled instance. Server GC and background GC run
+      extra threads that compete for that CPU, and dynamic PGO spends it
+      re-compiling hot methods; with them off, a request is less likely to stall
+      long enough to fail the host's health check.
+    -->
+    <ServerGarbageCollection>false</ServerGarbageCollection>
+    <ConcurrentGarbageCollection>false</ConcurrentGarbageCollection>
+    <TieredPGO>false</TieredPGO>
   </PropertyGroup>
 
   <ItemGroup>

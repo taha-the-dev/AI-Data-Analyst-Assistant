@@ -166,7 +166,9 @@ To set it up from scratch:
    hand with the same settings:
    - Runtime **Docker**, plan **Free**, region **Singapore**
    - Dockerfile path `./backend/AnalystAI.Api/Dockerfile`, Docker build context
-     `./backend/AnalystAI.Api`, health check path `/api/health`
+     `./backend/AnalystAI.Api`, and no health check path: on the free plan's
+     0.1 CPU a slow request can outlast its 5-second timeout, and the restart
+     that follows is what shows as "Cannot reach the API"
    - Environment: `PORT=8080`, `ConnectionStrings__Default=<Neon string>`,
      `Security__TrustedOrigins__0=https://datamind-ai-nine.vercel.app`,
      `Security__TrustForwardedHeaders=true`, `Security__ForwardLimit=2`, and

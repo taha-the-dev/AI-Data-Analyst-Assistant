@@ -16,7 +16,10 @@ services:
     region: singapore
     dockerfilePath: ./backend/AnalystAI.Api/Dockerfile
     dockerContext: ./backend/AnalystAI.Api
-    healthCheckPath: /api/health
+    # No healthCheckPath on purpose. On 0.1 CPU a request can stall past the
+    # health check's 5-second timeout, and Render then restarts the service,
+    # which turns a slow moment into a 502. Without one, Render only checks
+    # that the port is open.
     autoDeployTrigger: commit
     envVars:
       - key: PORT
