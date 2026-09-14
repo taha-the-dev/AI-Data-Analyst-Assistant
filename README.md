@@ -271,9 +271,9 @@ out and back in.
 A language model is unreliable at arithmetic, so it never does any here. A
 question moves through three stages: **plan** (a `QuerySpec` chosen by a model or
 by keyword rules), **execute** (`QueryEngine`, the only place a figure is ever
-produced), **explain** (prose written from the computed figures). Every answer
-carries the spec that ran, the rows scanned and the milliseconds each stage took,
-and the assistant screen shows all of it.
+produced), **explain** (prose written from the computed figures). The API records
+the spec that ran, the rows scanned and the milliseconds each stage took with
+every answer; the assistant screen shows the figures and a chart of them.
 
 A new account uses the **built-in planner**, which needs no key and no network:
 keyword rules pick the query and the figures are computed the same way they are

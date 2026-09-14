@@ -198,8 +198,8 @@ export default function AiAnalyst() {
     })
 
     source.addEventListener('figures', (e) => {
-      const { figures, rowsScanned, computeMs, chart, title } = JSON.parse(e.data)
-      patch({ figures, rowsScanned, latencyMs: computeMs, chart, title })
+      const { figures, chart, title } = JSON.parse(e.data)
+      patch({ figures, chart, title })
     })
 
     source.addEventListener('token', (e) => {
@@ -430,12 +430,6 @@ export default function AiAnalyst() {
                             )}
                           </p>
                         </div>
-                        {m.figures?.length > 0 && (
-                          <p className="font-body-sm text-body-sm text-on-surface-variant mt-1 ml-1">
-                            {m.figures.length} figures · {int(m.rowsScanned ?? 0)} rows scanned — shown in the
-                            analysis panel
-                          </p>
-                        )}
                       </div>
                     </div>
                   )
