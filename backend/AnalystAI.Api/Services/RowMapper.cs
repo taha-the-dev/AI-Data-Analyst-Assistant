@@ -16,7 +16,22 @@ public static class RowMapper
     /// <summary>Which header ended up feeding each queryable field.</summary>
     public sealed record FieldMapping(string Field, string? Header);
 
-    public sealed record MapResult(List<SalesRow> Rows, List<FieldMapping> Mapping);
+    /// <summary>
+    /// Which cell feeds each field, worked out once from the headers so rows can
+    /// then be mapped one at a time — an upload stores them in batches instead
+    /// of holding a mapped copy of the whole file.
+    /// </summary>
+    public sealed class Plan
+    {
+        internal Plan(Dictionary<string, int> index, List<FieldMapping> mapping)
+        {
+            Index = index;
+            Mapping = mapping;
+        }
+
+        internal Dictionary<string, int> Index { get; }
+        public List<FieldMapping> Mapping { get; }
+    }
 
     // Ordered by preference: the first header that contains one of these words
     // wins the field. Exact matches are preferred over contains.
@@ -34,9 +49,9 @@ public static class RowMapper
         ["status"] = ["status", "state", "stage", "outcome"],
     };
 
-    public static MapResult Map(CsvProfiler.ParseResult parsed)
+    public static Plan PlanFor(IReadOnlyList<string> headers)
     {
-        var normalised = parsed.Headers
+        var normalised = headers
             .Select(h => new string(h.ToLowerInvariant().Where(char.IsLetterOrDigit).ToArray()))
             .ToList();
 
@@ -51,39 +66,38 @@ public static class RowMapper
             taken.Add(match.Value);
         }
 
-        var rows = new List<SalesRow>(parsed.Rows.Count);
-
-        foreach (var cells in parsed.Rows)
-        {
-            var qty = (int)Math.Round(Number(cells, index, "qty") ?? 0);
-            var price = Number(cells, index, "price") ?? 0;
-            var revenue = Number(cells, index, "revenue")
-                          // No revenue column: the only honest substitute is the
-                          // product of two columns the file does have.
-                          ?? (qty > 0 && price > 0 ? qty * price : price);
-
-            rows.Add(new SalesRow
-            {
-                Date = Date(cells, index),
-                OrderId = Text(cells, index, "orderId"),
-                Customer = Text(cells, index, "customer"),
-                Product = Text(cells, index, "product"),
-                Category = Text(cells, index, "category"),
-                Qty = qty,
-                Price = Math.Round(price, 4),
-                Revenue = Math.Round(revenue, 4),
-                Region = Text(cells, index, "region"),
-                Status = Text(cells, index, "status"),
-            });
-        }
-
         var mapping = Vocabulary.Keys
             .Select(field => new FieldMapping(
                 field,
-                index.TryGetValue(field, out var i) ? parsed.Headers[i] : null))
+                index.TryGetValue(field, out var i) ? headers[i] : null))
             .ToList();
 
-        return new MapResult(rows, mapping);
+        return new Plan(index, mapping);
+    }
+
+    public static SalesRow MapRow(string[] cells, Plan plan)
+    {
+        var index = plan.Index;
+        var qty = (int)Math.Round(Number(cells, index, "qty") ?? 0);
+        var price = Number(cells, index, "price") ?? 0;
+        var revenue = Number(cells, index, "revenue")
+                      // No revenue column: the only honest substitute is the
+                      // product of two columns the file does have.
+                      ?? (qty > 0 && price > 0 ? qty * price : price);
+
+        return new SalesRow
+        {
+            Date = Date(cells, index),
+            OrderId = Text(cells, index, "orderId"),
+            Customer = Text(cells, index, "customer"),
+            Product = Text(cells, index, "product"),
+            Category = Text(cells, index, "category"),
+            Qty = qty,
+            Price = Math.Round(price, 4),
+            Revenue = Math.Round(revenue, 4),
+            Region = Text(cells, index, "region"),
+            Status = Text(cells, index, "status"),
+        };
     }
 
     private static int? FindColumn(List<string> headers, string[] words, HashSet<int> taken)

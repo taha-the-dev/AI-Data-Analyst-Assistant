@@ -124,25 +124,38 @@ public static class DatasetEndpoints
             // Profiling alone left an uploaded file unqueryable. The rows are
             // mapped onto the queryable schema and stored, so every other screen
             // works against an upload exactly as it does against the seed file.
-            var mapped = RowMapper.Map(parsed);
-            foreach (var row in mapped.Rows) row.DatasetId = dataset.Id;
+            //
+            // They are mapped a batch at a time, and each parsed row is let go
+            // once it is stored. Mapping the whole file up front held a second
+            // full copy of it in memory, next to the parsed one.
+            var plan = RowMapper.PlanFor(parsed.Headers);
+            var stored = parsed.Rows.Count;
+            var batch = new List<SalesRow>(InsertBatch);
 
-            for (var i = 0; i < mapped.Rows.Count; i += InsertBatch)
+            for (var i = 0; i < parsed.Rows.Count; i++)
             {
-                db.SalesRows.AddRange(mapped.Rows.Skip(i).Take(InsertBatch));
+                var row = RowMapper.MapRow(parsed.Rows[i], plan);
+                row.DatasetId = dataset.Id;
+                batch.Add(row);
+                parsed.Rows[i] = null!;
+
+                if (batch.Count < InsertBatch && i < parsed.Rows.Count - 1) continue;
+
+                db.SalesRows.AddRange(batch);
                 await db.SaveChangesAsync(ct);
 
                 // Saved rows are never read back here. Letting them pile up in
                 // the change tracker made a large file cost memory in proportion
                 // to its size and slowed every later batch.
                 db.ChangeTracker.Clear();
+                batch.Clear();
             }
 
             return Results.Created($"/api/datasets/{dataset.Id}", new UploadResultDto(
                 Map(dataset),
                 columns.Select(MapColumn).ToList(),
-                mapped.Rows.Count,
-                mapped.Mapping.Select(m => new FieldMappingDto(m.Field, m.Header)).ToList()));
+                stored,
+                plan.Mapping.Select(m => new FieldMappingDto(m.Field, m.Header)).ToList()));
         })
         .DisableAntiforgery()
         .WithName("UploadDataset")
