@@ -185,8 +185,13 @@ To set it up from scratch:
    ```
    Or run `npx vercel git connect` once, and every push deploys it.
 
-Render redeploys the API on every push to `main`. The frontend does not, unless
-Git is connected in Vercel.
+Pushes do not redeploy either half on their own. The live Render service was
+created from the repository's public URL, so Render is never told about a push,
+even though its Auto-Deploy setting reads "On Commit". After a change to
+`backend/`, use **Manual Deploy → Deploy latest commit** in the service, or
+connect GitHub to Render (**Account settings → Git**) for automatic deploys. The
+frontend likewise deploys only with `npx vercel deploy --prod`, unless Git is
+connected in Vercel.
 
 To check the deployment, `https://datamind-ai-nine.vercel.app/api/health` should
 return `{"status":"ok"}`: that response comes from Render, through Vercel.
