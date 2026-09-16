@@ -3,7 +3,6 @@ import { FixedCanvas } from '../components/AppShell'
 import { Button, EmptyState, ErrorState, TableSkeleton } from '../components/ui'
 import Icon from '../components/Icon'
 import Modal from '../components/Modal'
-import { useToast } from '../components/Toast'
 import { api } from '../lib/api'
 import { useResource } from '../hooks/useResource'
 import { useDatasets } from '../context/AppContext'
@@ -40,7 +39,6 @@ export default function DataExplorer() {
   const [page, setPage] = useState(1)
   const [addingRule, setAddingRule] = useState(false)
   const [draft, setDraft] = useState({ column: 'revenue', op: 'gt', value: '' })
-  const toast = useToast()
 
   const { activeId } = useDatasets()
   const columns = useResource(() => api.explorer.columns(), [])
@@ -81,64 +79,45 @@ export default function DataExplorer() {
   return (
     <FixedCanvas className="p-md gap-md">
       <div className="bg-surface-container-lowest border border-outline-variant rounded-lg shadow-sm shrink-0 flex flex-col gap-sm p-md">
-        <div className="flex flex-wrap items-center justify-between gap-md border-b border-outline-variant pb-sm">
+        <div
+          className={`flex flex-wrap items-center justify-between gap-md ${
+            filters.length > 0 ? 'border-b border-outline-variant pb-sm' : ''
+          }`}
+        >
           <div className="flex items-center gap-xs">
             <Button size="sm" icon="filter_list" onClick={() => setAddingRule(true)}>Filter</Button>
-            <Button size="sm" icon="sort" onClick={() => toggleSort(sort.key)}>Sort</Button>
-            <Button size="sm" icon="view_column" onClick={() => toast('Column visibility is not wired up yet.', 'info')}>
-              Columns
-            </Button>
           </div>
-          <div className="flex items-center gap-xs">
-            <span className="font-body-sm text-body-sm text-on-surface-variant mr-sm tabular-nums">
-              {busy ? '…' : `${int(total)} rows`}
-            </span>
-            <Button size="sm" icon="download" onClick={() => toast(`Exported ${int(total)} rows as CSV.`)}>
-              Export
-            </Button>
-            <button
-              aria-label="Fullscreen"
-              className="p-1.5 text-on-surface-variant hover:bg-surface-container-low rounded border border-transparent hover:border-outline-variant transition-all"
-            >
-              <Icon name="fullscreen" size={15} />
-            </button>
-          </div>
+          <span className="font-body-sm text-body-sm text-on-surface-variant tabular-nums">
+            {busy ? '…' : `${int(total)} rows`}
+          </span>
         </div>
 
-        <div className="flex flex-wrap items-center gap-sm pt-xs">
-          <span className="font-label-bold text-body-sm text-on-surface-variant">Active Filters:</span>
-          {filters.length === 0 && (
-            <span className="font-body-sm text-body-sm text-outline">None — all rows shown.</span>
-          )}
-          {filters.map((f, i) => (
-            <div key={f.id} className="flex items-center gap-sm">
-              {i > 0 && (
-                <span className="font-label-bold text-stat-label text-outline uppercase">and</span>
-              )}
-              <div className="flex items-center bg-primary-fixed border border-primary-fixed-dim rounded px-2 py-1 gap-xs font-body-main text-body-sm">
-                <span className="font-label-bold text-on-primary-fixed">{f.column}</span>
-                <span className="text-primary-container px-1">{symbolFor(f.op)}</span>
-                <span className="text-on-primary-fixed">{f.value}</span>
-                <button
-                  aria-label={`Remove filter ${f.column} ${symbolFor(f.op)} ${f.value}`}
-                  onClick={() => {
-                    setFilters((list) => list.filter((x) => x.id !== f.id))
-                    setPage(1)
-                  }}
-                  className="text-primary hover:text-on-primary-fixed ml-1"
-                >
-                  <Icon name="close" size={14} />
-                </button>
+        {filters.length > 0 && (
+          <div className="flex flex-wrap items-center gap-sm pt-xs">
+            {filters.map((f, i) => (
+              <div key={f.id} className="flex items-center gap-sm">
+                {i > 0 && (
+                  <span className="font-label-bold text-stat-label text-outline uppercase">and</span>
+                )}
+                <div className="flex items-center bg-primary-fixed border border-primary-fixed-dim rounded px-2 py-1 gap-xs font-body-main text-body-sm">
+                  <span className="font-label-bold text-on-primary-fixed">{f.column}</span>
+                  <span className="text-primary-container px-1">{symbolFor(f.op)}</span>
+                  <span className="text-on-primary-fixed">{f.value}</span>
+                  <button
+                    aria-label={`Remove filter ${f.column} ${symbolFor(f.op)} ${f.value}`}
+                    onClick={() => {
+                      setFilters((list) => list.filter((x) => x.id !== f.id))
+                      setPage(1)
+                    }}
+                    className="text-primary hover:text-on-primary-fixed ml-1"
+                  >
+                    <Icon name="close" size={14} />
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
-          <button
-            onClick={() => setAddingRule(true)}
-            className="text-primary-container hover:text-surface-tint font-label-bold text-body-sm flex items-center gap-xs ml-sm"
-          >
-            <Icon name="add" size={14} /> Add Rule
-          </button>
-        </div>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="flex-1 bg-surface-container-lowest border border-outline-variant rounded-lg shadow-sm overflow-hidden flex flex-col relative min-h-0">
