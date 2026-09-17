@@ -226,7 +226,7 @@ export function TrendChart({
 
 // Four hues that stay distinguishable in both themes; the channels swap
 // with the theme, the roles do not.
-const DONUT_COLORS = [
+export const DONUT_COLORS = [
   'rgb(var(--chart-1))',
   'rgb(var(--chart-2))',
   'rgb(var(--chart-3))',
@@ -322,13 +322,16 @@ export function RankedBars({ items, format = (v) => v }) {
  * Label, track, fill — the "Sales by Category" list. The fill steps down in
  * opacity by rank so the leader reads first without a legend.
  */
-export function TrackBars({ items, format = (v) => v }) {
+export function TrackBars({ items, format = (v) => v, showValues = false }) {
   const max = Math.max(...items.map((i) => i.value)) || 1
   return (
     <ul className="flex flex-col gap-sm">
       {items.map((item, i) => (
         <li key={item.label} className="flex items-center gap-md group">
-          <span className="font-body-main text-body-main text-on-surface-variant w-[76px] shrink-0 truncate">
+          <span
+            className={`font-body-main text-body-main text-on-surface-variant shrink-0 truncate ${showValues ? 'w-[96px]' : 'w-[76px]'}`}
+            title={bucketLabel(item.label)}
+          >
             {bucketLabel(item.label)}
           </span>
           <span className="flex-1 h-[10px] rounded bg-surface-container-highest overflow-hidden">
@@ -341,7 +344,11 @@ export function TrackBars({ items, format = (v) => v }) {
               }}
             />
           </span>
-          <span className="font-code text-code text-on-surface tabular-nums w-[64px] text-right shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+          <span
+            className={`font-code text-code text-on-surface tabular-nums w-[64px] text-right shrink-0 transition-opacity ${
+              showValues ? '' : 'opacity-0 group-hover:opacity-100'
+            }`}
+          >
             {format(item.value)}
           </span>
         </li>
@@ -355,7 +362,7 @@ export function TrackBars({ items, format = (v) => v }) {
  * trend. Drawn with flex boxes rather than SVG so the labels stay crisp and
  * the hover target is a real element.
  */
-export function ColumnChart({ points, format = (v) => v, height = 210 }) {
+export function ColumnChart({ points, format = (v) => v, height = 210, wideLabels = false }) {
   const max = Math.max(...points.map((p) => p.value)) || 1
   // A round number above the tallest column, so the axis reads sensibly.
   const step = Math.pow(10, Math.floor(Math.log10(max))) / 2
@@ -404,7 +411,9 @@ export function ColumnChart({ points, format = (v) => v, height = 210 }) {
           {points.map((p) => (
             <span
               key={p.label}
-              className="flex-1 max-w-[38px] text-center font-body-sm text-body-sm text-on-surface-variant truncate"
+              className={`flex-1 text-center font-body-sm text-on-surface-variant truncate ${
+                wideLabels ? 'min-w-0 text-[11px]' : 'max-w-[38px] text-body-sm'
+              }`}
               title={bucketLabel(p.label)}
             >
               {bucketLabel(p.label)}

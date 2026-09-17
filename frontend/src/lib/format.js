@@ -10,6 +10,22 @@ export const compactMoney = (n) => {
   return '$' + n
 }
 
+/**
+ * A figure in the unit the API described for it — `{ prefix: '$', suffix: '',
+ * decimals: 0 }` — shortened to K / M / B once it gets long. The API decides
+ * the unit from the file, so a marks chart never grows a dollar sign.
+ */
+export function unitValue(n, unit = {}, { compact = true } = {}) {
+  const { prefix = '', suffix = '', decimals = 0 } = unit
+  const abs = Math.abs(n)
+  let body
+  if (compact && abs >= 1e9) body = `${+(n / 1e9).toFixed(2)}B`
+  else if (compact && abs >= 1e6) body = `${+(n / 1e6).toFixed(2)}M`
+  else if (compact && abs >= 1e4) body = `${+(n / 1e3).toFixed(1)}K`
+  else body = n.toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals })
+  return `${prefix}${body}${suffix}`
+}
+
 const timeFmt = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false })
 const dayFmt = new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
 

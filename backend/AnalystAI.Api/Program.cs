@@ -51,6 +51,8 @@ builder.Services.AddScoped<QueryEngine>();
 builder.Services.AddScoped<ReportComposer>();
 builder.Services.AddScoped<IDatasetContext, DatasetContext>();
 builder.Services.AddScoped<SchemaSummary>();
+builder.Services.AddMemoryCache();
+builder.Services.AddScoped<DashboardService>();
 
 // Planners. The engine only ever receives a QuerySpec, so which planner produced
 // it changes nothing downstream. The resolver picks one per request from the

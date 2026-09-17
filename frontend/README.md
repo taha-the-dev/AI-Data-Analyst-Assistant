@@ -48,7 +48,7 @@ charts are inline SVG and flex boxes, drawn to the design's own spec.
 | --- | --- | --- |
 | `/login` | Sign in | `/api/auth/login` |
 | `/signup` | Create an account | `/api/auth/signup` |
-| `/` | Dashboard — KPI strip, revenue trend, category split, top products, insights | `/api/dashboard`, `/api/analytics`, `/api/query/run` |
+| `/` | Dashboard — tiles, charts, table and insights chosen from the file's own columns (students, sales, HR or any other data), plus data quality | `/api/dashboard` |
 | `/analyst` | AI Assistant — conversation left, analysis panel right | `/api/chat/*` (SSE) |
 | `/datasets` | Datasets — dropzone, library, file detail with a live row preview | `/api/datasets/*`, `/api/explorer/rows` |
 | `/analytics` | Analytics — metric/dimension/aggregate toolbar, chart, tabular data | `/api/query/run` |

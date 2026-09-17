@@ -1,46 +1,47 @@
-import { Link } from 'react-router-dom'
 import { PageCanvas, PageHeader } from '../components/AppShell'
 import {
   PanelSkeleton, ErrorState, IconTile, Panel, PanelHeader, Skeleton, StatCard, NoProject,
 } from '../components/ui'
-import { TrackBars, TrendChart } from '../components/charts'
+import { ColumnChart, DONUT_COLORS, DonutChart, TrackBars, TrendChart } from '../components/charts'
 import Icon from '../components/Icon'
 import ProjectPicker from '../components/ProjectPicker'
 import { api } from '../lib/api'
 import { useResource } from '../hooks/useResource'
 import { useDatasets, usePageActions } from '../context/AppContext'
 import { downloadCsv } from '../lib/csv'
-import { bucketLabel, compactMoney, int, money } from '../lib/format'
+import { bucketLabel, int, unitValue } from '../lib/format'
 
-/* Two extra series the dashboard needs that no endpoint returns ready-made.
-   Both are ordinary QuerySpecs, run by the same engine every other figure on
-   the screen comes from. */
-const TOP_PRODUCTS_SPEC = {
-  intent: 'aggregate',
-  groupBy: 'product',
-  metric: 'revenue',
-  aggregate: 'sum',
-  sort: 'value desc',
-  limit: 5,
-  chart: 'bar',
-  title: 'Top products by revenue',
-}
-
-const ORDER_VOLUME_SPEC = {
-  intent: 'trend',
-  groupBy: 'date',
-  timeBucket: 'month',
-  aggregate: 'count',
-  sort: 'label asc',
-  limit: 24,
-  chart: 'line',
-  title: 'Orders by month',
-}
+/*
+ * The dashboard is a frame; the API decides what goes in it.
+ *
+ * Which tiles appear, what each chart plots and is called, which table is shown
+ * and what the insights say all come from the uploaded file's own columns — a
+ * mark sheet gets marks and attendance, an order export gets revenue and
+ * products. Nothing on this screen names a business concept of its own, and a
+ * slot the file cannot fill is left out rather than drawn empty.
+ */
 
 const insightTones = {
   positive: { wrap: 'border-success/30 bg-success-container/40', icon: 'text-success', glyph: 'check_circle' },
   alert: { wrap: 'border-danger/30 bg-danger-container/40', icon: 'text-danger', glyph: 'warning' },
   neutral: { wrap: 'border-outline-variant bg-surface-container-low', icon: 'text-primary', glyph: 'lightbulb' },
+}
+
+const domainIcons = {
+  education: 'school',
+  sales: 'storefront',
+  hr: 'badge',
+  general: 'dataset',
+}
+
+// Written out in full so Tailwind sees every class it has to generate.
+const kpiColumns = {
+  1: 'xl:grid-cols-1',
+  2: 'xl:grid-cols-2',
+  3: 'xl:grid-cols-3',
+  4: 'xl:grid-cols-4',
+  5: 'xl:grid-cols-5',
+  6: 'xl:grid-cols-6',
 }
 
 export default function Dashboard() {
@@ -50,39 +51,32 @@ export default function Dashboard() {
     () => (activeId ? api.dashboard(activeId) : Promise.resolve(null)),
     [activeId]
   )
-  const analytics = useResource(
-    () => (activeId ? api.analytics(activeId) : Promise.resolve(null)),
-    [activeId]
-  )
-  const products = useResource(
-    () => (activeId ? api.runSpec(TOP_PRODUCTS_SPEC, activeId) : Promise.resolve(null)),
-    [activeId]
-  )
 
-  const orders = useResource(
-    () => (activeId ? api.runSpec(ORDER_VOLUME_SPEC, activeId) : Promise.resolve(null)),
-    [activeId]
-  )
-
-  const trend = dashboard.data?.revenueTrend ?? []
+  const data = dashboard.data
 
   usePageActions(
     () =>
-      trend.length
+      data
         ? {
-            exportLabel: 'Export revenue by month as CSV',
+            exportLabel: 'Export dashboard figures as CSV',
             onExport: () =>
               downloadCsv(
-                `${active?.name ?? 'dataset'}-revenue-by-month`,
+                `${active?.name ?? 'dataset'}-dashboard`,
                 [
-                  { label: 'Month', value: (r) => bucketLabel(r.label) },
-                  { label: 'Revenue', value: (r) => r.value },
+                  { label: 'Section', value: (r) => r.section },
+                  { label: 'Label', value: (r) => r.label },
+                  { label: 'Value', value: (r) => r.value },
                 ],
-                trend
+                [
+                  ...data.kpis.map((k) => ({ section: 'KPI', label: k.label, value: k.value })),
+                  ...data.charts.flatMap((c) =>
+                    c.figures.map((f) => ({ section: c.title, label: bucketLabel(f.label), value: f.value }))
+                  ),
+                ]
               ),
           }
         : {},
-    [trend.length, activeId, active?.name]
+    [data, active?.name]
   )
 
   const header = (
@@ -90,7 +84,9 @@ export default function Dashboard() {
       title="Dashboard"
       description={
         active
-          ? `${int(active.rows)} rows across ${active.columns} columns, computed on read.`
+          ? data
+            ? `${data.domainLabel} · ${int(active.rows)} rows × ${active.columns} columns, analysed from the file itself.`
+            : `${int(active.rows)} rows across ${active.columns} columns.`
           : 'Choose a project to analyse.'
       }
       aside={<ProjectPicker />}
@@ -103,38 +99,40 @@ export default function Dashboard() {
       <PageCanvas>
         {header}
         <Panel>
-          <NoProject what="KPIs, trends and insights" />
+          <NoProject what="KPIs, charts and insights chosen for your data" />
         </Panel>
       </PageCanvas>
     )
   }
 
-  const error = dashboard.error ?? analytics.error
-  if (error) {
+  if (dashboard.error) {
     return (
       <PageCanvas>
         {header}
         <ErrorState
-          error={error}
+          error={dashboard.error}
           onRetry={async () => {
             // A project can disappear while this screen is open; re-reading the
             // library first drops a selection the server no longer knows about.
             await revalidate()
             dashboard.reload()
-            analytics.reload()
           }}
         />
       </PageCanvas>
     )
   }
 
-  const loading = dashboard.loading || analytics.loading || !dashboard.data || !analytics.data
-
-  if (loading) {
+  if (dashboard.loading || !data) {
     return (
       <PageCanvas>
         {header}
-        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-md">
+        <Panel className="p-sm px-md flex items-center gap-sm">
+          <Icon name="auto_awesome" size={16} className="text-primary animate-pulse" />
+          <span className="font-body-main text-body-main text-on-surface-variant">
+            Reading the columns and choosing what to measure…
+          </span>
+        </Panel>
+        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-sm">
           {Array.from({ length: 6 }).map((_, i) => (
             <Panel key={i} className="p-md">
               <Skeleton className="h-3 w-20" />
@@ -143,186 +141,338 @@ export default function Dashboard() {
           ))}
         </div>
         <div className="grid grid-cols-12 gap-sm">
-          <PanelSkeleton className="col-span-12 lg:col-span-8 h-[340px]" />
-          <PanelSkeleton className="col-span-12 lg:col-span-4 h-[340px]" />
+          <PanelSkeleton className="col-span-12 lg:col-span-8 h-[300px]" />
+          <PanelSkeleton className="col-span-12 lg:col-span-4 h-[300px]" />
         </div>
       </PageCanvas>
     )
   }
 
-  const { categoryBars, insights } = dashboard.data
-  // Six tiles, as in the design: the four money figures, then the two that
-  // describe the file itself.
-  const stats = [
-    ...analytics.data.kpis,
-    ...dashboard.data.kpis.filter((k) => k.label === 'Total Rows' || k.label === 'Quality Score'),
-  ]
-
-  const productTotal = products.data?.total ?? 0
-  const orderPoints = orders.data?.figures ?? []
-  const totalOrders = orderPoints.reduce((sum, p) => sum + p.value, 0)
+  const { kpis, charts, table, insights, quality } = data
+  const [first, second, third, fourth] = charts
 
   return (
     <PageCanvas>
       {header}
 
-      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-sm stagger">
-        {stats.map((k) => (
-          <StatCard
-            key={k.label}
-            label={k.label}
-            value={k.value}
-            icon={k.icon}
-            iconTone={k.iconTone}
-            delta={k.delta}
-            deltaTone={k.deltaTone}
-          />
-        ))}
-      </div>
+      <AnalysisStrip data={data} />
 
-      <div className="grid grid-cols-12 gap-sm">
-        <Panel className="col-span-12 lg:col-span-8 p-md flex flex-col min-h-[130px]">
-          <PanelHeader
-            title="Revenue Performance"
-            action={
-              <span className="font-body-sm text-body-sm text-on-surface-variant">
-                {trend.length} months
-              </span>
-            }
-          />
-          <div className="flex-1 mt-md min-h-[150px] flex">
-            <TrendChart
-              points={trend}
-              format={compactMoney}
-              className="flex-1"
-              gradientId="dashboardTrend"
-              ariaLabel="Revenue by month"
+      {kpis.length > 0 && (
+        <div className={`grid grid-cols-2 md:grid-cols-3 ${kpiColumns[Math.min(kpis.length, 6)]} gap-sm stagger`}>
+          {kpis.map((k) => (
+            <StatCard
+              key={k.label}
+              label={k.label}
+              value={k.value}
+              icon={k.icon}
+              iconTone={k.iconTone}
+              delta={k.delta}
+              deltaTone={k.deltaTone}
+              hint={k.hint}
             />
-          </div>
-        </Panel>
+          ))}
+        </div>
+      )}
 
-        <Panel className="col-span-12 lg:col-span-4 p-md flex flex-col">
-          <PanelHeader title="Sales by Category" />
-          <div className="flex-1 flex items-center mt-md">
-            <div className="w-full">
-              <TrackBars items={categoryBars} format={compactMoney} />
-            </div>
-          </div>
-        </Panel>
+      {first && (
+        <div className="grid grid-cols-12 gap-sm">
+          <ChartPanel chart={first} className={second ? 'col-span-12 lg:col-span-8' : 'col-span-12'} tall />
+          {second && <ChartPanel chart={second} className="col-span-12 lg:col-span-4" tall />}
+        </div>
+      )}
+
+      <div className="grid grid-cols-12 gap-sm">
+        {table && <TablePanel table={table} className={`col-span-12 ${third ? 'xl:col-span-5' : 'xl:col-span-7'}`} />}
+        {third && (
+          <ChartPanel chart={third} className={`col-span-12 md:col-span-6 ${table ? 'xl:col-span-3' : 'xl:col-span-7'}`} />
+        )}
+        <InsightsPanel
+          insights={insights}
+          className={`col-span-12 ${third ? 'md:col-span-6' : ''} ${
+            table && third ? 'xl:col-span-4' : table || third ? 'xl:col-span-5' : ''
+          }`}
+        />
       </div>
 
       <div className="grid grid-cols-12 gap-sm">
-        <Panel className="col-span-12 xl:col-span-5 p-md flex flex-col">
-          <PanelHeader
-            title="Top Products"
-            action={
-              <Link
-                to="/explorer"
-                className="font-label-bold text-label-bold text-primary hover:text-surface-tint transition-colors"
-              >
-                View All
-              </Link>
-            }
-          />
-
-          {products.error ? (
-            <ErrorState error={products.error} onRetry={products.reload} className="mt-md" />
-          ) : products.loading ? (
-            <div className="mt-lg space-y-sm">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <Skeleton key={i} className="h-8 w-full" />
-              ))}
-            </div>
-          ) : (
-            <table className="w-full mt-md text-left border-collapse">
-              <thead>
-                <tr className="bg-surface-container-low">
-                  <th scope="col" className="font-label-bold text-stat-label uppercase text-on-surface-variant py-sm px-md rounded-l-lg">
-                    Product
-                  </th>
-                  <th scope="col" className="font-label-bold text-stat-label uppercase text-on-surface-variant py-sm px-md text-right">
-                    Revenue
-                  </th>
-                  <th scope="col" className="font-label-bold text-stat-label uppercase text-on-surface-variant py-sm px-md text-right rounded-r-lg">
-                    Share
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-outline-variant/50">
-                {(products.data?.figures ?? []).map((p, i) => (
-                  <tr
-                    key={p.label}
-                    className="hover:bg-surface-container-low/60 transition-colors animate-fade-up"
-                    style={{ animationDelay: `${i * 45}ms` }}
-                  >
-                    <td className="py-sm px-sm font-body-main text-body-main text-on-surface">{bucketLabel(p.label)}</td>
-                    <td className="py-sm px-sm text-right font-code text-code text-on-surface tabular-nums">
-                      {money(p.value, 0)}
-                    </td>
-                    <td className="py-sm px-sm text-right font-code text-code text-success tabular-nums">
-                      {productTotal ? `${((p.value / productTotal) * 100).toFixed(1)}%` : '—'}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </Panel>
-
-        <Panel className="col-span-12 md:col-span-6 xl:col-span-3 p-md flex flex-col">
-          <PanelHeader title="Order Volume" />
-          <p className="mt-md flex items-baseline gap-sm">
-            <span className="font-kpi-value text-stat-value text-on-surface tabular-nums">
-              {int(totalOrders)}
-            </span>
-            <span className="font-body-main text-body-main text-on-surface-variant">orders</span>
-          </p>
-          <div className="flex-1 min-h-[110px] mt-md flex">
-            {orders.loading ? (
-              <Skeleton className="h-full w-full" />
-            ) : orderPoints.length ? (
-              <TrendChart
-                points={orderPoints}
-                format={int}
-                showAxis={false}
-                className="flex-1"
-                gradientId="dashboardOrders"
-                ariaLabel="Orders by month"
-              />
-            ) : (
-              <p className="font-body-sm text-body-sm text-on-surface-variant">No dated rows to plot.</p>
-            )}
-          </div>
-        </Panel>
-
-        <Panel className="col-span-12 md:col-span-6 xl:col-span-4 p-md flex flex-col">
-          <PanelHeader title="AI Insights" icon="auto_awesome" />
-          <ul className="mt-md flex flex-col gap-xs">
-            {insights.map((insight, index) => {
-              const tone = insightTones[insight.tone] ?? insightTones.neutral
-              return (
-                <li
-                  key={insight.title}
-                  className={`border rounded-lg p-md flex gap-sm animate-fade-up ${tone.wrap}`}
-                  style={{ animationDelay: `${index * 70}ms` }}
-                >
-                  <Icon name={insight.icon || tone.glyph} size={18} className={`${tone.icon} shrink-0 mt-[2px]`} />
-                  <p className="font-body-main text-body-main text-on-surface">
-                    <span className="font-label-bold">{insight.title}. </span>
-                    {insight.body}
-                  </p>
-                </li>
-              )
-            })}
-          </ul>
-        </Panel>
+        <QualityPanel quality={quality} className={fourth ? 'col-span-12 xl:col-span-8' : 'col-span-12'} />
+        {fourth && <ChartPanel chart={fourth} className="col-span-12 xl:col-span-4" />}
       </div>
 
       <p className="font-body-sm text-body-sm text-on-surface-variant flex items-center gap-sm">
         <IconTile icon="function" size={28} tone="muted" />
-        Every figure above was computed by the API against the {int(active?.rows ?? 0)} stored rows of{' '}
-        {active?.name ?? 'this file'}.
+        Every figure above was computed from the {int(quality.rows)} rows and {quality.columns} columns of{' '}
+        {active?.name ?? 'this file'}. Figures the file cannot support are left out, not shown as zero.
       </p>
     </PageCanvas>
+  )
+}
+
+/** What the analyser took the file to be, and which columns told it so. */
+function AnalysisStrip({ data }) {
+  return (
+    <Panel className="px-md py-sm flex flex-col lg:flex-row lg:items-center gap-sm">
+      <div className="flex items-center gap-sm min-w-0 lg:max-w-[46%]">
+        <span className="w-7 h-7 rounded-lg bg-primary-fixed text-primary flex items-center justify-center shrink-0">
+          <Icon name={domainIcons[data.domain] ?? 'dataset'} size={16} />
+        </span>
+        <div className="min-w-0">
+          <p className="font-label-bold text-label-bold text-on-surface flex items-center gap-xs">
+            <Icon name="auto_awesome" size={13} className="text-primary" />
+            {data.domainLabel}
+          </p>
+          <p className="font-body-sm text-body-sm text-on-surface-variant">{data.summary}</p>
+        </div>
+      </div>
+      {data.fields.length > 0 && (
+        <ul className="flex flex-wrap gap-xs lg:ml-auto lg:justify-end" aria-label="Recognised columns">
+          {data.fields.slice(0, 12).map((f) => (
+            <li
+              key={f.column}
+              className="inline-flex items-center gap-1 rounded border border-outline-variant bg-surface-container-low px-1.5 py-[1px] font-body-sm text-[11px] leading-[16px]"
+              title={`${f.column} is read as ${f.role.toLowerCase()}`}
+            >
+              <span className="font-code text-on-surface">{f.column}</span>
+              <Icon name="arrow_right_alt" size={11} className="text-outline" />
+              <span className="text-primary">{f.role}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </Panel>
+  )
+}
+
+function ChartPanel({ chart, className = '', tall = false }) {
+  const format = (v) => unitValue(v, chart.unit)
+  const figures = chart.figures
+  // Four hues stay distinguishable; past that a donut starts repeating colours.
+  const kind = chart.kind === 'donut' && figures.length > DONUT_COLORS.length ? 'bars' : chart.kind
+  const total = figures.reduce((sum, f) => sum + f.value, 0)
+
+  return (
+    <Panel className={`p-md flex flex-col min-w-0 animate-fade-up ${className}`}>
+      <PanelHeader
+        title={chart.title}
+        action={
+          chart.caption && (
+            <span className="font-body-sm text-body-sm text-on-surface-variant text-right">{chart.caption}</span>
+          )
+        }
+      />
+      <div className={`flex-1 mt-md flex ${tall ? 'min-h-[220px]' : 'min-h-[180px]'}`}>
+        {kind === 'line' ? (
+          <TrendChart
+            points={figures}
+            format={format}
+            className="flex-1"
+            gradientId={`chart-${chart.id.replace(/[^a-z0-9]/gi, '')}`}
+            ariaLabel={chart.title}
+          />
+        ) : kind === 'columns' ? (
+          <div className="flex-1 min-w-0">
+            <ColumnChart points={figures} format={format} height={tall ? 220 : 180} wideLabels />
+          </div>
+        ) : kind === 'donut' ? (
+          <div className="flex-1 flex flex-col items-center justify-center gap-md">
+            <DonutChart
+              segments={figures}
+              centerLabel={bucketLabel(figures[0].label)}
+              centerValue={total ? `${((figures[0].value / total) * 100).toFixed(1)}%` : format(figures[0].value)}
+              size={tall ? 'w-40 h-40' : 'w-32 h-32'}
+              format={format}
+            />
+            <ul className="flex flex-wrap justify-center gap-x-md gap-y-xs">
+              {figures.map((f, i) => (
+                <li key={f.label} className="flex items-center gap-xs font-body-sm text-body-sm text-on-surface-variant">
+                  <span className="w-2 h-2 rounded-sm" style={{ background: DONUT_COLORS[i % DONUT_COLORS.length] }} />
+                  {bucketLabel(f.label)}
+                  <span className="font-code text-on-surface tabular-nums">
+                    {total ? `${((f.value / total) * 100).toFixed(1)}%` : '—'}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : (
+          <div className="w-full flex items-center">
+            <div className="w-full">
+              <TrackBars items={figures.slice(0, 10)} format={format} showValues />
+            </div>
+          </div>
+        )}
+      </div>
+    </Panel>
+  )
+}
+
+function TablePanel({ table, className = '' }) {
+  return (
+    <Panel className={`p-md flex flex-col min-w-0 ${className}`}>
+      <PanelHeader
+        title={table.title}
+        action={
+          table.caption && <span className="font-body-sm text-body-sm text-on-surface-variant">{table.caption}</span>
+        }
+      />
+      <div className="mt-md overflow-x-auto">
+        <table className="w-full text-left border-collapse">
+          <thead>
+            <tr className="bg-surface-container-low">
+              {table.columns.map((c, i) => (
+                <th
+                  key={`${c.label}-${i}`}
+                  scope="col"
+                  className={`font-label-bold text-stat-label uppercase text-on-surface-variant py-sm px-sm align-bottom ${
+                    c.align === 'right' ? 'text-right' : ''
+                  } ${i === 0 ? 'rounded-l-lg' : ''} ${i === table.columns.length - 1 ? 'rounded-r-lg' : ''}`}
+                >
+                  {c.label}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-outline-variant/50">
+            {table.rows.map((row, r) => (
+              <tr
+                key={r}
+                className="hover:bg-surface-container-low/60 transition-colors animate-fade-up"
+                style={{ animationDelay: `${r * 40}ms` }}
+              >
+                {row.map((cell, i) => {
+                  const right = table.columns[i]?.align === 'right'
+                  return (
+                    <td
+                      key={i}
+                      className={`py-sm px-sm ${
+                        right
+                          ? 'text-right font-code text-code text-on-surface tabular-nums whitespace-nowrap'
+                          : 'font-body-main text-body-main text-on-surface max-w-[180px] truncate'
+                      }`}
+                      title={right ? undefined : cell}
+                    >
+                      {cell}
+                    </td>
+                  )
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </Panel>
+  )
+}
+
+function InsightsPanel({ insights, className = '' }) {
+  return (
+    <Panel className={`p-md flex flex-col min-w-0 ${className}`}>
+      <PanelHeader title="AI Insights" icon="auto_awesome" />
+      <ul className="mt-md flex flex-col gap-xs">
+        {insights.map((insight, index) => {
+          const tone = insightTones[insight.tone] ?? insightTones.neutral
+          return (
+            <li
+              key={insight.title}
+              className={`border rounded-lg p-sm px-md flex gap-sm animate-fade-up ${tone.wrap}`}
+              style={{ animationDelay: `${index * 70}ms` }}
+            >
+              <Icon name={insight.icon || tone.glyph} size={16} className={`${tone.icon} shrink-0 mt-[2px]`} />
+              <p className="font-body-main text-body-main text-on-surface">
+                <span className="font-label-bold">{insight.title}. </span>
+                {insight.body}
+              </p>
+            </li>
+          )
+        })}
+      </ul>
+    </Panel>
+  )
+}
+
+const gradeTone = {
+  High: 'bg-success-container text-success',
+  Medium: 'bg-primary-fixed text-primary',
+  Low: 'bg-danger-container text-danger',
+}
+
+function QualityPanel({ quality, className = '' }) {
+  const stats = [
+    { label: 'Total rows', value: int(quality.rows), icon: 'table_rows' },
+    { label: 'Total columns', value: int(quality.columns), icon: 'view_column' },
+    { label: 'Missing values', value: int(quality.missingCells), icon: 'block', bad: quality.missingCells > 0 },
+    { label: 'Duplicate rows', value: int(quality.duplicateRows), icon: 'content_copy', bad: quality.duplicateRows > 0 },
+    { label: 'Completeness', value: `${(quality.completeness * 100).toFixed(1)}%`, icon: 'donut_large' },
+  ]
+
+  return (
+    <Panel className={`p-md flex flex-col min-w-0 ${className}`}>
+      <PanelHeader
+        title="Data Quality"
+        icon="verified"
+        action={
+          <span className={`rounded px-1.5 py-[1px] font-label-bold text-[11px] ${gradeTone[quality.grade] ?? gradeTone.Medium}`}>
+            {quality.grade}
+          </span>
+        }
+      />
+
+      <div className="mt-md grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-md">
+        <div className="flex flex-col gap-sm">
+          <div className="flex items-end gap-sm">
+            <span className="font-kpi-value text-stat-value text-on-surface tabular-nums">{quality.score}</span>
+            <span className="font-body-sm text-body-sm text-on-surface-variant pb-[3px]">/ 100 quality score</span>
+          </div>
+          <span className="h-[6px] rounded bg-surface-container-highest overflow-hidden" aria-hidden="true">
+            <span
+              className={`block h-full rounded origin-left animate-widen ${
+                quality.grade === 'Low' ? 'bg-error' : quality.grade === 'Medium' ? 'bg-primary' : 'bg-success'
+              }`}
+              style={{ width: `${quality.score}%` }}
+            />
+          </span>
+          <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-md">
+            {stats.map((s) => (
+              <div key={s.label} className="flex items-center justify-between gap-sm py-[5px] border-b border-outline-variant/60 min-w-0">
+                <dt className="flex items-center gap-xs font-body-sm text-body-sm text-on-surface-variant whitespace-nowrap">
+                  <Icon name={s.icon} size={13} className="text-outline" />
+                  {s.label}
+                </dt>
+                <dd className={`font-code text-code tabular-nums ${s.bad ? 'text-danger' : 'text-on-surface'}`}>{s.value}</dd>
+              </div>
+            ))}
+          </dl>
+          <p className="font-body-sm text-[11px] text-on-surface-variant">
+            Score weighs completeness, duplicate rows and values that do not match their column's type.
+          </p>
+        </div>
+
+        <div className="min-w-0">
+          <h4 className="font-label-bold text-stat-label uppercase text-on-surface-variant">Columns with gaps</h4>
+          {quality.issues.length === 0 ? (
+            <p className="mt-sm flex items-center gap-xs font-body-main text-body-main text-on-surface-variant">
+              <Icon name="check_circle" size={15} className="text-success" />
+              Every column is fully populated.
+            </p>
+          ) : (
+            <ul className="mt-sm flex flex-col gap-xs">
+              {quality.issues.map((issue) => (
+                <li key={issue.column} className="flex items-center gap-sm">
+                  <span className="font-code text-code text-on-surface w-[96px] shrink-0 truncate" title={issue.column}>
+                    {issue.column}
+                  </span>
+                  <span className="flex-1 h-[8px] rounded bg-danger-container overflow-hidden">
+                    <span className="block h-full rounded bg-success" style={{ width: `${issue.completeness * 100}%` }} />
+                  </span>
+                  <span className="font-code text-code text-on-surface-variant tabular-nums w-[88px] text-right shrink-0">
+                    {int(issue.missing)} missing
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </div>
+    </Panel>
   )
 }

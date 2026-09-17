@@ -193,17 +193,26 @@ export function TableSkeleton({ rows = 6, className = '' }) {
    large number, and a tinted delta chip when the API sends a delta.
 -------------------------------------------------------------------------- */
 
-export function StatCard({ label, value, icon, delta, deltaTone = 'up', iconTone = 'muted' }) {
+export function StatCard({ label, value, icon, delta, deltaTone = 'up', iconTone = 'muted', hint }) {
   const down = deltaTone === 'down'
   return (
-    <div className="bg-surface-container-lowest border border-outline-variant rounded-lg p-sm flex flex-col gap-xs">
+    <div className="bg-surface-container-lowest border border-outline-variant rounded-lg p-sm flex flex-col gap-xs min-w-0">
       <div className="flex items-start justify-between gap-sm">
-        <span className="font-label-bold text-stat-label uppercase text-on-surface-variant">{label}</span>
+        <span className="font-label-bold text-stat-label uppercase text-on-surface-variant truncate" title={label}>
+          {label}
+        </span>
         {icon && (
           <Icon name={icon} size={14} className={iconTone === 'error' ? 'text-error' : 'text-outline'} />
         )}
       </div>
-      <span className="font-kpi-value text-stat-value text-on-surface tabular-nums">{value}</span>
+      <span className="font-kpi-value text-stat-value text-on-surface tabular-nums truncate" title={value}>
+        {value}
+      </span>
+      {hint && !delta && (
+        <span className="font-body-sm text-[11px] leading-[14px] text-on-surface-variant truncate" title={hint}>
+          {hint}
+        </span>
+      )}
       {delta && (
         <span
           title="Latest period against the one before it"
@@ -213,6 +222,11 @@ export function StatCard({ label, value, icon, delta, deltaTone = 'up', iconTone
         >
           <Icon name={down ? 'trending_down' : 'trending_up'} size={12} />
           {delta}
+        </span>
+      )}
+      {hint && delta && (
+        <span className="font-body-sm text-[11px] leading-[14px] text-on-surface-variant truncate" title={hint}>
+          {hint}
         </span>
       )}
     </div>

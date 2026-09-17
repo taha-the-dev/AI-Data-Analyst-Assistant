@@ -270,6 +270,35 @@ namespace AnalystAI.Api.Data.Migrations.Postgres
                     b.ToTable("DatasetColumns");
                 });
 
+            modelBuilder.Entity("AnalystAI.Api.Models.DatasetSource", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<byte[]>("Content")
+                        .IsRequired()
+                        .HasColumnType("bytea");
+
+                    b.Property<int>("DatasetId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DatasetId")
+                        .IsUnique();
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("DatasetSources");
+                });
+
             modelBuilder.Entity("AnalystAI.Api.Models.Report", b =>
                 {
                     b.Property<int>("Id")
@@ -532,6 +561,21 @@ namespace AnalystAI.Api.Data.Migrations.Postgres
                         .IsRequired();
 
                     b.Navigation("Dataset");
+                });
+
+            modelBuilder.Entity("AnalystAI.Api.Models.DatasetSource", b =>
+                {
+                    b.HasOne("AnalystAI.Api.Models.Dataset", null)
+                        .WithOne()
+                        .HasForeignKey("AnalystAI.Api.Models.DatasetSource", "DatasetId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("AnalystAI.Api.Models.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("AnalystAI.Api.Models.Report", b =>

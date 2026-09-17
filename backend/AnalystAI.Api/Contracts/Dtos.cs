@@ -23,16 +23,56 @@ public record UploadResultDto(
     int RowsImported,
     IReadOnlyList<FieldMappingDto> Mapping);
 
-public record KpiDto(string Label, string Value, string Icon, string? Delta = null, string? DeltaTone = null, string? IconTone = null);
+/// <summary>
+/// One tile. <see cref="Hint"/> says what the figure was computed from or
+/// against — "score ≥ 50", "Mar 2026 vs Feb 2026" — when the label alone does not.
+/// </summary>
+public record KpiDto(string Label, string Value, string Icon, string? Delta = null, string? DeltaTone = null, string? IconTone = null, string? Hint = null);
 
 public record InsightDto(string Tone, string Icon, string Title, string Body);
 
+/// <summary>
+/// A dashboard written for one file. Nothing in it is fixed: which tiles,
+/// charts, table and insights appear, and what they are called, all follow from
+/// the columns the file actually has. A figure that cannot be computed from the
+/// file is left out rather than shown as zero.
+/// </summary>
 public record DashboardDto(
+    /// <summary>education | sales | hr | general</summary>
+    string Domain,
+    string DomainLabel,
+    string Summary,
+    IReadOnlyList<FieldRoleDto> Fields,
     IReadOnlyList<KpiDto> Kpis,
-    IReadOnlyList<Figure> RevenueTrend,
-    IReadOnlyList<Figure> RegionalPerformance,
-    IReadOnlyList<Figure> CategoryBars,
-    IReadOnlyList<InsightDto> Insights);
+    IReadOnlyList<ChartDto> Charts,
+    DataTableDto? Table,
+    IReadOnlyList<InsightDto> Insights,
+    DataQualityDto Quality);
+
+/// <summary>A column the analyser recognised, and what it took it to mean.</summary>
+public record FieldRoleDto(string Column, string Role);
+
+/// <summary>How a chart's values are written: a prefix such as "$", a suffix such as "%", and decimals.</summary>
+public record ValueUnitDto(string Prefix, string Suffix, int Decimals);
+
+/// <summary>Kind is line | bars | columns | donut.</summary>
+public record ChartDto(string Id, string Title, string Kind, string? Caption, IReadOnlyList<Figure> Figures, ValueUnitDto Unit);
+
+public record TableColumnDto(string Label, string Align);
+
+public record DataTableDto(string Title, string? Caption, IReadOnlyList<TableColumnDto> Columns, IReadOnlyList<string[]> Rows);
+
+public record ColumnIssueDto(string Column, int Missing, double Completeness);
+
+public record DataQualityDto(
+    long Rows,
+    int Columns,
+    long MissingCells,
+    int DuplicateRows,
+    double Completeness,
+    int Score,
+    string Grade,
+    IReadOnlyList<ColumnIssueDto> Issues);
 
 public record AnalyticsDto(
     IReadOnlyList<KpiDto> Kpis,

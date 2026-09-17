@@ -241,7 +241,7 @@ needs a signed-in session, and answers 401 without one.
 | DELETE | `/api/datasets/{id}` | Delete a dataset with its profile and its rows |
 | GET | `/api/explorer/columns` | Grid column definitions |
 | GET | `/api/explorer/rows` | Paged rows; sorting and repeatable filters |
-| GET | `/api/dashboard` | KPI strip, trend, regional split, category bars, insights |
+| GET | `/api/dashboard` | A dashboard written for the file: its data type, tiles, charts, table, insights and data quality, all chosen from its own columns |
 | GET | `/api/analytics` | Aggregate figures for the file in context |
 | GET | `/api/chat/sessions` | Conversations, most recent first |
 | POST | `/api/chat/sessions` | Start a conversation |

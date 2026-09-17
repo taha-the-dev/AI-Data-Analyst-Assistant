@@ -46,6 +46,20 @@ public class DatasetColumn : IOwned
 }
 
 /// <summary>
+/// The uploaded file itself, gzip-compressed. The stored rows are mapped onto a
+/// fixed schema and lose every column that schema has no place for; the
+/// dashboard is written from this copy, so it sees the columns the file
+/// actually has.
+/// </summary>
+public class DatasetSource : IOwned
+{
+    public int Id { get; set; }
+    public string UserId { get; set; } = "";
+    public int DatasetId { get; set; }
+    public byte[] Content { get; set; } = [];
+}
+
+/// <summary>
 /// One row of an uploaded file. Every figure the API returns is computed from
 /// these rows.
 /// </summary>

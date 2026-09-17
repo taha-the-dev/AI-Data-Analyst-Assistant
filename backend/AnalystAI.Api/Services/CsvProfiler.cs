@@ -76,15 +76,15 @@ public static class CsvProfiler
                 .Select(r => c < r.Length ? r[c].Trim() : "")
                 .ToList();
 
-            var present = values.Where(v => v.Length > 0).ToList();
+            var present = values.Where(v => !Cells.IsMissing(v)).ToList();
             var numbers = new List<double>();
             var dates = 0;
             var bools = 0;
 
             foreach (var v in present)
             {
-                if (double.TryParse(v, NumberStyles.Any, CultureInfo.InvariantCulture, out var n)) numbers.Add(n);
-                else if (DateTime.TryParse(v, CultureInfo.InvariantCulture, DateTimeStyles.None, out _)) dates++;
+                if (Cells.TryNumber(v, out var n)) numbers.Add(n);
+                else if (Cells.TryDate(v, out _)) dates++;
                 else if (bool.TryParse(v, out _)) bools++;
             }
 

@@ -75,7 +75,7 @@ public static class DatasetEndpoints
         .WithName("GetDataset")
         .WithSummary("One dataset with its full column profile.");
 
-        group.MapPost("/upload", async (AppDbContext db, IFormFile? file, CancellationToken ct) =>
+        group.MapPost("/upload", async (AppDbContext db, DashboardService dashboards, IFormFile? file, CancellationToken ct) =>
         {
             if (file is null || file.Length == 0)
                 return Problems.BadRequest(
@@ -95,8 +95,19 @@ public static class DatasetEndpoints
                     detail: $"'{extension}' cannot be parsed. Upload a CSV, TSV or TXT file.",
                     statusCode: StatusCodes.Status415UnsupportedMediaType);
 
-            using var reader = new StreamReader(file.OpenReadStream());
-            var parsed = CsvProfiler.Parse(reader);
+            // The file is read into memory once: parsed from that copy, and
+            // kept compressed so the dashboard can be written from every column
+            // the file has, not only the ones the stored rows keep.
+            byte[] raw;
+            using (var buffer = new MemoryStream((int)file.Length))
+            {
+                await file.CopyToAsync(buffer, ct);
+                raw = buffer.ToArray();
+            }
+
+            CsvProfiler.ParseResult parsed;
+            using (var reader = new StreamReader(new MemoryStream(raw)))
+                parsed = CsvProfiler.Parse(reader);
 
             if (parsed.Headers.Count == 0)
                 return Results.Problem(
@@ -120,6 +131,15 @@ public static class DatasetEndpoints
 
             db.Datasets.Add(dataset);
             await db.SaveChangesAsync(ct);
+
+            db.DatasetSources.Add(new DatasetSource { DatasetId = dataset.Id, Content = DashboardService.Compress(raw) });
+            raw = [];
+            await db.SaveChangesAsync(ct);
+            db.ChangeTracker.Clear();
+
+            // Written now, while the parsed file is in memory, so the dashboard
+            // for a new upload opens without reading the file a second time.
+            dashboards.Prime(dataset, parsed, columns);
 
             // Profiling alone left an uploaded file unqueryable. The rows are
             // mapped onto the queryable schema and stored, so every other screen

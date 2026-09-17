@@ -7,42 +7,34 @@ using Microsoft.EntityFrameworkCore;
 namespace AnalystAI.Api.Endpoints;
 
 /// <summary>
-/// Dashboard and Analytics. Both are saved <see cref="QuerySpec"/>s run through
-/// the engine — no figure on either screen is hard-coded.
+/// Dashboard and Analytics. The dashboard is written from the uploaded file's
+/// own columns; Analytics runs saved <see cref="QuerySpec"/>s through the engine.
 /// </summary>
 public static class InsightEndpoints
 {
     public static RouteGroupBuilder MapInsightEndpoints(this RouteGroupBuilder api)
     {
         api.MapGet("/dashboard", async (
-            AppDbContext db, QueryEngine engine, IDatasetContext context,
+            AppDbContext db, DashboardService dashboards, IDatasetContext context,
             int? datasetId, CancellationToken ct) =>
         {
             var id = await context.ResolveAsync(datasetId, ct);
             if (id is null) return Problems.NoDataset(datasetId);
 
-            var dataset = await db.Datasets.AsNoTracking()
-                .Include(d => d.Columns)
-                .FirstAsync(d => d.Id == id, ct);
+            var dataset = await db.Datasets.AsNoTracking().FirstAsync(d => d.Id == id, ct);
+            var dashboard = await dashboards.GetAsync(dataset, ct);
 
-            var trend = await engine.RunAsync(SavedSpecs.RevenueByMonth(), id.Value, ct);
-            var orders = await engine.RunAsync(SavedSpecs.OrdersByMonth(), id.Value, ct);
-            var byRegion = await engine.RunAsync(SavedSpecs.RevenueByRegion(), id.Value, ct);
-            var byCategory = await engine.RunAsync(SavedSpecs.RevenueByCategory(), id.Value, ct);
-
-            var missing = dataset.Columns.Sum(c => (long)c.Missing);
-            var orderCount = await db.SalesRows.CountAsync(r => r.DatasetId == id, ct);
-
-            return Results.Ok(new DashboardDto(
-                KpiBuilder.ForDataset(dataset, missing),
-                trend.Figures,
-                byRegion.Figures,
-                byCategory.Figures,
-                KpiBuilder.Insights(dataset, missing, byCategory, trend, orderCount)));
+            return dashboard is null
+                ? Results.Problem(
+                    title: "Upload this file again to build its dashboard",
+                    detail: $"'{dataset.Name}' was uploaded before files were kept for analysis, so only its sales-shaped rows survive. " +
+                            "Upload the original file again and the dashboard will be built from every column it has.",
+                    statusCode: StatusCodes.Status409Conflict)
+                : Results.Ok(dashboard);
         })
         .WithTags("Insights")
         .WithName("GetDashboard")
-        .WithSummary("KPI strip, trend, regional split, category bars and generated insights.");
+        .WithSummary("A dashboard written for the file: tiles, charts, table, insights and data quality chosen from its own columns.");
 
         api.MapGet("/analytics", async (
             AppDbContext db, QueryEngine engine, IDatasetContext context,

@@ -543,7 +543,7 @@
     <div class="section-head">
       <h2>Dashboard</h2>
       <span class="section-key">DASH</span>
-      <p>Six KPIs, two charts, three panels — all computed server-side.</p>
+      <p>Tiles, charts, table and insights are chosen from the uploaded file's own columns — never fixed sales metrics.</p>
     </div>
     <div class="table-scroll">
       <table>
@@ -554,37 +554,47 @@
           <tr>
             <td class="id">DASH-01</td><td><span class="p p-crit">Critical</span></td>
             <td class="step">Open the Dashboard with a project selected.</td>
-            <td class="expect">All six KPI tiles, both charts, Top Products, Order Volume and AI Insights render. No error boundary. <span class="p p-reg">Regression</span> — Top Products once crashed the whole screen.</td>
+            <td class="expect">The recognised data type, KPI tiles, charts, table, AI Insights and Data Quality render. No error boundary, and no panel is drawn empty.</td>
           </tr>
           <tr>
-            <td class="id">DASH-02</td><td><span class="p p-high">High</span></td>
-            <td class="step">Compare Top Products shares against the Analytics table grouped by product.</td>
-            <td class="expect">Same figures, same order. Share percentages sum to 100% across the rows shown.</td>
+            <td class="id">DASH-02</td><td><span class="p p-crit">Critical</span></td>
+            <td class="step">Upload a student file (student_id, name, subject, marks, attendance, grade) and open its Dashboard.</td>
+            <td class="expect">Reads as <b>Student performance</b>. Tiles are students, average / highest / lowest marks, attendance and pass rate; the table is <b>Student Performance</b>. <b>No</b> Revenue, Orders, Average Order Value, Processing or Products anywhere on the screen.</td>
           </tr>
           <tr>
             <td class="id">DASH-03</td><td><span class="p p-high">High</span></td>
-            <td class="step">Read the delta chip on Revenue, then hover it.</td>
-            <td class="expect">Tooltip explains it is the latest period against the one before. A file with one month of data shows <b>no</b> delta rather than a fabricated one.</td>
+            <td class="step">Upload an order export (order id, date, product, category, quantity, price, region), then an HR file (employee, department, salary, attrition).</td>
+            <td class="expect">Sales shows Revenue, Orders, AOV, Sales Growth and Top Product with a <b>Top Products</b> table; HR shows Employees, Departments, Avg Salary and Attrition with an <b>Employee Overview</b> table. Switching projects swaps every panel.</td>
           </tr>
           <tr>
-            <td class="id">DASH-04</td><td><span class="p p-med">Medium</span></td>
-            <td class="step">Hover along the Revenue Performance line.</td>
-            <td class="expect">A crosshair and a readable value for each month; the label matches the axis.</td>
+            <td class="id">DASH-04</td><td><span class="p p-high">High</span></td>
+            <td class="step">Upload a file no recipe recognises (e.g. date, city, temperature, humidity).</td>
+            <td class="expect">Reads as <b>General dataset</b>. Tiles are record counts and averages of its own numeric columns; charts and table use its own headers.</td>
           </tr>
           <tr>
-            <td class="id">DASH-05</td><td><span class="p p-med">Medium</span></td>
-            <td class="step">Check the AI Insights panel against the data.</td>
-            <td class="expect">Each insight states figures that appear elsewhere on the screen. Nothing speculates about causes.</td>
+            <td class="id">DASH-05</td><td><span class="p p-high">High</span></td>
+            <td class="step">Upload a file missing a column a tile would need (e.g. marks with no attendance, sales with no date).</td>
+            <td class="expect">That tile and chart are left out, not shown as 0 or $0. Sales Growth appears only when there are at least two dated periods.</td>
           </tr>
           <tr>
-            <td class="id">DASH-06</td><td><span class="p p-high">High</span></td>
+            <td class="id">DASH-06</td><td><span class="p p-med">Medium</span></td>
+            <td class="step">Check the AI Insights panel and the chips in the analysis strip against the data.</td>
+            <td class="expect">Each insight names real columns and figures from the file. Each chip maps a real header to the role it was read as.</td>
+          </tr>
+          <tr>
+            <td class="id">DASH-07</td><td><span class="p p-high">High</span></td>
+            <td class="step">Upload a file with blank cells and a repeated row; read Data Quality.</td>
+            <td class="expect">Missing values, duplicate rows and completeness match the file; the score is below 100 and the columns with gaps are listed.</td>
+          </tr>
+          <tr>
+            <td class="id">DASH-08</td><td><span class="p p-med">Medium</span></td>
             <td class="step">Press Export in the top bar.</td>
-            <td class="expect">A CSV of revenue by month downloads, named after the project, and its rows match the chart.</td>
+            <td class="expect">A CSV of the tiles and every chart's figures downloads, named after the project.</td>
           </tr>
           <tr>
-            <td class="id">DASH-07</td><td><span class="p p-med">Medium</span></td>
-            <td class="step">Click View All on Top Products.</td>
-            <td class="expect">Data Explorer opens on the same project.</td>
+            <td class="id">DASH-09</td><td><span class="p p-med">Medium</span></td>
+            <td class="step">Open the Dashboard for a project uploaded before this release.</td>
+            <td class="expect">A clear message asks for the file to be uploaded again. No crash.</td>
           </tr>
         </tbody>
       </table>
