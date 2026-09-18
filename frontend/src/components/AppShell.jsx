@@ -23,6 +23,15 @@ const TITLES = [
  * the AI Assistant pin to the viewport and scroll inside their own panes, which
  * is what the source design does for both.
  */
+/**
+ * Screens that carry their own controls, where the top bar's period, Filter
+ * and Export buttons would only repeat them or do nothing.
+ */
+const SCREENS_WITHOUT_ACTIONS = /^\/(analyst|datasets|settings)(\/|$)/
+
+/** Screens with a file picker of their own, where the tab strip would repeat it. */
+const SCREENS_WITHOUT_TABS = /^\/$/
+
 export default function AppShell() {
   const [navOpen, setNavOpen] = useState(false)
   const { pathname } = useLocation()
@@ -51,7 +60,11 @@ export default function AppShell() {
           <SideNavBar open={navOpen} onClose={() => setNavOpen(false)} />
 
           <div className="md:ml-rail flex flex-col min-h-screen min-w-0">
-            <TopNavBar onOpenNav={() => setNavOpen(true)} />
+            <TopNavBar
+              onOpenNav={() => setNavOpen(true)}
+              showActions={!SCREENS_WITHOUT_ACTIONS.test(pathname)}
+              showTabs={!SCREENS_WITHOUT_TABS.test(pathname)}
+            />
             <Outlet />
           </div>
         </div>

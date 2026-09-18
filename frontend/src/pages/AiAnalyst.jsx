@@ -8,7 +8,7 @@ import { useToast } from '../components/Toast'
 import Figure from '../components/Figure'
 import { api } from '../lib/api'
 import { useResource } from '../hooks/useResource'
-import { useDatasets, usePageActions } from '../context/AppContext'
+import { useDatasets } from '../context/AppContext'
 import { downloadCsv } from '../lib/csv'
 import { bucketLabel, clock, int, unitValue } from '../lib/format'
 
@@ -378,14 +378,6 @@ export default function AiAnalyst() {
       latest.figures
     )
 
-  usePageActions(
-    () => ({
-      exportLabel: 'Export the figures behind the last answer',
-      onExport: latest ? exportFigures : undefined,
-    }),
-    [latest]
-  )
-
   const busy = Boolean(streamingId)
 
   return (
@@ -444,13 +436,15 @@ export default function AiAnalyst() {
               </div>
             ) : (
               <>
-                <div className="flex items-start gap-sm">
+                {/* Centred on the icon: one line of text is shorter than the icon,
+                    and the file name keeps the sentence's size so it sits on its baseline. */}
+                <div className="flex items-center gap-sm">
                   <span className="w-8 h-8 rounded-lg bg-primary-container text-white flex items-center justify-center shrink-0">
                     <Icon name="smart_toy" size={15} />
                   </span>
                   <p className="font-body-main text-body-main text-on-surface max-w-[80%]">
                     Ready to analyze{' '}
-                    <span className="font-code text-code text-primary">{active?.name ?? 'your file'}</span>
+                    <span className="font-medium text-primary">{active?.name ?? 'your file'}</span>
                     {active ? ` (${int(active.rows)} rows)` : ''}. What would you like to know?
                   </p>
                 </div>

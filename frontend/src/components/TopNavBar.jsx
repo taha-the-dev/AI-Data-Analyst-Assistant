@@ -120,10 +120,10 @@ function CoverageButton() {
 
 /**
  * Docked bar. Names the files in the library as tabs — picking one switches
- * what every screen below reads from — and carries the two page-level actions
- * the current screen has registered.
+ * what every screen below reads from — and, where `showActions` allows, carries
+ * the page-level actions the current screen has registered.
  */
-export default function TopNavBar({ onOpenNav }) {
+export default function TopNavBar({ onOpenNav, showActions = true, showTabs = true }) {
   const { datasets, activeId, setActiveId, loading, error } = useDatasets()
   const { actions } = usePageActionsState()
 
@@ -139,6 +139,7 @@ export default function TopNavBar({ onOpenNav }) {
         </button>
 
         {/* File tabs — the row of dataset names from the design, made to switch context. */}
+        {showTabs && (
         <div
           className="flex items-center gap-md h-topbar min-w-0 overflow-x-auto no-scrollbar"
           role="tablist"
@@ -165,27 +166,27 @@ export default function TopNavBar({ onOpenNav }) {
             )
           })}
         </div>
+        )}
 
+        {showActions && (
         <div className="flex items-center gap-sm ml-auto shrink-0">
           <CoverageButton />
 
           <div className="w-px h-6 bg-outline-variant mx-1 hidden sm:block" />
 
-          <button
-            onClick={actions.onFilter}
-            disabled={!actions.onFilter}
-            title={
-              actions.onFilter
-                ? (actions.filterLabel ?? 'Filter this screen')
-                : 'This screen has nothing to filter'
-            }
-            className="inline-flex items-center gap-sm h-[30px] px-sm rounded-lg border border-outline-variant bg-surface-container-lowest font-label-bold text-label-bold text-on-surface hover:bg-surface-container-low transition-colors disabled:opacity-40 disabled:hover:bg-surface-container-lowest"
-          >
-            <Icon name="filter_list" size={15} />
-            {/* This is the only way to filter a screen, so it cannot disappear
-                on a narrow one. The label goes; the control stays. */}
-            <span className="hidden sm:inline">Filter</span>
-          </button>
+          {/* Only on a screen that has something to filter. */}
+          {actions.onFilter && (
+            <button
+              onClick={actions.onFilter}
+              title={actions.filterLabel ?? 'Filter this screen'}
+              className="inline-flex items-center gap-sm h-[30px] px-sm rounded-lg border border-outline-variant bg-surface-container-lowest font-label-bold text-label-bold text-on-surface hover:bg-surface-container-low transition-colors"
+            >
+              <Icon name="filter_list" size={15} />
+              {/* This is the only way to filter a screen, so it cannot disappear
+                  on a narrow one. The label goes; the control stays. */}
+              <span className="hidden sm:inline">Filter</span>
+            </button>
+          )}
 
           <button
             onClick={actions.onExport}
@@ -201,6 +202,7 @@ export default function TopNavBar({ onOpenNav }) {
             Export
           </button>
         </div>
+        )}
       </div>
     </header>
   )

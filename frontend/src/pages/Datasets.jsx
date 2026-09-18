@@ -7,8 +7,7 @@ import Modal from '../components/Modal'
 import { useToast } from '../components/Toast'
 import { api } from '../lib/api'
 import { useResource } from '../hooks/useResource'
-import { useDatasets, usePageActions } from '../context/AppContext'
-import { downloadCsv } from '../lib/csv'
+import { useDatasets } from '../context/AppContext'
 import { int, whenLabel } from '../lib/format'
 
 const PREVIEW_ROWS = 8
@@ -223,30 +222,6 @@ export default function Datasets() {
   const detail = useResource(
     () => (activeId ? api.datasets.get(activeId) : Promise.resolve(null)),
     [activeId]
-  )
-
-  usePageActions(
-    () => ({
-      filterLabel: 'Search the library',
-      onFilter: () => setSearchOpen((v) => !v),
-      exportLabel: 'Export the dataset library as CSV',
-      onExport: datasets.length
-        ? () =>
-            downloadCsv(
-              'dataset-library',
-              [
-                { label: 'Name', value: (d) => d.name },
-                { label: 'Type', value: (d) => d.type },
-                { label: 'Rows', value: (d) => d.rows },
-                { label: 'Columns', value: (d) => d.columns },
-                { label: 'Quality', value: (d) => d.quality },
-                { label: 'Updated', value: (d) => d.updatedAt },
-              ],
-              datasets
-            )
-        : undefined,
-    }),
-    [datasets]
   )
 
   const visible = query
