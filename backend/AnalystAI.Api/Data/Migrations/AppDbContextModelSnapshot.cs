@@ -319,66 +319,6 @@ namespace AnalystAI.Api.Data.Migrations
                     b.ToTable("Reports");
                 });
 
-            modelBuilder.Entity("AnalystAI.Api.Models.SalesRow", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Category")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Customer")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("DatasetId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateOnly>("Date")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("OrderId")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<double>("Price")
-                        .HasColumnType("REAL");
-
-                    b.Property<string>("Product")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("Qty")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Region")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<double>("Revenue")
-                        .HasColumnType("REAL");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Date");
-
-                    b.HasIndex("Revenue");
-
-                    b.HasIndex("UserId", "DatasetId");
-
-                    b.ToTable("SalesRows");
-                });
-
             modelBuilder.Entity("AnalystAI.Api.Models.UserSettings", b =>
                 {
                     b.Property<int>("Id")
@@ -554,15 +494,6 @@ namespace AnalystAI.Api.Data.Migrations
                 });
 
             modelBuilder.Entity("AnalystAI.Api.Models.Report", b =>
-                {
-                    b.HasOne("AnalystAI.Api.Models.AppUser", null)
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("AnalystAI.Api.Models.SalesRow", b =>
                 {
                     b.HasOne("AnalystAI.Api.Models.AppUser", null)
                         .WithMany()

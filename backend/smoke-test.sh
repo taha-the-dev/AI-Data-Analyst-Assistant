@@ -166,17 +166,16 @@ check 400 "PUT  /api/chat/sessions (empty title)"   -X PUT "${JSON[@]}" -d '{"ti
 check 400 "PUT  /api/chat/sessions (bad json)"      -X PUT "${JSON[@]}" --data-binary '{"title": broken}' "$BASE/api/chat/sessions/$SESSION_ID"
 check 404 "PUT  /api/chat/sessions/9999"            -X PUT "${JSON[@]}" -d '{"title":"nope"}' "$BASE/api/chat/sessions/9999"
 check 404 "GET  /api/chat/sessions/9999"            "$BASE/api/chat/sessions/9999"
-check 200 "POST /api/chat/sessions/<id>/ask"        -X POST "${JSON[@]}" -d '{"question":"Which category earns the most revenue?"}' "$BASE/api/chat/sessions/$SESSION_ID/ask"
+# The fixture is id, name, dept, salary, joined, active: questions use its own words.
+check 200 "POST /api/chat/sessions/<id>/ask"        -X POST "${JSON[@]}" -d '{"question":"Average salary by dept"}' "$BASE/api/chat/sessions/$SESSION_ID/ask"
+assert "$(grep -q '"groupBy":"dept"' "$TMP/last.json" && grep -q '"metric":"salary"' "$TMP/last.json" && echo true || echo false)" "the answer groups by the file's own columns"
 check 400 "POST /api/chat/sessions/<id>/ask (empty)" -X POST "${JSON[@]}" -d '{"question":"  "}' "$BASE/api/chat/sessions/$SESSION_ID/ask"
 LONG_QUESTION=$(printf 'why %.0s' $(seq 1 300))
 check 400 "POST /api/chat/sessions/<id>/ask (too long)" -X POST "${JSON[@]}" -d "{\"question\":\"$LONG_QUESTION\"}" "$BASE/api/chat/sessions/$SESSION_ID/ask"
 check 404 "POST /api/chat/sessions/9999/ask"        -X POST "${JSON[@]}" -d '{"question":"hi"}' "$BASE/api/chat/sessions/9999/ask"
-check 200 "GET  /api/chat/sessions/<id>/stream"     --max-time 25 "$BASE/api/chat/sessions/$SESSION_ID/stream?question=revenue%20by%20region"
-check 200 "POST /api/query/run"                     -X POST "${JSON[@]}" -d '{"spec":{"intent":"aggregate","groupBy":"region","metric":"revenue","aggregate":"sum","limit":5}}' "$BASE/api/query/run"
-check 400 "POST /api/query/run (bad groupBy)"       -X POST "${JSON[@]}" -d '{"spec":{"groupBy":"nope"}}' "$BASE/api/query/run"
-check 400 "POST /api/query/run (bad metric)"        -X POST "${JSON[@]}" -d '{"spec":{"groupBy":"region","metric":"nope"}}' "$BASE/api/query/run"
-check 400 "POST /api/query/run (bad aggregate)"     -X POST "${JSON[@]}" -d '{"spec":{"groupBy":"region","aggregate":"median"}}' "$BASE/api/query/run"
-check 404 "POST /api/query/run (missing dataset)"   -X POST "${JSON[@]}" -d '{"spec":{"groupBy":"region"},"datasetId":9999}' "$BASE/api/query/run"
+check 200 "GET  /api/chat/sessions/<id>/stream"     --max-time 25 "$BASE/api/chat/sessions/$SESSION_ID/stream?question=how%20many%20per%20dept"
+check 400 "GET  /api/chat/sessions/<id>/stream (empty)" "$BASE/api/chat/sessions/$SESSION_ID/stream?question=%20"
+check 404 "GET  /api/chat/sessions/9999/stream"     "$BASE/api/chat/sessions/9999/stream?question=hi"
 
 echo "Reports"
 check 200 "GET  /api/reports"                       "$BASE/api/reports"

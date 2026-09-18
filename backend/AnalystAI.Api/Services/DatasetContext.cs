@@ -27,10 +27,10 @@ public class DatasetContext(AppDbContext db) : IDatasetContext
         if (requested is > 0)
             return await db.Datasets.AnyAsync(d => d.Id == requested, ct) ? requested : null;
 
-        // No preference: the most recently updated file that actually holds
-        // rows, since that is the only kind anything can be computed from.
+        // No preference: the most recently updated file whose copy was kept,
+        // since that is the only kind anything can be computed from.
         var withRows = await db.Datasets
-            .Where(d => db.SalesRows.Any(r => r.DatasetId == d.Id))
+            .Where(d => db.DatasetSources.Any(s => s.DatasetId == d.Id))
             .OrderByDescending(d => d.UpdatedAt)
             .Select(d => (int?)d.Id)
             .FirstOrDefaultAsync(ct);

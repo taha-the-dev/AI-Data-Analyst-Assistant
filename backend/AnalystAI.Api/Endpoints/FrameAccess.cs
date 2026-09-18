@@ -51,26 +51,13 @@ internal static class FrameAccess
     public static IResult UnknownColumn(Frame frame, string what, string value) =>
         Problems.UnknownColumn(what, value, frame.Columns.Select(c => $"{FrameQuery.Key(c)} ({c.Name})"));
 
-    public static string Role(Column c) =>
-        c.Identifier ? "identifier" : c.IsNumber ? "number" : c.IsDate ? "date" : c.IsGroup(50) ? "group" : "text";
-
-    public static ColumnUnitDto Unit(Column c)
+    public static ValueUnitDto Unit(Column c)
     {
         var unit = Analysis.Unit.For(c);
-        return new ColumnUnitDto(unit.Prefix, unit.Suffix, unit.Decimals);
+        return new ValueUnitDto(unit.Prefix, unit.Suffix, unit.Decimals);
     }
 
-    public static ExplorerColumnDto Describe(Column c)
-    {
-        var role = Role(c);
-        IReadOnlyList<string>? options = role == "group" || (c.IsNumber && !c.Identifier && c.Distinct <= 12)
-            ? c.Values.Where(v => v.Length > 0).Distinct(StringComparer.OrdinalIgnoreCase)
-                .OrderBy(v => Cells.TryNumber(v, out var n) ? n : double.MaxValue)
-                .ThenBy(v => v, StringComparer.OrdinalIgnoreCase)
-                .Take(50).ToList()
-            : null;
-
-        return new ExplorerColumnDto(FrameQuery.Key(c), c.Name, c.Kind, role, c.IsNumber ? "right" : "left", c.IsNumber,
-            c.Distinct, c.Missing, Unit(c), options);
-    }
+    public static ExplorerColumnDto Describe(Column c) =>
+        new(FrameQuery.Key(c), c.Name, c.Kind, c.Role, c.IsNumber ? "right" : "left", c.IsNumber,
+            c.Distinct, c.Missing, Unit(c), c.FilterOptions());
 }

@@ -1,4 +1,5 @@
 using System.Globalization;
+using AnalystAI.Api.Analysis;
 
 namespace AnalystAI.Api.Query;
 
@@ -11,34 +12,20 @@ namespace AnalystAI.Api.Query;
 /// </summary>
 public static class Prompts
 {
-    /// <summary>The columns as written when nothing has described the loaded file.</summary>
-    private const string DefaultSchema = """
-          date      date       the order date
-          orderId   text
-          customer  category   the buying organisation
-          product   category
-          category  category   the product category
-          qty       number
-          price     number
-          revenue   number     qty multiplied by price
-          region    category
-          status    category
-        """;
-
     /// <summary>Stage one: read the question, choose what to compute. No arithmetic.</summary>
-    public static string Plan(string question, IReadOnlyList<string> priorTurns, string? schema = null)
+    public static string Plan(string question, IReadOnlyList<string> priorTurns, DatasetSchema schema)
     {
         var history = priorTurns.Count == 0
             ? "(none)"
             : string.Join("\n", priorTurns.TakeLast(6).Select(t => "- " + t));
 
-        var columns = string.IsNullOrWhiteSpace(schema) ? DefaultSchema : schema.TrimEnd();
-
         return $"""
-            You plan database queries for a sales dataset. You never calculate anything.
+            You plan queries over an uploaded table of {schema.Rows:N0} rows, recognised as
+            {schema.DomainLabel.ToLowerInvariant()} data. You never calculate anything.
 
-            Columns and their types, with the values each category column actually holds:
-            {columns}
+            Its columns, their kinds, and the values each category column actually holds
+            (a role in brackets is what the column was recognised as):
+            {schema.Describe()}
 
             Earlier questions in this conversation:
             {history}
@@ -46,18 +33,22 @@ public static class Prompts
             The question now: "{question}"
 
             Rules for the plan you return:
-            - groupBy must be one of the column names above.
-            - Use timeBucket (day/week/month/quarter/year) with groupBy "date" only when the question
-              asks about change over time. Set intent to "trend" then, otherwise "aggregate".
-            - aggregate is one of sum, avg, count, min, max. Use count for "how many".
-            - metric is revenue, qty or price. Leave it empty when aggregate is count.
-            - filters carry only what this question asks to narrow by, and a filter value must be
-              spelled exactly as listed above. op is one of > >= < <= = !=
-            - If the question names a value that appears in one of the category columns above —
-              a status, a region, a category, a product, a customer — filter on it.
-            - sort is "value desc" normally, "label asc" for a trend.
-            - limit is 10 normally, the number asked for in "top N", or 24 for a trend.
-            - chart is line for a trend, donut for region, otherwise bar.
+            - groupBy is a column name above whose kind is category, date, or a number with few values.
+              With no better choice use "{schema.DefaultDimension}".
+            - Use timeBucket (day/week/month/quarter/year) with groupBy "{schema.DateColumn ?? "(no date column)"}"
+              only when the question asks about change over time. Set intent to "trend" then,
+              otherwise "aggregate".
+            - metric is a column of kind number (or a derived one). With no better choice use
+              "{schema.DefaultMetric}". Leave it empty when aggregate is count.
+            - aggregate is one of sum, avg, count, min, max, median. Use count for "how many",
+              avg for "average", sum for "total".
+            - filters carry only what this question asks to narrow by. A category value must be
+              spelled exactly as listed above. op is one of > >= < <= = != contains
+            - If the question names a value that appears in one of the category columns above,
+              filter on it.
+            - sort is "value desc" normally, "value asc" for "lowest" or "bottom", "label asc" for a trend.
+            - limit is 10 normally, the number asked for in "top N", or 36 for a trend.
+            - chart is line for a trend, otherwise bar.
             - title is a short human title in sentence case.
             - The question being asked now outweighs the history. Use the history only to resolve
               references such as "that" or "those".
@@ -71,19 +62,27 @@ public static class Prompts
     /// <summary>Stage three: write the sentence, using only figures already computed.</summary>
     public static string Explain(string question, QueryResult result)
     {
-        var unit = result.Unit == "currency" ? "US dollars" : "a count of orders";
+        var unit = result.Unit;
+        var measured = result.MetricLabel is null
+            ? "a count of rows"
+            : $"{result.Spec.Aggregate} of {result.MetricLabel}";
+        var written = unit.Prefix.Length > 0 || unit.Suffix.Length > 0
+            ? $"Values are written with {(unit.Prefix.Length > 0 ? $"the prefix \"{unit.Prefix}\"" : "")}"
+              + $"{(unit.Prefix.Length > 0 && unit.Suffix.Length > 0 ? " and " : "")}"
+              + $"{(unit.Suffix.Length > 0 ? $"the suffix \"{unit.Suffix}\"" : "")}."
+            : "Values carry no currency or unit sign; do not add one.";
         var figures = string.Join("\n", result.Figures.Select(f =>
-            "- " + f.Label + ": " + f.Value.ToString("N2", CultureInfo.InvariantCulture)));
+            "- " + f.Label + ": " + f.Value.ToString("N" + unit.Decimals, CultureInfo.InvariantCulture)));
 
         return $"""
-            A database query has already run. These are its results.
+            A query over an uploaded table has already run. These are its results.
 
             Question asked: "{question}"
-            Measured: {result.Spec.Aggregate} of {result.Spec.Metric ?? "orders"},
-            grouped by {result.Spec.TimeBucket ?? result.Spec.GroupBy}, in {unit}.
-            Rows scanned: {result.RowsScanned}
+            Measured: {measured}, grouped by {result.Spec.TimeBucket ?? result.Spec.GroupBy}.
+            {written}
+            Rows in the file: {result.RowsScanned}
             Rows matching the filters: {result.RowsMatched}
-            Total across the groups shown: {result.Total.ToString("N2", CultureInfo.InvariantCulture)}
+            {(result.Total > 0 ? $"Total across the groups shown: {result.Total.ToString("N" + unit.Decimals, CultureInfo.InvariantCulture)}" : "")}
 
             Figures:
             {figures}
@@ -94,7 +93,7 @@ public static class Prompts
             - Use ONLY the numbers above. Never calculate a new one. State a percentage only if it
               is exactly derivable from the total given; otherwise leave it out.
             - Do not speculate about causes. The data does not say why.
-            - Round money to whole dollars, with a dollar sign and thousands separators.
+            - Write values exactly as they appear above, with their unit sign if any.
             - Finish by saying how many rows the figures came from.
             - Plain sentences. No bullet points, no headings, no markdown.
             """;

@@ -20,8 +20,7 @@ public static class Problems
 
     public static IResult NoRows(int datasetId) => Results.Problem(
         title: "That dataset has no rows",
-        detail: $"Dataset {datasetId} was profiled but holds no queryable rows. Upload a file whose columns "
-              + "include a value column (revenue, amount or total) so figures can be computed from it.",
+        detail: $"Dataset {datasetId} has a header row but no rows beneath it, so there is nothing to compute from.",
         statusCode: StatusCodes.Status404NotFound);
 
     /// <summary>A file uploaded before the original was kept has only its sales-shaped rows to read.</summary>

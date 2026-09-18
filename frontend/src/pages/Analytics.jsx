@@ -3,7 +3,7 @@ import { PageCanvas } from '../components/AppShell'
 import {
   Button, ErrorState, Pagination, Panel, PanelHeader, SegmentedControl, Select, Skeleton, NoProject,
 } from '../components/ui'
-import { ColumnChart, DONUT_COLORS, DonutChart, TrackBars, TrendChart } from '../components/charts'
+import Figure from '../components/Figure'
 import Icon from '../components/Icon'
 import { api } from '../lib/api'
 import { useResource } from '../hooks/useResource'
@@ -132,7 +132,6 @@ function Workspace({ fields, datasetId, datasetName }) {
 
   const data = result.data
   const figures = data?.figures ?? []
-  const format = (v) => unitValue(v, data?.unit)
   const formatFull = (v) => unitValue(v, data?.unit, { compact: false })
   const total = data?.total ?? null
 
@@ -247,24 +246,16 @@ function Workspace({ fields, datasetId, datasetName }) {
             <p className="font-body-main text-body-main text-on-surface-variant">
               Nothing matched this combination. Remove a filter or pick another column.
             </p>
-          ) : chart === 'line' ? (
-            <TrendChart
-              points={figures}
-              format={format}
-              className="flex-1 h-[260px]"
-              gradientId="analyticsTrend"
-              ariaLabel={data.title}
-            />
-          ) : chart === 'donut' ? (
-            <ShareChart figures={figures} format={format} />
-          ) : chart === 'ranked' ? (
-            <div className="flex-1">
-              <TrackBars items={figures.slice(0, 12)} format={format} showValues />
-            </div>
           ) : (
-            <div className="flex-1 min-w-0">
-              <ColumnChart points={figures.slice(0, 40)} format={format} height={300} wideLabels />
-            </div>
+            <Figure
+              kind={{ bar: 'columns', line: 'line', donut: 'donut', ranked: 'bars' }[chart]}
+              figures={chart === 'bar' ? figures.slice(0, 40) : chart === 'donut' ? figures.slice(0, 4) : chart === 'ranked' ? figures.slice(0, 12) : figures}
+              unit={data.unit}
+              height={chart === 'bar' ? 300 : 260}
+              id="analytics"
+              ariaLabel={data.title}
+              fit={false}
+            />
           )}
         </div>
       </Panel>
@@ -390,34 +381,6 @@ function SummaryStrip({ summary, unit }) {
           <p className="font-code text-code text-on-surface tabular-nums truncate" title={value}>{value}</p>
         </div>
       ))}
-    </div>
-  )
-}
-
-function ShareChart({ figures, format }) {
-  const top = figures.slice(0, DONUT_COLORS.length)
-  const total = figures.reduce((s, f) => s + f.value, 0)
-  return (
-    <div className="flex-1 flex flex-col items-center justify-center gap-lg">
-      <DonutChart
-        segments={top}
-        centerLabel={bucketLabel(top[0].label)}
-        centerValue={total ? `${((top[0].value / total) * 100).toFixed(1)}%` : format(top[0].value)}
-        size="w-48 h-48"
-        format={format}
-      />
-      <ul className="flex flex-wrap justify-center gap-md">
-        {top.map((f, i) => (
-          <li key={f.label} className="flex items-center gap-xs font-body-sm text-body-sm text-on-surface-variant">
-            <span className="w-2 h-2 rounded-sm" style={{ background: DONUT_COLORS[i] }} />
-            {bucketLabel(f.label)}{' '}
-            <span className="font-code text-on-surface tabular-nums">{total ? `${((f.value / total) * 100).toFixed(1)}%` : '—'}</span>
-          </li>
-        ))}
-        {figures.length > top.length && (
-          <li className="font-body-sm text-body-sm text-on-surface-variant">+{figures.length - top.length} more in the table</li>
-        )}
-      </ul>
     </div>
   )
 }

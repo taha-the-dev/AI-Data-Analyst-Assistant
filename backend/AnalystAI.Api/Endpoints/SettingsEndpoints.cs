@@ -116,7 +116,7 @@ public static class SettingsEndpoints
             {
                 status = "ok",
                 datasets = await db.Datasets.CountAsync(ct),
-                rows = await db.SalesRows.LongCountAsync(ct),
+                rows = await db.Datasets.SumAsync(d => d.RowCount, ct),
                 gemini = GeminiPlanner.IsConfigured(configuration) ? "configured" : "no key",
                 openrouter = OpenRouterPlanner.IsConfigured(configuration) ? "configured" : "no key",
                 // What the assistant will actually use for this account's next

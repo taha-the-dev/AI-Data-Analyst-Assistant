@@ -1019,7 +1019,7 @@
           </tr>
           <tr>
             <td class="id">API-05</td><td><span class="p p-high">High</span></td>
-            <td class="step">POST <code>/api/query/run</code> with an unknown groupBy, metric and aggregate in turn.</td>
+            <td class="step">GET <code>/api/analytics/run</code> with an unknown dimension, a text column as metric, and an unknown aggregate in turn.</td>
             <td class="expect">400 each, naming the valid columns or aggregates.</td>
           </tr>
           <tr>

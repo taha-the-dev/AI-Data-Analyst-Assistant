@@ -13,7 +13,8 @@ namespace AnalystAI.Api.Services;
 /// </summary>
 internal sealed class DashboardService(SourceStore sources, IMemoryCache cache)
 {
-    private static readonly MemoryCacheEntryOptions CacheOptions = new() { SlidingExpiration = TimeSpan.FromMinutes(30) };
+    /// <summary>A dashboard is small; it counts as one cell against the shared cap.</summary>
+    private static readonly MemoryCacheEntryOptions CacheOptions = new() { SlidingExpiration = TimeSpan.FromMinutes(30), Size = 1 };
 
     /// <summary>Parses into the shared frame and analyses it, so the first view of a new upload is instant.</summary>
     public void Prime(Dataset dataset, CsvProfiler.ParseResult parsed, IReadOnlyList<DatasetColumn> columns)

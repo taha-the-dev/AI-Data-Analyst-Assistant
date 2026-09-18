@@ -16,7 +16,20 @@ internal static class FrameQuery
 {
     public static readonly string[] Ops = ["eq", "ne", "gt", "gte", "lt", "lte", "contains"];
     public static readonly string[] Aggregates = ["sum", "avg", "count", "min", "max", "median"];
-    public static readonly string[] Buckets = ["day", "month", "quarter", "year"];
+    public static readonly string[] Buckets = ["day", "week", "month", "quarter", "year"];
+
+    /// <summary>Operator codes, from the symbols a planner writes (&gt;, &gt;=, =, !=…) or the codes themselves.</summary>
+    public static string? OpCode(string? op) => op?.Trim().ToLowerInvariant() switch
+    {
+        ">" or "gt" => "gt",
+        ">=" or "gte" => "gte",
+        "<" or "lt" => "lt",
+        "<=" or "lte" => "lte",
+        "=" or "==" or "eq" => "eq",
+        "!=" or "<>" or "ne" => "ne",
+        "contains" or "like" => "contains",
+        _ => null,
+    };
 
     public static string Key(Column column) => $"c{column.Index}";
 
@@ -128,6 +141,7 @@ internal static class FrameQuery
     private static string DateKey(DateOnly d, string bucket) => bucket switch
     {
         "day" => d.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+        "week" => $"{ISOWeek.GetYear(d.ToDateTime(TimeOnly.MinValue))}-W{ISOWeek.GetWeekOfYear(d.ToDateTime(TimeOnly.MinValue)):00}",
         "quarter" => $"{d.Year}-Q{(d.Month - 1) / 3 + 1}",
         "year" => d.Year.ToString(CultureInfo.InvariantCulture),
         _ => d.ToString("yyyy-MM", CultureInfo.InvariantCulture),

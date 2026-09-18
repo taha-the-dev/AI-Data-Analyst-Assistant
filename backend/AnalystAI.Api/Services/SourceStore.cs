@@ -10,17 +10,24 @@ namespace AnalystAI.Api.Services;
 /// <summary>
 /// The uploaded file, read back column by column.
 ///
-/// Dashboard, Analytics and the Data Explorer all work from the file's own
-/// columns rather than the sales-shaped rows, so they share one parsed copy.
+/// Every screen — Dashboard, Analytics, the Explorer, the assistant and
+/// reports — works from the file's own columns, so they share one parsed copy.
 /// Re-reading a large file is the expensive part; the parsed frame is read-only
 /// once built, so one cached copy serves every request for that file.
 /// </summary>
 internal sealed class SourceStore(AppDbContext db, IMemoryCache cache)
 {
-    private static readonly MemoryCacheEntryOptions CacheOptions = new()
+    /// <summary>
+    /// The cache's capacity, in cells. A cell costs roughly 60 bytes held as a
+    /// frame, so this keeps parsed files to about 250 MB however many are open.
+    /// </summary>
+    public const long CacheCells = 4_000_000;
+
+    private static MemoryCacheEntryOptions OptionsFor(Frame frame) => new()
     {
         SlidingExpiration = TimeSpan.FromMinutes(10),
         AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(30),
+        Size = Math.Max(1, (long)frame.RowCount * Math.Max(1, frame.Columns.Count)),
     };
 
     public static byte[] Compress(byte[] raw)
@@ -35,7 +42,7 @@ internal sealed class SourceStore(AppDbContext db, IMemoryCache cache)
     public Frame Prime(Dataset dataset, CsvProfiler.ParseResult parsed, IReadOnlyList<DatasetColumn> columns)
     {
         var frame = Frame.From(parsed, columns);
-        cache.Set(Key(dataset), frame, CacheOptions);
+        cache.Set(Key(dataset), frame, OptionsFor(frame));
         return frame;
     }
 
@@ -60,7 +67,7 @@ internal sealed class SourceStore(AppDbContext db, IMemoryCache cache)
             parsed = CsvProfiler.Parse(reader);
 
         var frame = Frame.From(parsed, CsvProfiler.Profile(parsed));
-        cache.Set(Key(dataset), frame, CacheOptions);
+        cache.Set(Key(dataset), frame, OptionsFor(frame));
         return frame;
     }
 

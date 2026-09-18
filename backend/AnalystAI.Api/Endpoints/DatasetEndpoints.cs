@@ -9,9 +9,6 @@ namespace AnalystAI.Api.Endpoints;
 
 public static class DatasetEndpoints
 {
-    /// <summary>Rows are inserted in batches so a large file does not build one enormous command.</summary>
-    private const int InsertBatch = 2_000;
-
     public static RouteGroupBuilder MapDatasetEndpoints(this RouteGroupBuilder api)
     {
         var group = api.MapGroup("/datasets").WithTags("Datasets");
@@ -95,9 +92,9 @@ public static class DatasetEndpoints
                     detail: $"'{extension}' cannot be parsed. Upload a CSV, TSV or TXT file.",
                     statusCode: StatusCodes.Status415UnsupportedMediaType);
 
-            // The file is read into memory once: parsed from that copy, and
-            // kept compressed so the dashboard can be written from every column
-            // the file has, not only the ones the stored rows keep.
+            // The file is read into memory once: parsed from that copy, and kept
+            // compressed. Every screen reads its columns from that copy, so it
+            // is stored as uploaded rather than mapped onto a fixed schema.
             byte[] raw;
             using (var buffer = new MemoryStream((int)file.Length))
             {
@@ -137,72 +134,32 @@ public static class DatasetEndpoints
             await db.SaveChangesAsync(ct);
             db.ChangeTracker.Clear();
 
-            // Written now, while the parsed file is in memory, so the dashboard
-            // for a new upload opens without reading the file a second time.
+            // Written now, while the parsed file is in memory, so every screen
+            // opens on a new upload without reading the file a second time.
             dashboards.Prime(dataset, parsed, columns);
-
-            // Profiling alone left an uploaded file unqueryable. The rows are
-            // mapped onto the queryable schema and stored, so every other screen
-            // works against an upload exactly as it does against the seed file.
-            //
-            // They are mapped a batch at a time, and each parsed row is let go
-            // once it is stored. Mapping the whole file up front held a second
-            // full copy of it in memory, next to the parsed one.
-            var plan = RowMapper.PlanFor(parsed.Headers);
-            var stored = parsed.Rows.Count;
-            var batch = new List<SalesRow>(InsertBatch);
-
-            for (var i = 0; i < parsed.Rows.Count; i++)
-            {
-                var row = RowMapper.MapRow(parsed.Rows[i], plan);
-                row.DatasetId = dataset.Id;
-                batch.Add(row);
-                parsed.Rows[i] = null!;
-
-                if (batch.Count < InsertBatch && i < parsed.Rows.Count - 1) continue;
-
-                db.SalesRows.AddRange(batch);
-                await db.SaveChangesAsync(ct);
-
-                // Saved rows are never read back here. Letting them pile up in
-                // the change tracker made a large file cost memory in proportion
-                // to its size and slowed every later batch.
-                db.ChangeTracker.Clear();
-                batch.Clear();
-            }
 
             return Results.Created($"/api/datasets/{dataset.Id}", new UploadResultDto(
                 Map(dataset),
                 columns.Select(MapColumn).ToList(),
-                stored,
-                plan.Mapping.Select(m => new FieldMappingDto(m.Field, m.Header)).ToList()));
+                dataset.RowCount));
         })
         .DisableAntiforgery()
         .WithName("UploadDataset")
-        .WithSummary("Upload a delimited file; it is profiled, stored and immediately queryable.");
+        .WithSummary("Upload a delimited file; it is profiled, stored as uploaded and immediately analysed.");
 
         group.MapDelete("/{id:int}", async (AppDbContext db, int id, CancellationToken ct) =>
         {
             var dataset = await db.Datasets.FirstOrDefaultAsync(d => d.Id == id, ct);
             if (dataset is null) return Problems.NoDataset(id);
 
-            // The last file used to be undeletable, on the grounds that every
-            // screen needs rows to read. That was true when the database
-            // arrived pre-filled; now that it starts empty, an empty library is
-            // a state the app is built for, and refusing to delete someone's
-            // only file trapped their data in the product.
-
-            // SalesRow has no navigation back to Dataset, so its rows would
-            // otherwise survive the file they belong to.
-            var rows = db.SalesRows.Where(r => r.DatasetId == id);
-            db.SalesRows.RemoveRange(rows);
+            // The column profile and the stored copy of the file go with it.
             db.Datasets.Remove(dataset);
             await db.SaveChangesAsync(ct);
 
             return Results.NoContent();
         })
         .WithName("DeleteDataset")
-        .WithSummary("Delete a dataset with its column profile and its stored rows.");
+        .WithSummary("Delete a dataset with its column profile and its stored copy.");
 
         return api;
     }

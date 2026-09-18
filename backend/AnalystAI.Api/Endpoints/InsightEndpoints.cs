@@ -13,13 +13,6 @@ namespace AnalystAI.Api.Endpoints;
 /// </summary>
 public static class InsightEndpoints
 {
-    /// <summary>Roles the dashboard assigns, in the order they make a good first metric.</summary>
-    private static readonly string[] MetricRoles =
-        ["Score", "Revenue", "Salary", "Quantity", "Profit", "Measure", "Subject marks", "Attendance", "Performance", "Tenure", "Age", "Unit price"];
-
-    private static readonly string[] DimensionRoles =
-        ["Subject", "Category", "Department", "Class", "Region", "Grade", "Product", "Grouping", "Role", "Status", "Gender", "Date", "Hire date"];
-
     public static RouteGroupBuilder MapInsightEndpoints(this RouteGroupBuilder api)
     {
         api.MapGet("/dashboard", async (
@@ -48,44 +41,37 @@ public static class InsightEndpoints
             if (problem is not null) return problem;
             var frame = loaded!.Frame;
 
-            var metrics = frame.Columns.Where(IsMetric).ToList();
-            var dimensions = frame.Columns.Where(c => IsDimension(c, frame.RowCount)).ToList();
+            var metrics = frame.Columns.Where(c => c.CanMeasure).ToList();
+            var dimensions = frame.Columns.Where(c => c.CanGroupBy).ToList();
 
             // Open on what the dashboard recognised, so the first view is the
-            // one that matters for this kind of data.
-            var roles = (await dashboards.GetAsync(loaded.Dataset, ct))?.Fields ?? [];
-            string? Pick(IEnumerable<Column> candidates, string[] preferred) =>
-                preferred
-                    .SelectMany(role => roles.Where(f => f.Role == role))
-                    .Select(f => candidates.FirstOrDefault(c => c.Name == f.Column))
-                    .FirstOrDefault(c => c is not null) is { } hit
-                    ? FrameQuery.Key(hit)
-                    : candidates.Select(FrameQuery.Key).FirstOrDefault();
-
-            var metricFields = metrics.Select(c => new AnalyticsFieldDto(FrameQuery.Key(c), c.Name, c.Kind, FrameAccess.Unit(c))).ToList();
-            var defaultMetric = Pick(metrics, MetricRoles);
-
-            // A file with quantity and price but no revenue column: offer the
-            // revenue the dashboard derived from them, and open on it.
-            var quantity = metrics.FirstOrDefault(c => roles.Any(f => f.Role == "Quantity" && f.Column == c.Name));
-            var price = metrics.FirstOrDefault(c => roles.Any(f => f.Role == "Unit price" && f.Column == c.Name));
-            if (quantity is not null && price is not null && !roles.Any(f => f.Role == "Revenue"))
+            // one that matters for this kind of data. The assistant reads the
+            // same schema, so both screens agree on what the file is about.
+            var schema = DatasetSchema.From(frame, await dashboards.GetAsync(loaded.Dataset, ct));
+            string? KeyOf(string? name)
             {
-                var derived = Derived(frame, $"{FrameQuery.Key(quantity)}*{FrameQuery.Key(price)}")!;
-                defaultMetric = $"{FrameQuery.Key(quantity)}*{FrameQuery.Key(price)}";
-                metricFields.Insert(0, new AnalyticsFieldDto(defaultMetric, derived.Name, "number", FrameAccess.Unit(derived)));
+                if (schema.Find(name) is not { } column) return null;
+                if (column.Expression is not null) return column.Expression;
+                return FrameQuery.Find(frame, column.Name) is { } c ? FrameQuery.Key(c) : null;
             }
 
-            var defaultDimension = Pick(dimensions.Where(d => !d.IsDate || dimensions.All(x => x.IsDate)), DimensionRoles);
-            var metricColumn = Derived(frame, defaultMetric) ?? FrameQuery.Find(frame, defaultMetric);
+            var metricFields = metrics.Select(c => new AnalyticsFieldDto(FrameQuery.Key(c), c.Name, c.Kind, FrameAccess.Unit(c))).ToList();
+            foreach (var derived in schema.Measures.Where(m => m.Expression is not null))
+                metricFields.Insert(0, new AnalyticsFieldDto(derived.Expression!, derived.Name, "number",
+                    FrameAccess.Unit(FrameEngine.Derived(frame, derived.Expression, derived.Name)!)));
+
+            var defaultMetric = KeyOf(schema.DefaultMetric);
+            var defaultDimension = KeyOf(schema.DefaultDimension)
+                                   ?? dimensions.Select(FrameQuery.Key).FirstOrDefault();
+            var metricColumn = schema.Find(schema.DefaultMetric);
 
             return Results.Ok(new AnalyticsFieldsDto(
                 metricFields,
-                dimensions.Select(c => new AnalyticsFieldDto(FrameQuery.Key(c), c.Name, c.IsDate ? "date" : c.IsNumber ? "number" : FrameAccess.Role(c), FrameAccess.Unit(c))).ToList(),
-                frame.Columns.Where(c => c.IsGroup(50) || (c.IsNumber && !c.Identifier && c.Distinct <= Math.Min(12, c.Present / 2))).Select(FrameAccess.Describe).ToList(),
+                dimensions.Select(c => new AnalyticsFieldDto(FrameQuery.Key(c), c.Name, c.IsDate ? "date" : c.IsNumber ? "number" : c.Role, FrameAccess.Unit(c))).ToList(),
+                frame.Columns.Where(c => c.CanFilterByValue).Select(FrameAccess.Describe).ToList(),
                 defaultMetric,
                 defaultDimension,
-                metricColumn is null ? "count" : DatasetAnalyzer.Additive(metricColumn.Name) ? "sum" : "avg",
+                metricColumn is null ? "count" : metricColumn.Additive ? "sum" : "avg",
                 frame.RowCount));
         })
         .WithName("AnalyticsFields")
@@ -111,7 +97,7 @@ public static class InsightEndpoints
             Column? measure = null;
             if (aggregate != "count")
             {
-                measure = Derived(frame, metric) ?? FrameQuery.Find(frame, metric);
+                measure = FrameEngine.Derived(frame, metric) ?? FrameQuery.Find(frame, metric);
                 if (measure is null) return FrameAccess.UnknownColumn(frame, "metric", metric ?? "");
                 if (!measure.IsNumber)
                     return Problems.BadRequest("That column holds no numbers",
@@ -139,7 +125,7 @@ public static class InsightEndpoints
                 dim.Name,
                 aggregate,
                 grain,
-                new ColumnUnitDto(unit.Prefix, unit.Suffix, unit.Decimals),
+                new ValueUnitDto(unit.Prefix, unit.Suffix, unit.Decimals),
                 grouped.Figures,
                 aggregate is "sum" or "count" ? grouped.Total : null,
                 grouped.GroupCount,
@@ -152,45 +138,6 @@ public static class InsightEndpoints
         .WithSummary("Aggregate one of the file's columns by another, with repeatable filter=column:op:value.");
 
         return api;
-    }
-
-    private static bool IsMetric(Column c) => c.IsNumber && !c.Identifier && c.Present > 0;
-
-    /// <summary>
-    /// Anything rows can sensibly be grouped by: dates, repeated labels, and
-    /// numbers with only a few values (a rating, a year, a class level).
-    /// </summary>
-    private static bool IsDimension(Column c, int rows) =>
-        c.Present > 0 && !c.Identifier && (
-            c.IsDate
-            || (c.IsNumber && c.Distinct <= Math.Min(24, c.Present / 2))
-            || (!c.IsNumber && c.Distinct >= 1 && c.Distinct <= 1000 && c.Distinct < Math.Max(2, rows)));
-
-    /// <summary>
-    /// "c5*c6": the product of two numeric columns, row by row — revenue from
-    /// quantity and unit price. Built per request; the shared frame is never changed.
-    /// </summary>
-    private static Column? Derived(Frame frame, string? key)
-    {
-        if (key?.Split('*') is not [var left, var right]) return null;
-        if (FrameQuery.Find(frame, left) is not { IsNumber: true } a || FrameQuery.Find(frame, right) is not { IsNumber: true } b) return null;
-
-        var values = new double?[frame.RowCount];
-        var present = 0;
-        for (var r = 0; r < frame.RowCount; r++)
-        {
-            if (a.Numbers[r] is not { } x || b.Numbers[r] is not { } y) continue;
-            values[r] = x * y;
-            present++;
-        }
-
-        var name = a.Match(["qty", "quantity", "units"]) > 0 && b.Match(["price", "rate"]) > 0 ? "Revenue" : $"{a.Name} × {b.Name}";
-        return new Column
-        {
-            Index = -1, Name = name, Tokens = Frame.Tokenise(name), Compact = name.ToLowerInvariant(),
-            Kind = "number", Values = a.Values, Present = present, Distinct = 0,
-            Numbers = values, Prefix = a.Prefix.Length > 0 ? a.Prefix : b.Prefix,
-        };
     }
 
     private static string AggregateWord(string aggregate) => aggregate switch

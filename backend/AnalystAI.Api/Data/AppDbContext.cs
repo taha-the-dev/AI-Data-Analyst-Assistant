@@ -23,7 +23,6 @@ public abstract class AppDbContext(DbContextOptions options, ICurrentUser curren
 {
     public DbSet<Dataset> Datasets => Set<Dataset>();
     public DbSet<DatasetColumn> DatasetColumns => Set<DatasetColumn>();
-    public DbSet<SalesRow> SalesRows => Set<SalesRow>();
     public DbSet<DatasetSource> DatasetSources => Set<DatasetSource>();
     public DbSet<ChatSession> ChatSessions => Set<ChatSession>();
     public DbSet<ChatMessage> ChatMessages => Set<ChatMessage>();
@@ -69,7 +68,6 @@ public abstract class AppDbContext(DbContextOptions options, ICurrentUser curren
         // that keeps accounts apart can be read in one screen.
         b.Entity<Dataset>().HasQueryFilter(e => e.UserId == CurrentUserId);
         b.Entity<DatasetColumn>().HasQueryFilter(e => e.UserId == CurrentUserId);
-        b.Entity<SalesRow>().HasQueryFilter(e => e.UserId == CurrentUserId);
         b.Entity<DatasetSource>().HasQueryFilter(e => e.UserId == CurrentUserId);
         b.Entity<ChatSession>().HasQueryFilter(e => e.UserId == CurrentUserId);
         b.Entity<ChatMessage>().HasQueryFilter(e => e.UserId == CurrentUserId);
@@ -79,7 +77,6 @@ public abstract class AppDbContext(DbContextOptions options, ICurrentUser curren
         // Deleting an account deletes everything it owns.
         b.Entity<Dataset>().HasOne<AppUser>().WithMany().HasForeignKey(e => e.UserId).OnDelete(DeleteBehavior.Cascade);
         b.Entity<DatasetColumn>().HasOne<AppUser>().WithMany().HasForeignKey(e => e.UserId).OnDelete(DeleteBehavior.Cascade);
-        b.Entity<SalesRow>().HasOne<AppUser>().WithMany().HasForeignKey(e => e.UserId).OnDelete(DeleteBehavior.Cascade);
         b.Entity<DatasetSource>().HasOne<AppUser>().WithMany().HasForeignKey(e => e.UserId).OnDelete(DeleteBehavior.Cascade);
         b.Entity<ChatSession>().HasOne<AppUser>().WithMany().HasForeignKey(e => e.UserId).OnDelete(DeleteBehavior.Cascade);
         b.Entity<ChatMessage>().HasOne<AppUser>().WithMany().HasForeignKey(e => e.UserId).OnDelete(DeleteBehavior.Cascade);
@@ -94,10 +91,6 @@ public abstract class AppDbContext(DbContextOptions options, ICurrentUser curren
         b.Entity<Report>().HasIndex(e => e.UserId);
         b.Entity<UserSettings>().HasIndex(e => e.UserId).IsUnique();
 
-        // The explorer filters and sorts on these constantly.
-        b.Entity<SalesRow>().HasIndex(r => new { r.UserId, r.DatasetId });
-        b.Entity<SalesRow>().HasIndex(r => r.Revenue);
-        b.Entity<SalesRow>().HasIndex(r => r.Date);
     }
 
     public override int SaveChanges(bool acceptAllChangesOnSuccess)

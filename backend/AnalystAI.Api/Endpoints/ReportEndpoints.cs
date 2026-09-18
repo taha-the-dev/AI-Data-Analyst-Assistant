@@ -45,10 +45,9 @@ public static class ReportEndpoints
             var datasetId = await context.ResolveAsync(body?.DatasetId, ct);
             if (datasetId is null) return Problems.NoDataset(body?.DatasetId);
 
-            if (!await db.SalesRows.AnyAsync(r => r.DatasetId == datasetId, ct))
-                return Problems.NoRows(datasetId.Value);
-
             var dataset = await db.Datasets.AsNoTracking().FirstAsync(d => d.Id == datasetId, ct);
+            if (!await db.DatasetSources.AnyAsync(s => s.DatasetId == dataset.Id, ct))
+                return Problems.NoSource(dataset.Name);
 
             var report = new Report
             {
@@ -65,8 +64,8 @@ public static class ReportEndpoints
 
             // Composed once here so Figures is the number the reader will
             // actually show, rather than a guess stored beside it.
-            var composed = await composer.ComposeAsync(report, datasetId.Value, dataset.Name, ct);
-            report.Figures = composed.Sections.Count(s => s.Figure is not null);
+            var composed = await composer.ComposeAsync(report, dataset, ct);
+            report.Figures = composed?.Sections.Count(s => s.Figure is not null) ?? 0;
             await db.SaveChangesAsync(ct);
 
             return Results.Created($"/api/reports/{report.Id}",
@@ -89,7 +88,7 @@ public static class ReportEndpoints
             // screen to say so. A deleted source is now reported as gone.
             var source = await db.Datasets.AsNoTracking()
                 .Where(d => d.Id == datasetId || (datasetId == null && d.Name == report.DatasetName))
-                .Select(d => new { d.Id, d.Name })
+                .OrderByDescending(d => d.UpdatedAt)
                 .FirstOrDefaultAsync(ct);
 
             if (source is null)
@@ -103,10 +102,11 @@ public static class ReportEndpoints
                               + "file deliberately, pass ?datasetId=.",
                         statusCode: StatusCodes.Status410Gone);
 
-            return Results.Ok(await composer.ComposeAsync(report, source.Id, source.Name, ct));
+            var composed = await composer.ComposeAsync(report, source, ct);
+            return composed is null ? Problems.NoSource(source.Name) : Results.Ok(composed);
         })
         .WithName("GetReport")
-        .WithSummary("One report, composed from live figures with the spec behind each.");
+        .WithSummary("One report, composed at read time from the file's own analysis.");
 
         group.MapDelete("/{id:int}", async (AppDbContext db, int id, CancellationToken ct) =>
         {

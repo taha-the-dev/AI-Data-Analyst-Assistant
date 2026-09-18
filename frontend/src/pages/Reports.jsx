@@ -3,14 +3,14 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { PageCanvas, PageHeader } from '../components/AppShell'
 import { Button, ErrorState, IconTile, Panel, Skeleton, StatusChip, TableSkeleton } from '../components/ui'
 import Icon from '../components/Icon'
-import { RankedBars, TrendChart } from '../components/charts'
+import Figure from '../components/Figure'
 import { useToast } from '../components/Toast'
 import { api } from '../lib/api'
 import { useResource } from '../hooks/useResource'
 import Modal from '../components/Modal'
 import { useDatasets, usePageActions } from '../context/AppContext'
 import { downloadCsv } from '../lib/csv'
-import { compactMoney, int, whenLabel } from '../lib/format'
+import { int, whenLabel } from '../lib/format'
 
 export function ReportsList() {
   const { data, error, loading, reload } = useResource(() => api.reports.list())
@@ -346,17 +346,14 @@ export function ReportReader() {
 
               {section.figure && (
                 <figure className="mt-sm border border-outline-variant rounded-xl bg-background p-md">
-                  {section.figure.kind === 'trend' ? (
-                    <TrendChart
-                      points={section.figure.data}
-                      format={compactMoney}
-                      className="h-[180px]"
-                      gradientId={`fig-${section.figure.number}`}
-                      ariaLabel={section.figure.caption}
-                    />
-                  ) : (
-                    <RankedBars items={section.figure.data} format={compactMoney} />
-                  )}
+                  <Figure
+                    kind={section.figure.kind}
+                    figures={section.figure.data}
+                    unit={section.figure.unit}
+                    height={200}
+                    id={`report-${section.figure.number}`}
+                    ariaLabel={section.figure.caption}
+                  />
                   <figcaption className="font-body-sm text-body-sm text-on-surface-variant mt-md pt-sm border-t border-outline-variant/50">
                     <span className="font-label-bold text-on-surface">Figure {section.figure.number}.</span>{' '}
                     {section.figure.caption} — computed from{' '}

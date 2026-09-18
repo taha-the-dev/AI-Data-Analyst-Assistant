@@ -1,4 +1,6 @@
 using System.Text.Json.Serialization;
+using AnalystAI.Api.Analysis;
+using AnalystAI.Api.Contracts;
 
 namespace AnalystAI.Api.Query;
 
@@ -6,16 +8,19 @@ namespace AnalystAI.Api.Query;
 /// The contract the whole application runs on.
 ///
 /// A planner decides *what* to compute and returns one of these. It never
-/// computes anything itself — <see cref="QueryEngine"/> runs the spec against
-/// the real rows, so every figure a caller sees came from the data.
+/// computes anything itself — the engine runs the spec against the uploaded
+/// file, so every figure a caller sees came from the data. Columns are named
+/// by the file's own headers.
 /// </summary>
 public record QuerySpec
 {
-    /// <summary>aggregate | trend | distribution | list</summary>
+    /// <summary>aggregate | trend</summary>
     public string Intent { get; init; } = "aggregate";
+    /// <summary>A column to group by: a category, a date, or a number with few values.</summary>
     public string? GroupBy { get; init; }
+    /// <summary>A numeric column (or a derived measure the schema names). Null for a count.</summary>
     public string? Metric { get; init; }
-    /// <summary>sum | avg | count | min | max</summary>
+    /// <summary>sum | avg | count | min | max | median</summary>
     public string Aggregate { get; init; } = "sum";
     public List<QueryFilter> Filters { get; init; } = [];
     /// <summary>"value desc" | "value asc" | "label asc" | "label desc"</summary>
@@ -28,6 +33,7 @@ public record QuerySpec
     public string Title { get; init; } = "";
 }
 
+/// <summary>Op is one of &gt; &gt;= &lt; &lt;= = != contains.</summary>
 public record QueryFilter(string Column, string Op, string Value);
 
 /// <summary>A single computed figure. The label/value pairs a chart renders.</summary>
@@ -44,8 +50,12 @@ public record QueryResult
     public long RowsScanned { get; init; }
     public long RowsMatched { get; init; }
     public int DurationMs { get; init; }
+    /// <summary>Sum of the figures shown, for sums and counts; zero where a total means nothing.</summary>
     public double Total { get; init; }
-    public string Unit { get; init; } = "currency";
+    /// <summary>How the figures are written: the measured column's own currency or percent sign.</summary>
+    public ValueUnitDto Unit { get; init; } = new("", "", 0);
+    /// <summary>The measured column's header, or null for a count of rows.</summary>
+    public string? MetricLabel { get; init; }
 }
 
 /// <summary>
@@ -62,9 +72,9 @@ public interface IQuestionPlanner
     string Model { get; }
 
     /// <param name="schema">
-    /// The columns of the file in context and the values its category columns
-    /// hold, or null when nothing described it. A planner that ignores the
-    /// question's wording can still be right; one that ignores the data cannot.
+    /// The columns of the file in context, what each holds, and which measure
+    /// and grouping the file is about. A planner that ignores the question's
+    /// wording can still be right; one that ignores the data cannot.
     /// </param>
     /// <returns>
     /// The spec and the planner that actually produced it. A hosted planner
@@ -73,13 +83,13 @@ public interface IQuestionPlanner
     /// answered — and the screen must say which one did.
     /// </returns>
     Task<PlannedSpec> PlanAsync(
-        string question, IReadOnlyList<string> priorTurns, string? schema, CancellationToken ct = default);
+        string question, IReadOnlyList<string> priorTurns, DatasetSchema schema, CancellationToken ct = default);
 
     /// <summary>
     /// Writes the answer. Implementations are given the computed figures and
     /// must not produce any number that is not among them.
     /// </summary>
-    Task<string> ExplainAsync(string question, QueryResult result, CancellationToken ct = default);
+    Task<string> ExplainAsync(string question, QueryResult result, DatasetSchema schema, CancellationToken ct = default);
 }
 
 /// <summary>

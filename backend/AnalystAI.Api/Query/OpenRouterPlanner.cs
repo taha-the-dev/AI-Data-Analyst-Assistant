@@ -2,6 +2,7 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using AnalystAI.Api.Analysis;
 
 namespace AnalystAI.Api.Query;
 
@@ -57,7 +58,7 @@ public partial class OpenRouterPlanner(
     /// <see cref="PlanAsync"/> that does not reach OpenRouter comes through
     /// here, so a fallback can never be reported as a hosted answer.
     /// </summary>
-    private PlannedSpec FellBack(string question, IReadOnlyList<string> priorTurns, string? schema) =>
+    private PlannedSpec FellBack(string question, IReadOnlyList<string> priorTurns, DatasetSchema schema) =>
         new(fallback.Plan(question, priorTurns, schema), fallback.Id, fallback.Model);
 
     /// <summary>
@@ -78,7 +79,7 @@ public partial class OpenRouterPlanner(
         !string.IsNullOrWhiteSpace(ResolveKey(configuration));
 
     public async Task<PlannedSpec> PlanAsync(
-        string question, IReadOnlyList<string> priorTurns, string? schema = null, CancellationToken ct = default)
+        string question, IReadOnlyList<string> priorTurns, DatasetSchema schema, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(ApiKey)) return FellBack(question, priorTurns, schema);
 
@@ -111,7 +112,7 @@ public partial class OpenRouterPlanner(
             if (json is null) return FellBack(question, priorTurns, schema);
 
             var raw = JsonNode.Parse(json) as JsonObject;
-            var spec = raw is null ? null : SpecValidator.TryBuild(raw);
+            var spec = raw is null ? null : SpecValidator.TryBuild(raw, schema);
 
             if (spec is null)
             {
@@ -128,7 +129,7 @@ public partial class OpenRouterPlanner(
         }
     }
 
-    public async Task<string> ExplainAsync(string question, QueryResult result, CancellationToken ct = default)
+    public async Task<string> ExplainAsync(string question, QueryResult result, DatasetSchema schema, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(ApiKey) || result.Figures.Count == 0)
             return fallback.Explain(question, result);

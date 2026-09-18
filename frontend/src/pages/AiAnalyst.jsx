@@ -5,12 +5,12 @@ import Icon from '../components/Icon'
 import { Button, ErrorState, IconButton, Skeleton, StatusChip } from '../components/ui'
 import Modal from '../components/Modal'
 import { useToast } from '../components/Toast'
-import { MiniColumns } from '../components/charts'
+import Figure from '../components/Figure'
 import { api } from '../lib/api'
 import { useResource } from '../hooks/useResource'
 import { useDatasets, usePageActions } from '../context/AppContext'
 import { downloadCsv } from '../lib/csv'
-import { bucketLabel, clock, compactMoney, int } from '../lib/format'
+import { bucketLabel, clock, int, unitValue } from '../lib/format'
 
 /** One collapsible block in the analysis panel. */
 function Section({ title, children, defaultOpen = true }) {
@@ -46,10 +46,13 @@ function AnalysisPanel({ answer }) {
     )
   }
 
-  const total = answer.figures.reduce((sum, f) => sum + f.value, 0)
   const top = answer.figures.slice(0, 10)
-  const isCount = answer.spec?.aggregate === 'count' || answer.spec?.metric === 'qty'
-  const format = isCount ? int : compactMoney
+  // The API says how the figures are written; turns stored before it did are plain numbers.
+  const unit = answer.unit ?? { prefix: '', suffix: '', decimals: 0 }
+  const format = (v) => unitValue(v, unit, { compact: false })
+  // A share of the whole only means something when the parts add up.
+  const additive = ['sum', 'count'].includes(answer.spec?.aggregate)
+  const total = additive ? answer.figures.reduce((sum, f) => sum + f.value, 0) : 0
 
   return (
     <div className="flex flex-col gap-md">
@@ -77,9 +80,11 @@ function AnalysisPanel({ answer }) {
                 <td className="py-sm text-right font-code text-code text-on-surface tabular-nums">
                   {format(f.value)}
                 </td>
-                <td className="py-sm text-right font-code text-code text-on-surface-variant tabular-nums">
-                  {total ? `${((f.value / total) * 100).toFixed(1)}%` : '—'}
-                </td>
+                {total > 0 && (
+                  <td className="py-sm text-right font-code text-code text-on-surface-variant tabular-nums">
+                    {`${((f.value / total) * 100).toFixed(1)}%`}
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>
@@ -92,7 +97,14 @@ function AnalysisPanel({ answer }) {
       </Section>
 
       <Section title="Visualization">
-        <MiniColumns points={top.slice(0, 6)} format={format} height={200} />
+        <Figure
+          kind={answer.spec?.intent === 'trend' ? 'line' : answer.spec?.chart === 'donut' ? 'donut' : 'bars'}
+          figures={answer.spec?.intent === 'trend' ? answer.figures : top}
+          unit={unit}
+          height={200}
+          id={`answer-${answer.id}`}
+          ariaLabel={answer.title ?? 'Answer'}
+        />
       </Section>
     </div>
   )
@@ -198,8 +210,8 @@ export default function AiAnalyst() {
     })
 
     source.addEventListener('figures', (e) => {
-      const { figures, chart, title } = JSON.parse(e.data)
-      patch({ figures, chart, title })
+      const { figures, unit, chart, title } = JSON.parse(e.data)
+      patch({ figures, unit, chart, title })
     })
 
     source.addEventListener('token', (e) => {
@@ -216,12 +228,17 @@ export default function AiAnalyst() {
       sessions.reload()
     })
 
+    // A refusal before streaming starts (no file, file uploaded before copies
+    // were kept) arrives as a plain response, which EventSource reports as an
+    // error; the message says what to do rather than blaming a restart.
     source.onerror = () => {
       source.close()
       sourceRef.current = null
       setStreaming(null)
       patch({
-        content: 'The answer stopped partway through. The API may have restarted — ask again to retry.',
+        content:
+          'No answer came back. If this file was uploaded before files were kept for analysis, upload it again; ' +
+          'otherwise the API may have restarted — ask again to retry.',
       })
     }
   }
@@ -537,7 +554,7 @@ export default function AiAnalyst() {
           value={saveName ?? ''}
           onChange={(e) => setSaveName(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && saveSession()}
-          placeholder="Revenue by region, Q3"
+          placeholder="Marks by subject, term 1"
           className="w-full h-[32px] rounded-lg border border-outline-variant bg-surface-container-lowest px-3 font-body-main text-body-main text-on-surface placeholder:text-outline focus:outline-none focus:border-primary-container transition-colors"
         />
       </Modal>

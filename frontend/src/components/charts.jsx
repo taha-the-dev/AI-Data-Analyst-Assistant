@@ -291,33 +291,6 @@ export function DonutChart({ segments, centerLabel, centerValue, size = 'w-32 h-
   )
 }
 
-/** Horizontal ranked bars — used where labels are long. */
-export function RankedBars({ items, format = (v) => v }) {
-  const max = Math.max(...items.map((i) => i.value)) || 1
-  return (
-    <ul className="flex flex-col gap-sm">
-      {items.map((item, i) => (
-        <li key={item.label} className="flex items-center gap-sm sm:gap-md group">
-          <span className="font-body-sm text-body-sm text-on-surface-variant w-[72px] sm:w-[96px] shrink-0 truncate">
-            {bucketLabel(item.label)}
-          </span>
-          <div className="flex-1 min-w-[40px] h-[14px] bg-surface-container-low rounded overflow-hidden">
-            <div
-              className={`h-full rounded transition-colors ${
-                i === 0 ? 'bg-primary-container' : 'bg-primary-fixed-dim'
-              } group-hover:bg-primary-hover`}
-              style={{ width: `${(item.value / max) * 100}%` }}
-            />
-          </div>
-          <span className="font-code text-code text-on-surface tabular-nums w-[56px] sm:w-[76px] text-right shrink-0">
-            {format(item.value)}
-          </span>
-        </li>
-      ))}
-    </ul>
-  )
-}
-
 /**
  * Label, track, fill — the "Sales by Category" list. The fill steps down in
  * opacity by rank so the leader reads first without a legend.
@@ -421,32 +394,6 @@ export function ColumnChart({ points, format = (v) => v, height = 210, wideLabel
           ))}
         </div>
       </div>
-    </div>
-  )
-}
-
-/** The descending block chart in the assistant's analysis panel. */
-export function MiniColumns({ points, format = (v) => v, height = 170 }) {
-  const max = Math.max(...points.map((p) => p.value)) || 1
-  return (
-    <div className="flex items-end gap-2 border-l border-b border-outline-variant pl-2 pb-0" style={{ height }}>
-      {points.map((p, i) => (
-        <div key={p.label} className="relative group flex-1 h-full flex items-end">
-          <span className="pointer-events-none absolute -top-1 left-1/2 -translate-x-1/2 z-10 whitespace-nowrap rounded bg-inverse-surface px-1.5 py-0.5 font-body-sm text-[12px] text-inverse-on-surface opacity-0 group-hover:opacity-100 transition-opacity">
-            {bucketLabel(p.label)} · {format(p.value)}
-          </span>
-          <span
-            className="w-full bg-primary origin-bottom animate-grow"
-            style={{
-              height: `${Math.max(2, (p.value / max) * 100)}%`,
-              opacity: Math.max(0.22, 1 - i * 0.2),
-              animationDelay: `${i * 60}ms`,
-            }}
-            role="img"
-            aria-label={`${p.label}: ${format(p.value)}`}
-          />
-        </div>
-      ))}
     </div>
   )
 }

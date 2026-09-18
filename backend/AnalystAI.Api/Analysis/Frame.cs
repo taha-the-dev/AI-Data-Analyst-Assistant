@@ -41,6 +41,38 @@ internal sealed class Column
 
     public bool IsLabel => !IsNumber && !IsDate;
 
+    // ── What the column may be used as ──────────────────────────────────────
+    // Decided here, once. Analytics, the Explorer, the assistant's schema and
+    // the recipes all ask these rather than re-deriving thresholds of their own.
+
+    /// <summary>identifier | number | date | group | text</summary>
+    public string Role => Identifier ? "identifier" : IsNumber ? "number" : IsDate ? "date" : IsGroup(50) ? "group" : "text";
+
+    /// <summary>A measurement that can be summed, averaged or ranged.</summary>
+    public bool CanMeasure => IsNumber && !Identifier && Present > 0;
+
+    /// <summary>
+    /// Something rows can sensibly be grouped by: dates, repeated labels, and
+    /// numbers with only a few repeated values (a rating, a year, a class level).
+    /// </summary>
+    public bool CanGroupBy =>
+        Present > 0 && !Identifier && (
+            IsDate
+            || (IsNumber && Distinct <= Math.Min(24, Present / 2))
+            || (!IsNumber && Distinct <= 1000 && Distinct < Math.Max(2, Present)));
+
+    /// <summary>Few enough values to offer as a pick-list filter.</summary>
+    public bool CanFilterByValue => IsGroup(50) || (IsNumber && !Identifier && Distinct <= Math.Min(12, Present / 2));
+
+    /// <summary>The values a pick-list filter offers, numbers in numeric order; null when the column has too many.</summary>
+    public IReadOnlyList<string>? FilterOptions() =>
+        CanFilterByValue
+            ? Values.Where(v => v.Length > 0).Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(v => Cells.TryNumber(v, out var n) ? n : double.MaxValue)
+                .ThenBy(v => v, StringComparer.OrdinalIgnoreCase)
+                .Take(50).ToList()
+            : null;
+
     /// <summary>How strongly the header reads as one of <paramref name="words"/>: 3 for a whole word, 1 for a fragment.</summary>
     public int Match(IEnumerable<string> words)
     {
@@ -77,6 +109,8 @@ internal sealed record Unit(string Prefix, string Suffix, int Decimals)
         var integers = column.Numbers.All(n => n is null || Math.Abs(n.Value % 1) < 1e-9);
         return new Unit(column.Prefix, column.Percent ? "%" : "", integers ? 0 : column.Prefix.Length > 0 ? 2 : 1);
     }
+
+    public Contracts.ValueUnitDto ToDto() => new(Prefix, Suffix, Decimals);
 
     /// <summary>An average of whole numbers still needs a decimal place to be honest.</summary>
     public Unit ForAverage => this with { Decimals = Math.Max(Decimals, Prefix.Length > 0 ? 2 : 1) };

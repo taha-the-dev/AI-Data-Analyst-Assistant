@@ -1,15 +1,5 @@
 export const int = (n) => n.toLocaleString('en-US')
 
-export const money = (n, decimals = 2) =>
-  '$' +
-  n.toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals })
-
-export const compactMoney = (n) => {
-  if (n >= 1_000_000) return '$' + (n / 1_000_000).toFixed(2) + 'M'
-  if (n >= 1_000) return '$' + Math.round(n / 1_000) + 'K'
-  return '$' + n
-}
-
 /**
  * A figure in the unit the API described for it — `{ prefix: '$', suffix: '',
  * decimals: 0 }` — shortened to K / M / B once it gets long. The API decides

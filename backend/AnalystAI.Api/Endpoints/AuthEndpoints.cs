@@ -147,7 +147,7 @@ public static class AuthEndpoints
             await db.ChatMessages.Where(e => e.UserId == user.Id).ExecuteDeleteAsync(ct);
             await db.ChatSessions.Where(e => e.UserId == user.Id).ExecuteDeleteAsync(ct);
             await db.Reports.Where(e => e.UserId == user.Id).ExecuteDeleteAsync(ct);
-            await db.SalesRows.Where(e => e.UserId == user.Id).ExecuteDeleteAsync(ct);
+            await db.DatasetSources.Where(e => e.UserId == user.Id).ExecuteDeleteAsync(ct);
             await db.DatasetColumns.Where(e => e.UserId == user.Id).ExecuteDeleteAsync(ct);
             await db.Datasets.Where(e => e.UserId == user.Id).ExecuteDeleteAsync(ct);
             await db.UserSettings.Where(e => e.UserId == user.Id).ExecuteDeleteAsync(ct);

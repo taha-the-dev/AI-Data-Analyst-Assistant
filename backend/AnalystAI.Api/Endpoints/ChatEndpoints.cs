@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Text.Json;
 using AnalystAI.Api.Contracts;
 using AnalystAI.Api.Data;
@@ -61,7 +60,7 @@ public static class ChatEndpoints
 
             return Results.Ok(session.Messages
                 .OrderBy(m => m.CreatedAt).ThenBy(m => m.Id)
-                .Select(ToDto).ToList());
+                .Select(Assistant.ToDto).ToList());
         })
         .WithName("GetSessionMessages")
         .WithSummary("Every turn in one conversation, with the spec and figures behind each answer.");
@@ -106,110 +105,34 @@ public static class ChatEndpoints
         .WithSummary("Delete a conversation and its turns.");
 
         group.MapPost("/sessions/{id:int}/ask", async (
-            AppDbContext db, QueryEngine engine, IPlannerResolver planners, IDatasetContext context,
-            SchemaSummary schema, int id, AskRequest body, int? datasetId, CancellationToken ct) =>
+            Assistant assistant, int id, AskRequest body, int? datasetId, CancellationToken ct) =>
         {
-            if (string.IsNullOrWhiteSpace(body?.Question))
-                return Problems.BadRequest("The question is empty", "Send { \"question\": \"...\" } in the body.");
+            var (turn, problem) = await assistant.PrepareAsync(id, datasetId, body?.Question, ct);
+            if (problem is not null) return problem;
 
-            if (body.Question.Length > InputLimits.QuestionLength)
-                return Problems.BadRequest(
-                    "The question is too long",
-                    $"Keep a question under {InputLimits.QuestionLength:N0} characters.");
-
-            var dataset = await context.ResolveAsync(datasetId, ct);
-            if (dataset is null) return Problems.NoDataset(datasetId);
-
-            var session = await db.ChatSessions.Include(s => s.Messages)
-                .FirstOrDefaultAsync(s => s.Id == id, ct);
-            if (session is null) return SessionNotFound(id);
-
-            if (!await db.SalesRows.AnyAsync(r => r.DatasetId == dataset, ct))
-                return Problems.NoRows(dataset.Value);
-
-            var question = body.Question.Trim();
-
-            // Stage 1 — plan. Prior turns go in so follow-ups resolve.
-            var planSw = Stopwatch.StartNew();
-            var priorTurns = session.Messages
-                .OrderBy(m => m.Id).TakeLast(6).Select(m => m.Content).ToList();
-            var planner = await planners.ResolveAsync(ct);
-            var planned = await planner.PlanAsync(
-                question, priorTurns, await schema.DescribeAsync(dataset.Value, ct), ct);
-            var spec = planned.Spec;
-            planSw.Stop();
-
-            // Stage 2 — execute. Every figure originates here.
-            var result = await engine.RunAsync(spec, dataset.Value, ct);
-
-            // Stage 3 — explain, from the computed figures only.
-            var prose = await planner.ExplainAsync(question, result, ct);
-
-            var now = DateTime.UtcNow;
-            var userMessage = new ChatMessage
-            {
-                SessionId = id, Role = "user", Content = question, CreatedAt = now,
-            };
-            var assistantMessage = new ChatMessage
-            {
-                SessionId = id,
-                Role = "assistant",
-                Content = prose,
-                SpecJson = JsonSerializer.Serialize(result.Spec, Json),
-                ResultJson = JsonSerializer.Serialize(result.Figures, Json),
-                RowsScanned = result.RowsScanned,
-                LatencyMs = (int)planSw.ElapsedMilliseconds + result.DurationMs,
-                CreatedAt = now.AddMilliseconds(1),
-            };
-
-            db.ChatMessages.AddRange(userMessage, assistantMessage);
-            session.UpdatedAt = now;
-            if (session.Messages.Count == 0) session.Subtitle = Summarise(question);
-            await db.SaveChangesAsync(ct);
+            var answer = await assistant.AskAsync(turn!, null, ct);
+            var result = answer.Result;
 
             return Results.Ok(new AskResponse(
-                ToDto(userMessage), ToDto(assistantMessage),
+                Assistant.ToDto(answer.UserMessage), Assistant.ToDto(answer.AssistantMessage),
                 result.Spec, result.Figures, result.RowsScanned, result.RowsMatched,
-                (int)planSw.ElapsedMilliseconds, result.DurationMs,
-                result.Spec.Chart, result.Spec.Title, planned.Attribution));
+                answer.PlanMs, result.DurationMs, result.Spec.Chart, result.Spec.Title, result.Unit, answer.Planner));
         })
         .RequireRateLimiting(RateLimits.Assistant)
         .WithName("Ask")
-        .WithSummary("Plan a QuerySpec, compute it against the rows, and explain the figures.");
+        .WithSummary("Plan a query over the file's own columns, compute it, and explain the figures.");
 
         // Server-sent events: the plan and the figures arrive immediately, then
         // the sentence streams word by word — the client can render the working
-        // before the prose finishes.
+        // before the prose finishes. The same module answers as /ask; only the
+        // delivery differs.
         group.MapGet("/sessions/{id:int}/stream", async (
-            HttpContext http, AppDbContext db, QueryEngine engine, IPlannerResolver planners,
-            IDatasetContext context, SchemaSummary schema, int id, string question, int? datasetId,
-            CancellationToken ct) =>
+            HttpContext http, Assistant assistant, int id, string? question, int? datasetId, CancellationToken ct) =>
         {
-            if (string.IsNullOrWhiteSpace(question) || question.Length > InputLimits.QuestionLength)
+            var (turn, problem) = await assistant.PrepareAsync(id, datasetId, question, ct);
+            if (problem is not null)
             {
-                http.Response.StatusCode = StatusCodes.Status400BadRequest;
-                await http.Response.WriteAsJsonAsync(new
-                {
-                    title = string.IsNullOrWhiteSpace(question) ? "The question is empty" : "The question is too long",
-                }, ct);
-                return;
-            }
-
-            var session = await db.ChatSessions.Include(s => s.Messages)
-                .FirstOrDefaultAsync(s => s.Id == id, ct);
-            if (session is null)
-            {
-                http.Response.StatusCode = StatusCodes.Status404NotFound;
-                await http.Response.WriteAsJsonAsync(new { title = "Session not found", id }, ct);
-                return;
-            }
-
-            var dataset = await context.ResolveAsync(datasetId, ct);
-            if (dataset is null)
-            {
-                http.Response.StatusCode = StatusCodes.Status404NotFound;
-                await http.Response.WriteAsJsonAsync(
-                    new { title = "There is no dataset to answer from", datasetId }, ct);
+                await problem.ExecuteAsync(http);
                 return;
             }
 
@@ -217,83 +140,20 @@ public static class ChatEndpoints
             http.Response.Headers.CacheControl = "no-cache";
             http.Response.Headers["X-Accel-Buffering"] = "no";
 
-            var planSw = Stopwatch.StartNew();
-            var priorTurns = session.Messages.OrderBy(m => m.Id).TakeLast(6).Select(m => m.Content).ToList();
-            var planner = await planners.ResolveAsync(ct);
-            var planned = await planner.PlanAsync(
-                question.Trim(), priorTurns, await schema.DescribeAsync(dataset.Value, ct), ct);
-            var spec = planned.Spec;
-            planSw.Stop();
+            var answer = await assistant.AskAsync(turn!, new StreamProgress(http, ct), ct);
 
-            await Send(http, "plan",
-                new { spec, planMs = planSw.ElapsedMilliseconds, planner = planned.Attribution }, ct);
-
-            var result = await engine.RunAsync(spec, dataset.Value, ct);
-            await Send(http, "figures", new
-            {
-                figures = result.Figures,
-                rowsScanned = result.RowsScanned,
-                rowsMatched = result.RowsMatched,
-                computeMs = result.DurationMs,
-                chart = spec.Chart,
-                title = spec.Title,
-            }, ct);
-
-            var prose = await planner.ExplainAsync(question, result, ct);
-            foreach (var word in prose.Split(' '))
+            foreach (var word in answer.AssistantMessage.Content.Split(' '))
             {
                 if (ct.IsCancellationRequested) break;
                 await Send(http, "token", new { text = word + " " }, ct);
                 await Task.Delay(18, ct);
             }
 
-            var now = DateTime.UtcNow;
-            db.ChatMessages.AddRange(
-                new ChatMessage { SessionId = id, Role = "user", Content = question.Trim(), CreatedAt = now },
-                new ChatMessage
-                {
-                    SessionId = id, Role = "assistant", Content = prose,
-                    SpecJson = JsonSerializer.Serialize(result.Spec, Json),
-                    ResultJson = JsonSerializer.Serialize(result.Figures, Json),
-                    RowsScanned = result.RowsScanned,
-                    LatencyMs = (int)planSw.ElapsedMilliseconds + result.DurationMs,
-                    CreatedAt = now.AddMilliseconds(1),
-                });
-            session.UpdatedAt = now;
-            await db.SaveChangesAsync(CancellationToken.None);
-
             await Send(http, "done", new { ok = true }, ct);
         })
         .RequireRateLimiting(RateLimits.Assistant)
         .WithName("AskStream")
-        .WithSummary("Same three stages as /ask, delivered as server-sent events.");
-
-        api.MapPost("/query/run", async (
-            QueryEngine engine, IDatasetContext context, RunSpecRequest body, CancellationToken ct) =>
-        {
-            if (body?.Spec is null)
-                return Problems.BadRequest("No spec supplied", "Send { \"spec\": { ... } } in the body.");
-
-            if (body.Spec.GroupBy is not null && !QueryEngine.IsColumn(body.Spec.GroupBy))
-                return Problems.UnknownColumn("groupBy column", body.Spec.GroupBy, QueryEngine.Columns);
-
-            if (body.Spec.Metric is not null && !QueryEngine.IsColumn(body.Spec.Metric))
-                return Problems.UnknownColumn("metric column", body.Spec.Metric, QueryEngine.Columns);
-
-            if (!QueryEngine.IsAggregate(body.Spec.Aggregate))
-                return Problems.BadRequest(
-                    "Unknown aggregate",
-                    $"'{body.Spec.Aggregate}' is not supported. Use one of: {string.Join(", ", QueryEngine.Aggregates)}.");
-
-            var dataset = await context.ResolveAsync(body.DatasetId, ct);
-            if (dataset is null) return Problems.NoDataset(body.DatasetId);
-
-            var result = await engine.RunAsync(body.Spec, dataset.Value, ct);
-            return Results.Ok(result);
-        })
-        .WithTags("Chat")
-        .WithName("RunSpec")
-        .WithSummary("Run an edited QuerySpec directly — the working is inspectable and re-runnable.");
+        .WithSummary("Same answer as /ask, delivered as server-sent events: plan, figures, tokens, done.");
 
         return api;
     }
@@ -305,19 +165,27 @@ public static class ChatEndpoints
         detail: $"No chat session with id {id}.",
         statusCode: StatusCodes.Status404NotFound);
 
+    private sealed class StreamProgress(HttpContext http, CancellationToken ct) : Assistant.IProgress
+    {
+        public Task PlannedAsync(QuerySpec spec, string planner, int planMs) =>
+            Send(http, "plan", new { spec, planMs, planner }, ct);
+
+        public Task ComputedAsync(QueryResult result) => Send(http, "figures", new
+        {
+            figures = result.Figures,
+            unit = result.Unit,
+            rowsScanned = result.RowsScanned,
+            rowsMatched = result.RowsMatched,
+            computeMs = result.DurationMs,
+            chart = result.Spec.Chart,
+            title = result.Spec.Title,
+        }, ct);
+    }
+
     private static async Task Send(HttpContext http, string @event, object payload, CancellationToken ct)
     {
         await http.Response.WriteAsync($"event: {@event}\n", ct);
         await http.Response.WriteAsync($"data: {JsonSerializer.Serialize(payload, Json)}\n\n", ct);
         await http.Response.Body.FlushAsync(ct);
     }
-
-    private static ChatMessageDto ToDto(ChatMessage m) => new(
-        m.Id, m.Role, m.Content,
-        m.SpecJson is null ? null : JsonSerializer.Deserialize<QuerySpec>(m.SpecJson, Json),
-        m.ResultJson is null ? null : JsonSerializer.Deserialize<List<Figure>>(m.ResultJson, Json),
-        m.RowsScanned, m.LatencyMs, m.CreatedAt);
-
-    private static string Summarise(string question) =>
-        question.Length <= 48 ? question : question[..45].TrimEnd() + "...";
 }

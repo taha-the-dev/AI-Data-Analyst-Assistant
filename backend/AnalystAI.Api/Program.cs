@@ -47,11 +47,12 @@ else
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUser, HttpCurrentUser>();
 
-builder.Services.AddScoped<QueryEngine>();
 builder.Services.AddScoped<ReportComposer>();
 builder.Services.AddScoped<IDatasetContext, DatasetContext>();
-builder.Services.AddScoped<SchemaSummary>();
-builder.Services.AddMemoryCache();
+// Parsed files are the largest thing the service holds. The cache is capped in
+// cells so a burst of large files evicts the oldest instead of exhausting the
+// 512 MB a free instance has; see SourceStore for how entries are sized.
+builder.Services.AddMemoryCache(options => options.SizeLimit = SourceStore.CacheCells);
 builder.Services.AddScoped<SourceStore>();
 builder.Services.AddScoped<DashboardService>();
 
@@ -64,6 +65,7 @@ builder.Services.AddHttpClient<GeminiPlanner>(client =>
 builder.Services.AddHttpClient<OpenRouterPlanner>(client =>
     client.Timeout = TimeSpan.FromSeconds(45));
 builder.Services.AddScoped<IPlannerResolver, PlannerResolver>();
+builder.Services.AddScoped<Assistant>();
 
 // Accounts. ASP.NET Core Identity stores them and hashes passwords with PBKDF2;
 // the session is a cookie that no script on the page can read.

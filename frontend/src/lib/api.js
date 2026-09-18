@@ -161,8 +161,6 @@ export const api = {
       `${BASE}/chat/sessions/${id}/stream${qs({ question, datasetId })}`,
   },
 
-  runSpec: (spec, datasetId) => request('/query/run', { method: 'POST', body: { spec, datasetId } }),
-
   reports: {
     list: () => request('/reports'),
     get: (id) => request(`/reports/${id}`),

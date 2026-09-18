@@ -240,10 +240,10 @@ the `X-DataMind-Csrf` header itself.
 bash backend/smoke-test.sh
 ```
 
-107 cases. The run signs up two throwaway accounts — one that does the work, one
+113 cases. The run signs up two throwaway accounts — one that does the work, one
 that proves it cannot see any of it — and covers every endpoint and its failure
 paths: sign-up, sign-in and sign-out, refused cross-site requests, an upload's
-full round trip (profile → stored rows → queryable → deletable), report writing
+full round trip (profile → stored copy → analysed → deletable), report writing
 and deletion, a report whose source file has since been deleted, saving a
 conversation, the assistant provider switch, isolation between the two
 accounts, and deleting an account. Both accounts are deleted at the end with
@@ -270,9 +270,11 @@ out and back in.
 ## How it fits together
 
 A language model is unreliable at arithmetic, so it never does any here. A
-question moves through three stages: **plan** (a `QuerySpec` chosen by a model or
-by keyword rules), **execute** (`QueryEngine`, the only place a figure is ever
-produced), **explain** (prose written from the computed figures). The API records
+question moves through three stages: **plan** (a `QuerySpec` over the file's own
+columns, chosen by a model or by keyword rules), **execute** (`FrameEngine`, over
+the uploaded file itself), **explain** (prose written from the computed figures).
+One module, `Services/Assistant.cs`, runs all three for both the answer and the
+streamed answer. The API records
 the spec that ran, the rows scanned and the milliseconds each stage took with
 every answer; the assistant screen shows the figures and a chart of them.
 
@@ -306,10 +308,10 @@ returns nonsense, the built-in planner answers instead and every screen keeps
 working. Each answer from the chat stream still records which planner produced
 it, in the `plan` event's `planner` field.
 
-The same engine backs the rest of the product: Dashboard, Analytics and the
-report writer are saved `QuerySpec`s (`Query/SavedSpecs.cs`) run through it, and
-the Analytics toolbar builds a spec from its selectors and posts it to
-`/api/query/run`.
+Every screen reads the same thing: the uploaded file, kept compressed and parsed
+into a cached frame (`Services/SourceStore.cs`). The dashboard, the assistant's
+schema and the reports all start from the analysis in `Analysis/`, which works
+out what kind of data the file holds and which of its columns matter.
 
 ```
 design/                    the Stitch export the UI was built from — one folder
@@ -321,7 +323,8 @@ frontend/src
   context/AuthContext.jsx  the signed-in account: sign in, sign up, sign out
   context/AppContext.jsx   active dataset + the top bar's page actions
   lib/api.js               the only place the app talks to the service
-  components/              rail, top bar, panels, charts (inline SVG), auth layout
+  components/              rail, top bar, panels, charts (inline SVG), Figure
+                           (one chart for any figures and unit), auth layout
   pages/                   one file per screen, plus SignIn and SignUp
 
 backend/AnalystAI.Api
@@ -330,9 +333,14 @@ backend/AnalystAI.Api
   Security/                response headers, cross-site checks, input limits
   Endpoints/               one file per screen area, AuthEndpoints, and the
                            shared ProblemDetails
-  Query/                   QuerySpec, engine, shared row filters, planners
+  Analysis/                the file as columns (Frame), filtering and grouping,
+                           the dashboard recipes, the planner schema and engine
+  Query/                   QuerySpec, the one validator, the planners
   Services/                current account, dataset context, CSV profiler,
-                           row mapper, KPIs, report composer
+                           source store, the assistant, dashboard, report composer
+
+backend/AnalystAI.Tests    xUnit: cell parsing, column roles, grouping, the
+                           dashboard recipes, and question -> figures
   Data/                    EF Core context with per-account filters, migrations,
                            startup
   Models/                  entities and the account

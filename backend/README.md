@@ -82,16 +82,26 @@ have while building and an open door in production, so `MapOpenApi` and
 ## Test it
 
 ```bash
+dotnet test AnalystAI.Tests
+```
+
+37 unit tests, no server needed: cell parsing, what each column may be used as,
+filtering, sorting and grouping, the dashboard each kind of file gets, and the
+assistant's path from a question to figures — schema, keyword plan, validation,
+engine and explanation — on small files whose expected figures are worked out by
+hand. Last run: **37 passed, 0 failed**.
+
+```bash
 bash smoke-test.sh
 ```
 
-Exercises all 107 cases, asserting the status code of each. It signs up two
+Exercises the running API end to end, asserting the status code of each case. It signs up two
 throwaway accounts: one does the work — every endpoint, its failure paths, an
 upload's whole round trip, a report whose source file has since been deleted,
 the assistant provider switch — and the other proves it cannot see or change
 any of it. Sign-up, sign-in, sign-out, refused cross-site requests and account
 deletion are covered too. Both accounts are deleted at the end with everything
-they created. Last run: **107 passed, 0 failed**.
+they created. Last run: **113 passed, 0 failed**.
 
 Sign-in is rate limited, so leave a minute between runs.
 
@@ -100,10 +110,13 @@ Sign-in is rate limited, so leave a minute between runs.
 A language model is unreliable at arithmetic, so it never does any here. A
 question moves through three stages:
 
-1. **Plan** — `IQuestionPlanner` reads the question and returns a `QuerySpec`:
-   what to group by, what to measure, how to aggregate, how to filter.
-2. **Execute** — `QueryEngine` runs that spec against the stored rows. This is
-   the only place in the codebase a figure is ever produced.
+1. **Plan** — `IQuestionPlanner` reads the question and a `DatasetSchema` (the
+   file's own columns and values, and what the dashboard recognised them as) and
+   returns a `QuerySpec`: what to group by, what to measure, how to aggregate,
+   how to filter — all named by the file's own headers.
+2. **Execute** — `SpecValidator` repairs or rejects the plan, whichever planner
+   wrote it, and `FrameEngine` runs it over the uploaded file. This is the only
+   place an answer's figures are produced.
 3. **Explain** — the explanation is written from the computed figures, so the
    prose can only state numbers the engine returned.
 
@@ -151,9 +164,9 @@ engine either way. The response names the planner that actually produced the
 spec, so a fallback is never presented as the model's work.
 
 The free models are what a free-tier key can reach, and they vary. Planning is
-usually right, including filters — "how many orders are in processing" plans a
-count with `status = Processing`, because the prompt carries the values the
-loaded file actually holds (`SchemaSummary`). Prose is less reliable, and when
+usually right, including filters — "average marks in Physics" plans an average
+with `subject = Physics`, because the prompt carries the values the loaded file
+actually holds (`DatasetSchema.Describe`). Prose is less reliable, and when
 it is not usable the templated writer takes over, which is why an answer
 sometimes reads more plainly than the model could have written.
 
@@ -201,11 +214,15 @@ Security/             RequestGuards (response headers, cross-site checks) and
                       SecurityRules (password, lockout and input limits)
 Endpoints/            one file per screen area, AuthEndpoints for accounts, and
                       Problems.cs for the ProblemDetails wording every failure shares
-Query/                QuerySpec, the engine, the shared row filters, the planners
-                      and SavedSpecs — the specs the product ships with
-Services/             CurrentUser (the signed-in account), DatasetContext (which
-                      file a request reads from), CsvProfiler, RowMapper,
-                      KpiBuilder, ReportComposer
+Analysis/             Frame (the file as typed columns, with each column's roles),
+                      FrameQuery (filter, sort, group), the dashboard recipes,
+                      DatasetSchema and FrameEngine (what the assistant runs on)
+Query/                QuerySpec, SpecValidator (the one gate every plan passes),
+                      Prompts and the planners
+Services/             CurrentUser, DatasetContext (which file a request reads
+                      from), CsvProfiler, Cells, SourceStore (the stored copy and
+                      its cached frame), Assistant (question -> answer),
+                      DashboardService, ReportComposer
 Data/                 AppDbContext with the per-account filters; its SQLite and
                       PostgreSQL context types and their Migrations; Database.cs,
                       which migrates on startup; DatabaseConnection, which reads
@@ -237,7 +254,7 @@ needs a signed-in session, and answers 401 without one.
 | GET | `/api/status` | What this account has loaded, and which planner will answer next |
 | GET | `/api/datasets` | Paged, searchable, sortable list |
 | GET | `/api/datasets/{id}` | One dataset with its full column profile |
-| POST | `/api/datasets/upload` | Upload a delimited file (up to 25 MB); profiles it, stores its rows, reports the field mapping |
+| POST | `/api/datasets/upload` | Upload a delimited file (up to 25 MB); profiles it and stores it as uploaded |
 | DELETE | `/api/datasets/{id}` | Delete a dataset with its profile and its rows |
 | GET | `/api/explorer/columns` | The file's own columns (keyed `c0`, `c1`…): header, type, role, unit, filter values, and the period its date column covers |
 | GET | `/api/explorer/rows` | Paged rows as uploaded; sort by any column, repeatable filters |
@@ -251,7 +268,6 @@ needs a signed-in session, and answers 401 without one.
 | DELETE | `/api/chat/sessions/{id}` | Delete a conversation |
 | POST | `/api/chat/sessions/{id}/ask` | Plan, compute, explain — all three returned |
 | GET | `/api/chat/sessions/{id}/stream` | The same, as server-sent events |
-| POST | `/api/query/run` | Run an edited `QuerySpec` directly |
 | GET | `/api/reports` · `/api/reports/{id}` | Reports, composed from live figures; `410` once the source file is deleted |
 | POST | `/api/reports` | Write a report for a dataset |
 | DELETE | `/api/reports/{id}` | Delete a report |
@@ -284,12 +300,11 @@ figures before the sentence has finished arriving.
   database context rather than trusted to each endpoint.
 - **The model picker is enforced, not decorative.** `PUT /api/settings` rejects a
   model the chosen provider does not serve, with a 400 naming the ones it does.
-- **An upload is queryable immediately.** Its rows are mapped onto the queryable
-  schema by header name (`Total Amount` → revenue, `Client Name` → customer, and
-  so on) and stored, and the upload response names the header behind every
-  field. Nothing that cannot be matched is invented: an unmatched text field
-  reads `Unspecified`, a row with no readable date is grouped as `Undated`, and
-  revenue with no column of its own falls back to quantity × price.
+- **An upload is analysed immediately, as it is.** The file is kept compressed
+  and every screen reads its own columns; nothing is mapped onto a fixed schema.
+  Revenue with no column of its own is derived from quantity × price, and says so.
+  Parsed files are cached under a size cap (`SourceStore.CacheCells`), so a burst
+  of large files evicts the oldest instead of exhausting the instance.
 - **Which dataset a request reads from is resolved against the database**
   (`IDatasetContext`): an id that does not exist, or belongs to another account,
   is a 404 rather than another file's figures.
@@ -307,9 +322,10 @@ figures before the sentence has finished arriving.
 - **Any dataset can be deleted, including the last one.** The empty state is a
   screen the app is built for, and refusing to delete someone's only file
   trapped their data in the product.
-- **The keyword planner reads the file's own values.** `SchemaSummary` supplies
-  the regions, categories and statuses the loaded file actually holds, and every
-  planner — including the fallback path of the model planners — gets them.
+- **The keyword planner reads the file's own columns and values.** It has no
+  vocabulary of its own: "average marks by subject" works on a mark sheet and
+  "revenue by region" on an order export, and every plan — keyword or model —
+  passes the same `SpecValidator` before it runs.
 - **Text filters ignore case.** `status:eq:shipped` and `status:eq:Shipped` are
   the same request — a filter that silently matches nothing because of a capital
   letter is indistinguishable from having no data.
@@ -323,9 +339,9 @@ figures before the sentence has finished arriving.
 - A report binds to its source file by name, within its account. Delete a file
   and upload a different one under the same name, and the report reads from the
   new one.
-- Grouping is done in memory after filtering in SQL, because the group-by column
-  is chosen at runtime. Fine at 14k rows; a dataset in the millions wants raw SQL.
-- Row mapping is by header name. A file whose columns are named nothing like
-  sales data maps few fields, and the response says which ones were left empty.
+- Files are analysed in memory, up to the 25 MB upload limit. Fine for the
+  sizes this is built for; a dataset in the millions of rows wants a database.
+- Files uploaded before the original was kept have nothing to analyse and ask
+  to be uploaded again.
 - XLSX and JSON are still rejected at upload with a 415; only delimited text is
   parsed.

@@ -59,28 +59,6 @@ public class DatasetSource : IOwned
     public byte[] Content { get; set; } = [];
 }
 
-/// <summary>
-/// One row of an uploaded file. Every figure the API returns is computed from
-/// these rows.
-/// </summary>
-public class SalesRow : IOwned
-{
-    public int Id { get; set; }
-    public string UserId { get; set; } = "";
-    public int DatasetId { get; set; }
-
-    public DateOnly Date { get; set; }
-    public string OrderId { get; set; } = "";
-    public string Customer { get; set; } = "";
-    public string Product { get; set; } = "";
-    public string Category { get; set; } = "";
-    public int Qty { get; set; }
-    public double Price { get; set; }
-    public double Revenue { get; set; }
-    public string Region { get; set; } = "";
-    public string Status { get; set; } = "";
-}
-
 public class ChatSession : IOwned
 {
     public int Id { get; set; }

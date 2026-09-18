@@ -14,14 +14,10 @@ public record ColumnProfileDto(
 
 public record DatasetDetailDto(DatasetDto Dataset, IReadOnlyList<ColumnProfileDto> Columns);
 
-/// <summary>Which uploaded header fed each queryable field. A null header means nothing matched.</summary>
-public record FieldMappingDto(string Field, string? Header);
-
 public record UploadResultDto(
     DatasetDto Dataset,
     IReadOnlyList<ColumnProfileDto> Columns,
-    int RowsImported,
-    IReadOnlyList<FieldMappingDto> Mapping);
+    long RowsImported);
 
 /// <summary>
 /// One tile. <see cref="Hint"/> says what the figure was computed from or
@@ -74,9 +70,6 @@ public record DataQualityDto(
     string Grade,
     IReadOnlyList<ColumnIssueDto> Issues);
 
-/// <summary>How a column's values are written: a prefix such as "$", a suffix such as "%".</summary>
-public record ColumnUnitDto(string Prefix, string Suffix, int Decimals);
-
 /// <summary>
 /// One column of the uploaded file. Key is its position ("c0", "c1"…), since
 /// headers can repeat or be blank. Role is identifier | number | date | group | text.
@@ -84,7 +77,7 @@ public record ColumnUnitDto(string Prefix, string Suffix, int Decimals);
 /// </summary>
 public record ExplorerColumnDto(
     string Key, string Label, string Kind, string Role, string Align, bool Numeric,
-    int Distinct, int Missing, ColumnUnitDto Unit, IReadOnlyList<string>? Options);
+    int Distinct, int Missing, ValueUnitDto Unit, IReadOnlyList<string>? Options);
 
 /// <summary>The earliest and latest value of the file's main date column.</summary>
 public record CoverageDto(string Column, string From, string To);
@@ -94,7 +87,7 @@ public record ExplorerSchemaDto(IReadOnlyList<ExplorerColumnDto> Columns, long R
 /// <summary>A row as the file has it: one cell per column, in column order; an empty string where the cell is blank.</summary>
 public record ExplorerRowDto(int Id, IReadOnlyList<string> Cells);
 
-public record AnalyticsFieldDto(string Key, string Label, string Kind, ColumnUnitDto Unit);
+public record AnalyticsFieldDto(string Key, string Label, string Kind, ValueUnitDto Unit);
 
 /// <summary>
 /// What Analytics can compute for a file: its numeric columns as metrics, its
@@ -120,7 +113,7 @@ public record AnalyticsResultDto(
     string DimensionLabel,
     string Aggregate,
     string? Bucket,
-    ColumnUnitDto Unit,
+    ValueUnitDto Unit,
     IReadOnlyList<Figure> Figures,
     double? Total,
     int GroupCount,
@@ -132,7 +125,7 @@ public record AnalyticsResultDto(
 public record ChatSessionDto(int Id, string Title, string Subtitle, int MessageCount, DateTime UpdatedAt);
 
 public record ChatMessageDto(
-    int Id, string Role, string Content, QuerySpec? Spec, IReadOnlyList<Figure>? Figures,
+    int Id, string Role, string Content, QuerySpec? Spec, IReadOnlyList<Figure>? Figures, ValueUnitDto? Unit,
     long RowsScanned, int LatencyMs, DateTime CreatedAt);
 
 public record AskRequest(string Question);
@@ -152,6 +145,7 @@ public record AskResponse(
     int ComputeMs,
     string Chart,
     string Title,
+    ValueUnitDto Unit,
     /// <summary>
     /// The planner that produced the spec, as "provider/model". Not read back
     /// from settings: settings record which planner was asked, and a hosted one
@@ -169,7 +163,8 @@ public record RenameSessionRequest(string Title, string? Subtitle);
 
 public record ReportSectionDto(string Heading, string[] Paragraphs, ReportFigureDto? Figure);
 
-public record ReportFigureDto(int Number, string Caption, string Kind, IReadOnlyList<Figure> Data, QuerySpec Spec, long RowsScanned);
+/// <summary>Kind is line | bars | columns | donut, as on the dashboard; Unit says how its values are written.</summary>
+public record ReportFigureDto(int Number, string Caption, string Kind, IReadOnlyList<Figure> Data, ValueUnitDto Unit, long RowsScanned);
 
 public record ReportDetailDto(ReportDto Report, string Meta, IReadOnlyList<ReportSectionDto> Sections);
 
@@ -182,8 +177,6 @@ public record ReportDetailDto(ReportDto Report, string Meta, IReadOnlyList<Repor
 public record SettingsDto(string ProviderId, string ModelName);
 
 public record ProviderDto(string Id, string Name, string Detail, string[] Models, string Status);
-
-public record RunSpecRequest(QuerySpec Spec, int? DatasetId);
 
 /// <summary>Sign-up and sign-in both take an email address and a password.</summary>
 public record CredentialsRequest(string Email, string Password);

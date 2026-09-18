@@ -2,14 +2,14 @@ import { PageCanvas, PageHeader } from '../components/AppShell'
 import {
   PanelSkeleton, ErrorState, IconTile, Panel, PanelHeader, Skeleton, StatCard, NoProject,
 } from '../components/ui'
-import { ColumnChart, DONUT_COLORS, DonutChart, TrackBars, TrendChart } from '../components/charts'
+import Figure from '../components/Figure'
 import Icon from '../components/Icon'
 import ProjectPicker from '../components/ProjectPicker'
 import { api } from '../lib/api'
 import { useResource } from '../hooks/useResource'
 import { useDatasets, usePageActions } from '../context/AppContext'
 import { downloadCsv } from '../lib/csv'
-import { bucketLabel, int, unitValue } from '../lib/format'
+import { bucketLabel, int } from '../lib/format'
 
 /*
  * The dashboard is a frame; the API decides what goes in it.
@@ -244,12 +244,6 @@ function AnalysisStrip({ data }) {
 }
 
 function ChartPanel({ chart, className = '', tall = false }) {
-  const format = (v) => unitValue(v, chart.unit)
-  const figures = chart.figures
-  // Four hues stay distinguishable; past that a donut starts repeating colours.
-  const kind = chart.kind === 'donut' && figures.length > DONUT_COLORS.length ? 'bars' : chart.kind
-  const total = figures.reduce((sum, f) => sum + f.value, 0)
-
   return (
     <Panel className={`p-md flex flex-col min-w-0 animate-fade-up ${className}`}>
       <PanelHeader
@@ -260,47 +254,8 @@ function ChartPanel({ chart, className = '', tall = false }) {
           )
         }
       />
-      <div className={`flex-1 mt-md flex ${tall ? 'min-h-[220px]' : 'min-h-[180px]'}`}>
-        {kind === 'line' ? (
-          <TrendChart
-            points={figures}
-            format={format}
-            className="flex-1"
-            gradientId={`chart-${chart.id.replace(/[^a-z0-9]/gi, '')}`}
-            ariaLabel={chart.title}
-          />
-        ) : kind === 'columns' ? (
-          <div className="flex-1 min-w-0">
-            <ColumnChart points={figures} format={format} height={tall ? 220 : 180} wideLabels />
-          </div>
-        ) : kind === 'donut' ? (
-          <div className="flex-1 flex flex-col items-center justify-center gap-md">
-            <DonutChart
-              segments={figures}
-              centerLabel={bucketLabel(figures[0].label)}
-              centerValue={total ? `${((figures[0].value / total) * 100).toFixed(1)}%` : format(figures[0].value)}
-              size={tall ? 'w-40 h-40' : 'w-32 h-32'}
-              format={format}
-            />
-            <ul className="flex flex-wrap justify-center gap-x-md gap-y-xs">
-              {figures.map((f, i) => (
-                <li key={f.label} className="flex items-center gap-xs font-body-sm text-body-sm text-on-surface-variant">
-                  <span className="w-2 h-2 rounded-sm" style={{ background: DONUT_COLORS[i % DONUT_COLORS.length] }} />
-                  {bucketLabel(f.label)}
-                  <span className="font-code text-on-surface tabular-nums">
-                    {total ? `${((f.value / total) * 100).toFixed(1)}%` : '—'}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ) : (
-          <div className="w-full flex items-center">
-            <div className="w-full">
-              <TrackBars items={figures.slice(0, 10)} format={format} showValues />
-            </div>
-          </div>
-        )}
+      <div className="flex-1 mt-md flex items-center">
+        <Figure kind={chart.kind} figures={chart.figures} unit={chart.unit} height={tall ? 220 : 180} id={chart.id} ariaLabel={chart.title} />
       </div>
     </Panel>
   )
