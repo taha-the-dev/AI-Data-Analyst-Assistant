@@ -63,6 +63,13 @@ public class ChatSession : IOwned
 {
     public int Id { get; set; }
     public string UserId { get; set; } = "";
+    /// <summary>
+    /// The file this conversation is about. Every question in it is answered
+    /// from this file, whichever one is selected when it is asked. Null for
+    /// conversations started before sessions were tied to a file, and for those
+    /// whose file has since been deleted.
+    /// </summary>
+    public int? DatasetId { get; set; }
     public string Title { get; set; } = "";
     public string Subtitle { get; set; } = "";
     public DateTime CreatedAt { get; set; }
@@ -107,4 +114,6 @@ public class UserSettings : IOwned
     public string UserId { get; set; } = "";
     public string ProviderId { get; set; } = "keyword";
     public string ModelName { get; set; } = "rules-v1";
+    /// <summary>The file last selected, so signing back in lands on the same one.</summary>
+    public int? ActiveDatasetId { get; set; }
 }

@@ -62,8 +62,18 @@ internal sealed class Assistant(
             return (null, Results.Problem(title: "Session not found", detail: $"No chat session with id {sessionId}.",
                 statusCode: StatusCodes.Status404NotFound));
 
-        var id = await datasets.ResolveAsync(datasetId, ct);
-        if (id is null) return (null, Problems.NoDataset(datasetId));
+        // A conversation is about one file: once it has asked about one, every
+        // later question in it is answered from that file, whichever is selected.
+        // One from before conversations were tied to a file, or whose file was
+        // deleted, takes the file it is asked about now.
+        var requested = session.DatasetId ?? datasetId;
+        var id = await datasets.ResolveAsync(requested, ct);
+        if (id is null) return (null, Problems.NoDataset(requested));
+        if (session.DatasetId is null)
+        {
+            session.DatasetId = id;
+            await db.SaveChangesAsync(ct);
+        }
 
         var dataset = await db.Datasets.AsNoTracking().FirstAsync(d => d.Id == id, ct);
         var frame = await sources.LoadAsync(dataset, ct);

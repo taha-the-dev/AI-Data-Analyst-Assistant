@@ -138,6 +138,9 @@ namespace AnalystAI.Api.Data.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
 
+                    b.Property<int?>("DatasetId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("Subtitle")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -154,6 +157,8 @@ namespace AnalystAI.Api.Data.Migrations
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("DatasetId");
 
                     b.HasIndex("UserId");
 
@@ -323,6 +328,9 @@ namespace AnalystAI.Api.Data.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("ActiveDatasetId")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("ModelName")

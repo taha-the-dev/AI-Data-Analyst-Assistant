@@ -122,7 +122,8 @@ public record AnalyticsResultDto(
     int DurationMs,
     MetricSummaryDto? Summary);
 
-public record ChatSessionDto(int Id, string Title, string Subtitle, int MessageCount, DateTime UpdatedAt);
+public record ChatSessionDto(
+    int Id, string Title, string Subtitle, int MessageCount, DateTime UpdatedAt, int? DatasetId, string? DatasetName);
 
 public record ChatMessageDto(
     int Id, string Role, string Content, QuerySpec? Spec, IReadOnlyList<Figure>? Figures, ValueUnitDto? Unit,
@@ -175,6 +176,9 @@ public record ReportDetailDto(ReportDto Report, string Meta, IReadOnlyList<Repor
 /// but never consulted anywhere.
 /// </summary>
 public record SettingsDto(string ProviderId, string ModelName);
+
+/// <summary>Where the account left off: the file last selected.</summary>
+public record WorkspaceDto(int? ActiveDatasetId);
 
 public record ProviderDto(string Id, string Name, string Detail, string[] Models, string Status);
 

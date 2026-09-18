@@ -17,22 +17,37 @@ public static class ChatEndpoints
     {
         var group = api.MapGroup("/chat").WithTags("Chat");
 
-        group.MapGet("/sessions", async (AppDbContext db, CancellationToken ct) =>
+        group.MapGet("/sessions", async (AppDbContext db, int? datasetId, CancellationToken ct) =>
         {
-            var sessions = await db.ChatSessions.AsNoTracking()
+            var query = db.ChatSessions.AsNoTracking();
+            if (datasetId is not null) query = query.Where(s => s.DatasetId == datasetId);
+
+            var sessions = await query
                 .OrderByDescending(s => s.UpdatedAt)
-                .Select(s => new ChatSessionDto(s.Id, s.Title, s.Subtitle, s.Messages.Count, s.UpdatedAt))
+                .Select(s => new ChatSessionDto(
+                    s.Id, s.Title, s.Subtitle, s.Messages.Count, s.UpdatedAt, s.DatasetId,
+                    db.Datasets.Where(d => d.Id == s.DatasetId).Select(d => d.Name).FirstOrDefault()))
                 .ToListAsync(ct);
 
             return Results.Ok(sessions);
         })
         .WithName("ListSessions")
-        .WithSummary("Every stored conversation, most recent first.");
+        .WithSummary("Stored conversations, most recent first; ?datasetId= keeps those about one file.");
 
-        group.MapPost("/sessions", async (AppDbContext db, CreateSessionRequest? body, CancellationToken ct) =>
+        group.MapPost("/sessions", async (
+            AppDbContext db, IDatasetContext datasets, CreateSessionRequest? body, CancellationToken ct) =>
         {
+            // A conversation is about one file from its first moment, so the
+            // assistant can list the conversations belonging to the file on screen.
+            var datasetId = await datasets.ResolveAsync(body?.DatasetId, ct);
+            if (body?.DatasetId is not null && datasetId is null) return Problems.NoDataset(body.DatasetId);
+            var datasetName = datasetId is null
+                ? null
+                : await db.Datasets.Where(d => d.Id == datasetId).Select(d => d.Name).FirstOrDefaultAsync(ct);
+
             var session = new ChatSession
             {
+                DatasetId = datasetId,
                 Title = string.IsNullOrWhiteSpace(body?.Title)
                     ? "New session"
                     : InputLimits.Clip(body.Title.Trim(), InputLimits.TitleLength),
@@ -45,7 +60,8 @@ public static class ChatEndpoints
             await db.SaveChangesAsync(ct);
 
             return Results.Created($"/api/chat/sessions/{session.Id}",
-                new ChatSessionDto(session.Id, session.Title, session.Subtitle, 0, session.UpdatedAt));
+                new ChatSessionDto(session.Id, session.Title, session.Subtitle, 0, session.UpdatedAt,
+                    session.DatasetId, datasetName));
         })
         .WithName("CreateSession")
         .WithSummary("Start a conversation.");
@@ -86,8 +102,11 @@ public static class ChatEndpoints
 
             await db.SaveChangesAsync(ct);
 
+            var datasetName = await db.Datasets.Where(d => d.Id == session.DatasetId)
+                .Select(d => d.Name).FirstOrDefaultAsync(ct);
             return Results.Ok(new ChatSessionDto(
-                session.Id, session.Title, session.Subtitle, session.Messages.Count, session.UpdatedAt));
+                session.Id, session.Title, session.Subtitle, session.Messages.Count, session.UpdatedAt,
+                session.DatasetId, datasetName));
         })
         .WithName("SaveSession")
         .WithSummary("Save a conversation under a name.");
@@ -110,7 +129,8 @@ public static class ChatEndpoints
             var (turn, problem) = await assistant.PrepareAsync(id, datasetId, body?.Question, ct);
             if (problem is not null) return problem;
 
-            var answer = await assistant.AskAsync(turn!, null, ct);
+            // Stored even if the caller hangs up before it arrives.
+            var answer = await assistant.AskAsync(turn!, null, CancellationToken.None);
             var result = answer.Result;
 
             return Results.Ok(new AskResponse(
@@ -140,7 +160,10 @@ public static class ChatEndpoints
             http.Response.Headers.CacheControl = "no-cache";
             http.Response.Headers["X-Accel-Buffering"] = "no";
 
-            var answer = await assistant.AskAsync(turn!, new StreamProgress(http, ct), ct);
+            // The turn is computed and stored even when the reader goes away
+            // mid-answer — pressing Stop, closing the tab, signing out — so the
+            // question and its answer are in the conversation when they come back.
+            var answer = await assistant.AskAsync(turn!, new StreamProgress(http, ct), CancellationToken.None);
 
             foreach (var word in answer.AssistantMessage.Content.Split(' '))
             {
@@ -158,19 +181,23 @@ public static class ChatEndpoints
         return api;
     }
 
-    private record CreateSessionRequest(string? Title, string? Subtitle);
+    private record CreateSessionRequest(string? Title, string? Subtitle, int? DatasetId);
 
     private static IResult SessionNotFound(int id) => Results.Problem(
         title: "Session not found",
         detail: $"No chat session with id {id}.",
         statusCode: StatusCodes.Status404NotFound);
 
+    /// <summary>
+    /// Reports each stage to the reader while they are listening. Once they have
+    /// gone, it stops writing rather than failing, so the answer is still stored.
+    /// </summary>
     private sealed class StreamProgress(HttpContext http, CancellationToken ct) : Assistant.IProgress
     {
         public Task PlannedAsync(QuerySpec spec, string planner, int planMs) =>
-            Send(http, "plan", new { spec, planMs, planner }, ct);
+            TrySend("plan", new { spec, planMs, planner });
 
-        public Task ComputedAsync(QueryResult result) => Send(http, "figures", new
+        public Task ComputedAsync(QueryResult result) => TrySend("figures", new
         {
             figures = result.Figures,
             unit = result.Unit,
@@ -179,7 +206,20 @@ public static class ChatEndpoints
             computeMs = result.DurationMs,
             chart = result.Spec.Chart,
             title = result.Spec.Title,
-        }, ct);
+        });
+
+        private async Task TrySend(string @event, object payload)
+        {
+            if (ct.IsCancellationRequested) return;
+            try
+            {
+                await Send(http, @event, payload, ct);
+            }
+            catch (Exception e) when (e is OperationCanceledException or IOException)
+            {
+                // The reader left; the turn is still worth keeping.
+            }
+        }
     }
 
     private static async Task Send(HttpContext http, string @event, object payload, CancellationToken ct)

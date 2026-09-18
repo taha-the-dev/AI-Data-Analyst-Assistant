@@ -87,6 +87,7 @@ public abstract class AppDbContext(DbContextOptions options, ICurrentUser curren
         b.Entity<DatasetColumn>().HasIndex(e => e.UserId);
         b.Entity<DatasetSource>().HasIndex(e => e.UserId);
         b.Entity<ChatSession>().HasIndex(e => e.UserId);
+        b.Entity<ChatSession>().HasIndex(e => e.DatasetId);
         b.Entity<ChatMessage>().HasIndex(e => e.UserId);
         b.Entity<Report>().HasIndex(e => e.UserId);
         b.Entity<UserSettings>().HasIndex(e => e.UserId).IsUnique();

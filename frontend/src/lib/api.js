@@ -121,6 +121,13 @@ export const api = {
     deleteAccount: (password) => request('/auth/account', { method: 'DELETE', body: { password } }),
   },
 
+  /** Where the account left off — kept on the server, so it survives signing out. */
+  workspace: {
+    get: () => request('/settings/workspace'),
+    save: (activeDatasetId) =>
+      request('/settings/workspace', { method: 'PUT', body: { activeDatasetId } }),
+  },
+
   datasets: {
     list: (params = {}) => request(`/datasets${qs(params)}`),
     get: (id) => request(`/datasets/${id}`),
@@ -147,8 +154,9 @@ export const api = {
   },
 
   chat: {
-    sessions: () => request('/chat/sessions'),
-    create: (title) => request('/chat/sessions', { method: 'POST', body: { title } }),
+    /** Every conversation, or with a datasetId only those about that file. */
+    sessions: (datasetId) => request(`/chat/sessions${qs({ datasetId })}`),
+    create: (title, datasetId) => request('/chat/sessions', { method: 'POST', body: { title, datasetId } }),
     messages: (id) => request(`/chat/sessions/${id}`),
     /** Saving a conversation is naming it — every turn is stored as it happens. */
     save: (id, title, subtitle) =>

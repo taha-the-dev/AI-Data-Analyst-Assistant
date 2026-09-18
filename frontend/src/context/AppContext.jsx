@@ -49,11 +49,25 @@ export function DatasetProvider({ children }) {
   const [error, setError] = useState(null)
   const [loading, setLoading] = useState(true)
 
+  // The id the server last stored for this account, so a change is only sent
+  // when it is one.
+  const saved = useRef(undefined)
+
   const load = useCallback(async () => {
     setLoading(true)
     try {
       // pageSize covers the whole library: the tab strip scrolls rather than pages.
-      const page = await api.datasets.list({ pageSize: 50, sort: 'updated', dir: 'desc' })
+      // The account's last selection is kept on the server so that signing out
+      // and back in opens on the same file; the browser's copy is the fallback
+      // for an API that cannot say.
+      const [page, workspace] = await Promise.all([
+        api.datasets.list({ pageSize: 50, sort: 'updated', dir: 'desc' }),
+        saved.current === undefined ? api.workspace.get().catch(() => null) : null,
+      ])
+      if (workspace) {
+        saved.current = workspace.activeDatasetId ?? null
+        if (workspace.activeDatasetId) remembered.current = workspace.activeDatasetId
+      }
       setDatasets(page.items)
       setError(null)
       setActiveId((current) => {
@@ -72,7 +86,14 @@ export function DatasetProvider({ children }) {
   }, [load])
 
   useEffect(() => {
-    if (activeId) localStorage.setItem(STORAGE_KEY, String(activeId))
+    if (!activeId) return
+    localStorage.setItem(STORAGE_KEY, String(activeId))
+    if (activeId === saved.current) return
+    saved.current = activeId
+    // Best effort: failing to remember a tab must not get in the way of using it.
+    api.workspace.save(activeId).catch(() => {
+      saved.current = undefined
+    })
   }, [activeId])
 
   /**

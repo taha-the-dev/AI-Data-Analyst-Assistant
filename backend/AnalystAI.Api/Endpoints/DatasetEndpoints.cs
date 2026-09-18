@@ -152,9 +152,13 @@ public static class DatasetEndpoints
             var dataset = await db.Datasets.FirstOrDefaultAsync(d => d.Id == id, ct);
             if (dataset is null) return Problems.NoDataset(id);
 
-            // The column profile and the stored copy of the file go with it.
+            // The column profile and the stored copy of the file go with it. The
+            // conversations about it stay readable in History, no longer tied to
+            // a file; the next question asked in one ties it to the file in use.
             db.Datasets.Remove(dataset);
             await db.SaveChangesAsync(ct);
+            await db.ChatSessions.Where(s => s.DatasetId == id)
+                .ExecuteUpdateAsync(u => u.SetProperty(s => s.DatasetId, (int?)null), ct);
 
             return Results.NoContent();
         })

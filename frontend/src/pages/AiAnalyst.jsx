@@ -111,7 +111,7 @@ function AnalysisPanel({ answer }) {
 }
 
 export default function AiAnalyst() {
-  const { activeId, active } = useDatasets()
+  const { activeId, active, datasets, setActiveId, loading: filesLoading } = useDatasets()
   const location = useLocation()
   const navigate = useNavigate()
   const [params, setParams] = useSearchParams()
@@ -140,12 +140,55 @@ export default function AiAnalyst() {
 
   const sessions = useResource(() => api.chat.sessions(), [])
 
-  // Land on the most recent conversation once the list arrives. When there is
-  // none, the screen stays usable and `ask` opens one on the first question, so
-  // a visit that asks nothing leaves nothing behind in History.
+  // A conversation belongs to the file it is about, so the picker offers the
+  // conversations of the file selected in the top bar. One opened from History
+  // that predates files being tied to conversations is shown as well.
+  const allSessions = sessions.data ?? []
+  const current = allSessions.find((s) => s.id === activeSession)
+  const forFile = allSessions.filter((s) => s.datasetId === activeId)
+  const pickable = current && !forFile.includes(current) ? [current, ...forFile] : forFile
+
+  const openSession = (id) => {
+    setActiveSession(id)
+    setParams(id === null ? {} : { session: String(id) })
+  }
+
+  // Arriving on a conversation about another file — a link from History —
+  // selects that file, so the answers and the file on screen agree. Once only:
+  // after that, choosing a file chooses its conversations.
+  const arrived = useRef(false)
   useEffect(() => {
-    if (activeSession === null && sessions.data?.length) setActiveSession(sessions.data[0].id)
-  }, [sessions.data, activeSession])
+    if (arrived.current || !sessions.data || (activeId === null && filesLoading)) return
+    arrived.current = true
+    const target = current?.datasetId
+    if (target && target !== activeId && datasets.some((d) => d.id === target)) setActiveId(target)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sessions.data, activeId])
+
+  // Choosing another file in the top bar moves to that file's latest
+  // conversation. An answer still streaming is stored by the API regardless.
+  const previousFile = useRef(activeId)
+  useEffect(() => {
+    const previous = previousFile.current
+    previousFile.current = activeId
+    if (previous === null || previous === activeId || !arrived.current) return
+    if (current?.datasetId === activeId) return
+
+    sourceRef.current?.close()
+    sourceRef.current = null
+    setStreaming(null)
+    setMessages([])
+    openSession(forFile[0]?.id ?? null)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeId])
+
+  // Land on the file's most recent conversation once the list arrives. When
+  // there is none, the screen stays usable and `ask` opens one on the first
+  // question, so a visit that asks nothing leaves nothing behind in History.
+  useEffect(() => {
+    if (activeSession === null && arrived.current && forFile.length) openSession(forFile[0].id)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sessions.data, activeSession, activeId])
 
   const history = useResource(
     () => (activeSession === null ? Promise.resolve([]) : api.chat.messages(activeSession)),
@@ -174,10 +217,9 @@ export default function AiAnalyst() {
     let sessionId = activeSession
     if (sessionId === null) {
       try {
-        const created = await api.chat.create('New session')
+        const created = await api.chat.create('New session', activeId)
         sessionId = created.id
-        setActiveSession(created.id)
-        setParams({ session: String(created.id) })
+        openSession(created.id)
         sessions.reload()
       } catch (cause) {
         toast.show(cause?.title ?? 'Could not start a conversation', 'error')
@@ -266,15 +308,13 @@ export default function AiAnalyst() {
   const newSession = async () => {
     sourceRef.current?.close()
     setStreaming(null)
-    const created = await api.chat.create('New session')
+    const created = await api.chat.create('New session', activeId)
     await sessions.reload()
-    setActiveSession(created.id)
-    setParams({ session: String(created.id) })
+    openSession(created.id)
     setMessages([])
   }
 
-  const currentTitle =
-    (sessions.data ?? []).find((s) => s.id === activeSession)?.title ?? 'New session'
+  const currentTitle = current?.title ?? 'New session'
 
   /**
    * Saving a conversation is naming it. Every turn was stored as it happened,
@@ -309,19 +349,13 @@ export default function AiAnalyst() {
       setStreaming(null)
       await api.chat.remove(activeSession)
 
-      const remaining = (sessions.data ?? []).filter((s) => s.id !== activeSession)
+      const remaining = forFile.filter((s) => s.id !== activeSession)
       await sessions.reload()
       setConfirmDelete(false)
       setMessages([])
 
-      // Land on whatever is left rather than on an id that no longer exists.
-      if (remaining.length > 0) {
-        setActiveSession(remaining[0].id)
-        setParams({ session: String(remaining[0].id) })
-      } else {
-        setActiveSession(null)
-        setParams({})
-      }
+      // Land on whatever is left for this file rather than on an id that no longer exists.
+      openSession(remaining[0]?.id ?? null)
 
       toast('Conversation deleted.')
     } catch (cause) {
@@ -371,13 +405,11 @@ export default function AiAnalyst() {
             <select
               id="session-picker"
               value={activeSession ?? ''}
-              onChange={(e) => {
-                setActiveSession(Number(e.target.value))
-                setParams({ session: e.target.value })
-              }}
+              onChange={(e) => openSession(e.target.value ? Number(e.target.value) : null)}
               className="h-[30px] rounded-lg border border-outline-variant bg-surface-container-lowest px-3 font-body-main text-body-main text-on-surface focus:outline-none focus:border-primary-container"
             >
-              {(sessions.data ?? []).map((s) => (
+              {activeSession === null && <option value="">New conversation</option>}
+              {pickable.map((s) => (
                 <option key={s.id} value={s.id}>
                   {s.title}
                 </option>

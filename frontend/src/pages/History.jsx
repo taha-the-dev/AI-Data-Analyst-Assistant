@@ -22,7 +22,7 @@ const PER_PAGE = 6
 function summaryOf(session) {
   const stale = session.messageCount > 0 && session.subtitle === 'No questions yet'
   const summary = stale ? '' : session.subtitle
-  return summary ? `${summary} · ${whenLabel(session.updatedAt)}` : whenLabel(session.updatedAt)
+  return [summary, session.datasetName, whenLabel(session.updatedAt)].filter(Boolean).join(' · ')
 }
 
 export default function History() {
@@ -37,7 +37,7 @@ export default function History() {
   const sessions = data ?? []
 
   const visible = query
-    ? sessions.filter((s) => `${s.title} ${s.subtitle}`.toLowerCase().includes(query.toLowerCase()))
+    ? sessions.filter((s) => `${s.title} ${s.subtitle} ${s.datasetName ?? ''}`.toLowerCase().includes(query.toLowerCase()))
     : sessions
 
   usePageActions(

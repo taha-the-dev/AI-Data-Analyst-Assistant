@@ -102,6 +102,44 @@ public static class SettingsEndpoints
         .WithName("UpdateSettings")
         .WithSummary("Choose the planner and model. Rejects a model the chosen provider does not serve.");
 
+        // What the account was last looking at. Kept with the account rather than
+        // in the browser, so signing out and back in — here or on another
+        // machine — opens on the same file and its conversations.
+        api.MapGet("/settings/workspace", async (AppDbContext db, CancellationToken ct) =>
+        {
+            var s = await db.UserSettings.AsNoTracking().FirstOrDefaultAsync(ct);
+            var id = s?.ActiveDatasetId;
+            // A file deleted since reads back as no choice, not as a dead id.
+            if (id is not null && !await db.Datasets.AnyAsync(d => d.Id == id, ct)) id = null;
+
+            return Results.Ok(new WorkspaceDto(id));
+        })
+        .WithTags("Settings")
+        .WithName("GetWorkspace")
+        .WithSummary("The file this account last selected, if it still exists.");
+
+        api.MapPut("/settings/workspace", async (AppDbContext db, WorkspaceDto body, CancellationToken ct) =>
+        {
+            var id = body?.ActiveDatasetId;
+            if (id is not null && !await db.Datasets.AnyAsync(d => d.Id == id, ct))
+                return Problems.NoDataset(id);
+
+            var s = await db.UserSettings.FirstOrDefaultAsync(ct);
+            if (s is null)
+            {
+                s = new Models.UserSettings();
+                db.UserSettings.Add(s);
+            }
+
+            s.ActiveDatasetId = id;
+            await db.SaveChangesAsync(ct);
+
+            return Results.Ok(new WorkspaceDto(s.ActiveDatasetId));
+        })
+        .WithTags("Settings")
+        .WithName("UpdateWorkspace")
+        .WithSummary("Remember which file this account has selected.");
+
         api.MapGet("/providers", (IConfiguration configuration) => Results.Ok(BuildProviders(configuration)))
             .WithTags("Settings")
             .WithName("ListProviders")
