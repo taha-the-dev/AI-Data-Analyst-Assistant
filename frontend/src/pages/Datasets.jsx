@@ -9,7 +9,7 @@ import { api } from '../lib/api'
 import { useResource } from '../hooks/useResource'
 import { useDatasets, usePageActions } from '../context/AppContext'
 import { downloadCsv } from '../lib/csv'
-import { int, money, whenLabel } from '../lib/format'
+import { int, whenLabel } from '../lib/format'
 
 const PREVIEW_ROWS = 8
 
@@ -121,14 +121,14 @@ function Dropzone({ onUploaded, inputRef }) {
   )
 }
 
-/** The preview grid on the right — real rows, straight from the explorer API. */
+/** The preview grid on the right: the first rows of the file, under its own headers. */
 function RowPreview({ datasetId }) {
-  const columns = useResource(() => api.explorer.columns(), [])
+  const columns = useResource(
+    () => (datasetId ? api.explorer.columns(datasetId) : Promise.resolve(null)),
+    [datasetId]
+  )
   const rows = useResource(
-    () =>
-      datasetId
-        ? api.explorer.rows({ datasetId, page: 1, pageSize: PREVIEW_ROWS, sort: 'date', dir: 'asc' })
-        : Promise.resolve(null),
+    () => (datasetId ? api.explorer.rows({ datasetId, page: 1, pageSize: PREVIEW_ROWS }) : Promise.resolve(null)),
     [datasetId]
   )
 
@@ -142,24 +142,24 @@ function RowPreview({ datasetId }) {
     )
   }
 
-  if (rows.error) {
+  const failure = columns.error ?? rows.error
+  if (failure) {
     return (
       <div className="p-md">
-        <p className="font-label-bold text-label-bold text-on-surface">{rows.error.title}</p>
+        <p className="font-label-bold text-label-bold text-on-surface">{failure.title}</p>
         <p className="font-body-main text-body-main text-on-surface-variant mt-xs">
-          {rows.error.detail ||
-            'This file was profiled at upload, but its rows are not stored for querying yet.'}
+          {failure.detail || 'The rows of this file could not be read.'}
         </p>
       </div>
     )
   }
 
-  const cols = columns.data ?? []
+  const cols = columns.data?.columns ?? []
   const items = rows.data?.items ?? []
 
   return (
     <div className="overflow-x-auto">
-      <table className="w-full min-w-[720px] text-left border-collapse">
+      <table className="w-full text-left border-collapse" style={{ minWidth: `${Math.max(560, cols.length * 130)}px` }}>
         <thead>
           <tr className="border-y border-outline-variant bg-surface-container-low/60">
             {cols.map((c) => (
@@ -178,16 +178,16 @@ function RowPreview({ datasetId }) {
         <tbody className="divide-y divide-outline-variant/50">
           {items.map((row) => (
             <tr key={row.id} className="hover:bg-surface-container-low/60 transition-colors">
-              {cols.map((c) => (
+              {cols.map((c, i) => (
                 <td
                   key={c.key}
-                  className={`py-sm px-md whitespace-nowrap ${
+                  className={`py-sm px-md whitespace-nowrap max-w-[240px] truncate ${
                     c.numeric
                       ? 'text-right font-code text-code text-on-surface tabular-nums'
                       : 'font-body-main text-body-main text-on-surface'
                   }`}
                 >
-                  {c.key === 'revenue' || c.key === 'price' ? money(row[c.key]) : row[c.key]}
+                  {row.cells[i] === '' ? '—' : row.cells[i]}
                 </td>
               ))}
             </tr>
@@ -196,7 +196,7 @@ function RowPreview({ datasetId }) {
       </table>
       <div className="flex items-center justify-between gap-md px-md py-sm">
         <p className="font-body-sm text-body-sm text-on-surface-variant">
-          First {items.length} of {int(rows.data?.total ?? 0)} rows, oldest first
+          First {items.length} of {int(rows.data?.total ?? 0)} rows, in file order
         </p>
         <Link
           to="/explorer"

@@ -37,8 +37,8 @@ function Panel({ children, className = '' }) {
 }
 
 /**
- * The calendar button reports the period the active file actually covers, read
- * off its first and last row by date. There is no date picker behind it because
+ * The calendar button reports the period the active file actually covers: the
+ * earliest and latest value of its main date column, if it has one. There is no date picker behind it because
  * the API has no date-range parameter for it to drive.
  */
 function CoverageButton() {
@@ -49,16 +49,15 @@ function CoverageButton() {
   useEffect(() => {
     if (!open || !activeId) return
     setRange({ state: 'loading' })
-    Promise.all([
-      api.explorer.rows({ datasetId: activeId, page: 1, pageSize: 1, sort: 'date', dir: 'asc' }),
-      api.explorer.rows({ datasetId: activeId, page: 1, pageSize: 1, sort: 'date', dir: 'desc' }),
-    ])
-      .then(([first, last]) =>
+    api.explorer
+      .columns(activeId)
+      .then((schema) =>
         setRange({
           state: 'ready',
-          from: first.items[0]?.date,
-          to: last.items[0]?.date,
-          rows: first.total,
+          column: schema.coverage?.column,
+          from: schema.coverage?.from,
+          to: schema.coverage?.to,
+          rows: schema.rows,
         })
       )
       .catch((error) => setRange({ state: 'error', error }))
@@ -93,6 +92,9 @@ function CoverageButton() {
           )}
           {range.state === 'ready' && (
             <dl className="mt-sm grid grid-cols-2 gap-sm">
+              {range.column ? null : (
+                <p className="col-span-2 font-body-sm text-body-sm text-on-surface-variant">This file has no date column.</p>
+              )}
               {[
                 ['From', range.from ?? '—'],
                 ['To', range.to ?? '—'],

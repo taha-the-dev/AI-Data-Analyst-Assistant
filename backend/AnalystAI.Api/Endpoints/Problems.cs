@@ -24,6 +24,13 @@ public static class Problems
               + "include a value column (revenue, amount or total) so figures can be computed from it.",
         statusCode: StatusCodes.Status404NotFound);
 
+    /// <summary>A file uploaded before the original was kept has only its sales-shaped rows to read.</summary>
+    public static IResult NoSource(string datasetName) => Results.Problem(
+        title: "Upload this file again to analyse it",
+        detail: $"'{datasetName}' was uploaded before files were kept for analysis, so its own columns were not saved. "
+              + "Upload the original file again and every screen will read from all of its columns.",
+        statusCode: StatusCodes.Status409Conflict);
+
     public static IResult NotFound(string what, int id) => Results.Problem(
         title: $"{what} not found",
         detail: $"No {what.ToLowerInvariant()} with id {id}.",

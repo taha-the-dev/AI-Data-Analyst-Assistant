@@ -74,18 +74,60 @@ public record DataQualityDto(
     string Grade,
     IReadOnlyList<ColumnIssueDto> Issues);
 
-public record AnalyticsDto(
-    IReadOnlyList<KpiDto> Kpis,
-    IReadOnlyList<Figure> RevenueByCategory,
-    IReadOnlyList<Figure> RevenueByRegion,
-    IReadOnlyList<Figure> TopCustomers,
-    IReadOnlyList<Figure> RevenueTrend);
+/// <summary>How a column's values are written: a prefix such as "$", a suffix such as "%".</summary>
+public record ColumnUnitDto(string Prefix, string Suffix, int Decimals);
 
-public record ExplorerColumnDto(string Key, string Label, string Align, bool Numeric);
+/// <summary>
+/// One column of the uploaded file. Key is its position ("c0", "c1"…), since
+/// headers can repeat or be blank. Role is identifier | number | date | group | text.
+/// Options lists the values of a grouping column, for filter pickers.
+/// </summary>
+public record ExplorerColumnDto(
+    string Key, string Label, string Kind, string Role, string Align, bool Numeric,
+    int Distinct, int Missing, ColumnUnitDto Unit, IReadOnlyList<string>? Options);
 
-public record ExplorerRowDto(
-    int Id, string Date, string OrderId, string Customer, string Product,
-    string Category, int Qty, double Price, double Revenue, string Region, string Status);
+/// <summary>The earliest and latest value of the file's main date column.</summary>
+public record CoverageDto(string Column, string From, string To);
+
+public record ExplorerSchemaDto(IReadOnlyList<ExplorerColumnDto> Columns, long Rows, CoverageDto? Coverage);
+
+/// <summary>A row as the file has it: one cell per column, in column order; an empty string where the cell is blank.</summary>
+public record ExplorerRowDto(int Id, IReadOnlyList<string> Cells);
+
+public record AnalyticsFieldDto(string Key, string Label, string Kind, ColumnUnitDto Unit);
+
+/// <summary>
+/// What Analytics can compute for a file: its numeric columns as metrics, its
+/// groupings and dates as dimensions, and its low-cardinality columns as filters.
+/// The defaults follow what the dashboard recognised, so a mark sheet opens on
+/// marks by subject rather than on whichever column came first.
+/// </summary>
+public record AnalyticsFieldsDto(
+    IReadOnlyList<AnalyticsFieldDto> Metrics,
+    IReadOnlyList<AnalyticsFieldDto> Dimensions,
+    IReadOnlyList<ExplorerColumnDto> Filters,
+    string? DefaultMetric,
+    string? DefaultDimension,
+    string DefaultAggregate,
+    long Rows);
+
+public record MetricSummaryDto(int Count, double Sum, double Mean, double Min, double Max, double Median);
+
+/// <summary>Total is the sum of every group, for share of total; null when a share would mean nothing (averages, extremes).</summary>
+public record AnalyticsResultDto(
+    string Title,
+    string? MetricLabel,
+    string DimensionLabel,
+    string Aggregate,
+    string? Bucket,
+    ColumnUnitDto Unit,
+    IReadOnlyList<Figure> Figures,
+    double? Total,
+    int GroupCount,
+    int RowsMatched,
+    int RowsScanned,
+    int DurationMs,
+    MetricSummaryDto? Summary);
 
 public record ChatSessionDto(int Id, string Title, string Subtitle, int MessageCount, DateTime UpdatedAt);
 

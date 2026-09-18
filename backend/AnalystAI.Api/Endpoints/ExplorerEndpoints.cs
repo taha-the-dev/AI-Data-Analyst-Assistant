@@ -1,95 +1,83 @@
+using System.Globalization;
+using AnalystAI.Api.Analysis;
 using AnalystAI.Api.Contracts;
 using AnalystAI.Api.Data;
-using AnalystAI.Api.Query;
 using AnalystAI.Api.Services;
-using Microsoft.EntityFrameworkCore;
 
 namespace AnalystAI.Api.Endpoints;
 
+/// <summary>
+/// The Data Explorer grid. It shows the file as it was uploaded — its own
+/// headers, every column, values as written — rather than the sales-shaped rows
+/// the query engine stores, which had no place for a marks or salary column.
+/// </summary>
 public static class ExplorerEndpoints
 {
-    private static readonly ExplorerColumnDto[] ColumnSet =
-    [
-        new("date", "Date", "left", false),
-        new("orderId", "Order ID", "left", false),
-        new("customer", "Customer", "left", false),
-        new("product", "Product", "left", false),
-        new("category", "Category", "left", false),
-        new("qty", "Qty", "right", true),
-        new("price", "Price", "right", true),
-        new("revenue", "Revenue", "right", true),
-        new("region", "Region", "left", false),
-        new("status", "Status", "left", false),
-    ];
-
     public static RouteGroupBuilder MapExplorerEndpoints(this RouteGroupBuilder api)
     {
         var group = api.MapGroup("/explorer").WithTags("Explorer");
 
-        group.MapGet("/columns", () => Results.Ok(ColumnSet))
-            .WithName("ExplorerColumns")
-            .WithSummary("Column definitions the grid renders from.");
+        group.MapGet("/columns", async (
+            AppDbContext db, SourceStore sources, IDatasetContext context, int? datasetId, CancellationToken ct) =>
+        {
+            var (loaded, problem) = await FrameAccess.LoadAsync(db, sources, context, datasetId, ct);
+            if (problem is not null) return problem;
+            var frame = loaded!.Frame;
+
+            CoverageDto? coverage = null;
+            if (frame.Date is { } date)
+            {
+                var dates = date.Dates.Where(d => d.HasValue).Select(d => d!.Value).ToList();
+                if (dates.Count > 0)
+                    coverage = new CoverageDto(date.Name,
+                        dates.Min().ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+                        dates.Max().ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
+            }
+
+            return Results.Ok(new ExplorerSchemaDto(frame.Columns.Select(FrameAccess.Describe).ToList(), frame.RowCount, coverage));
+        })
+        .WithName("ExplorerColumns")
+        .WithSummary("The file's own columns: header, type, role, unit and, for groupings, their values.");
 
         group.MapGet("/rows", async (
             AppDbContext db,
+            SourceStore sources,
             HttpRequest request,
             IDatasetContext context,
             int? datasetId,
             int page = 1,
             int pageSize = 25,
-            string sort = "revenue",
-            string dir = "desc",
+            string? sort = null,
+            string dir = "asc",
             CancellationToken ct = default) =>
         {
             page = Math.Max(1, page);
             pageSize = Math.Clamp(pageSize, 1, 500);
 
-            var id = await context.ResolveAsync(datasetId, ct);
-            if (id is null) return Problems.NoDataset(datasetId);
+            var (loaded, problem) = await FrameAccess.LoadAsync(db, sources, context, datasetId, ct);
+            if (problem is not null) return problem;
+            var frame = loaded!.Frame;
 
-            if (!QueryEngine.IsColumn(sort))
-                return Problems.UnknownColumn("sort column", sort, QueryEngine.Columns);
+            Column? sortColumn = null;
+            if (!string.IsNullOrWhiteSpace(sort) && (sortColumn = FrameQuery.Find(frame, sort)) is null)
+                return FrameAccess.UnknownColumn(frame, "sort column", sort);
 
-            // Filters arrive as repeated ?filter=column:op:value
-            var filters = new List<QueryFilter>();
-            foreach (var raw in request.Query["filter"])
-            {
-                if (string.IsNullOrWhiteSpace(raw)) continue;
+            var (filters, filterProblem) = FrameAccess.ParseFilters(frame, request.Query["filter"]);
+            if (filterProblem is not null) return filterProblem;
 
-                var parts = raw.Split(':', 3);
-                if (parts.Length != 3)
-                    return Problems.BadRequest(
-                        "Malformed filter",
-                        $"'{raw}' is not valid. Use filter=column:op:value, for example filter=revenue:gt:10000.");
+            var rows = FrameQuery.Filter(frame, filters);
+            if (sortColumn is not null)
+                FrameQuery.Sort(rows, sortColumn, dir.Equals("desc", StringComparison.OrdinalIgnoreCase));
 
-                if (!QueryEngine.IsColumn(parts[0]))
-                    return Problems.UnknownColumn("filter column", parts[0], QueryEngine.Columns);
-
-                filters.Add(new QueryFilter(parts[0], RowFilters.ParseOp(parts[1]), parts[2]));
-            }
-
-            var stored = await db.SalesRows.CountAsync(r => r.DatasetId == id, ct);
-            if (stored == 0) return Problems.NoRows(id.Value);
-
-            var q = db.SalesRows.AsNoTracking().Where(r => r.DatasetId == id);
-            foreach (var f in filters) q = RowFilters.Apply(q, f);
-
-            var matched = await q.CountAsync(ct);
-            q = RowFilters.Order(q, sort, dir.Equals("desc", StringComparison.OrdinalIgnoreCase));
-
-            var items = await q.Skip((page - 1) * pageSize).Take(pageSize)
-                .Select(r => new ExplorerRowDto(
-                    r.Id,
-                    r.Date == RowFilters.UndatedValue ? "" : r.Date.ToString("yyyy-MM-dd"),
-                    r.OrderId, r.Customer, r.Product,
-                    r.Category, r.Qty, r.Price, r.Revenue, r.Region, r.Status))
-                .ToListAsync(ct);
+            var items = rows.Skip((page - 1) * pageSize).Take(pageSize)
+                .Select(r => new ExplorerRowDto(r + 1, frame.Columns.Select(c => c.Values[r]).ToList()))
+                .ToList();
 
             return Results.Ok(new Paged<ExplorerRowDto>(
-                items, page, pageSize, matched, (int)Math.Ceiling(matched / (double)pageSize)));
+                items, page, pageSize, rows.Count, (int)Math.Ceiling(rows.Count / (double)pageSize)));
         })
         .WithName("ExplorerRows")
-        .WithSummary("Paged rows with sorting and repeatable filter=column:op:value.");
+        .WithSummary("Paged rows of the file, sorted by any column and filtered with repeatable filter=column:op:value.");
 
         return api;
     }

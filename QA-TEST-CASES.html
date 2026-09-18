@@ -605,7 +605,7 @@
     <div class="section-head">
       <h2>Analytics</h2>
       <span class="section-key">AN</span>
-      <p>The toolbar builds a query spec; the API runs it. Every combination should be legal or clearly refused.</p>
+      <p>The toolbar offers the uploaded file's own columns; the API aggregates them. Every combination should be legal or clearly refused.</p>
     </div>
     <div class="table-scroll">
       <table>
@@ -615,43 +615,43 @@
         <tbody>
           <tr>
             <td class="id">AN-01</td><td><span class="p p-crit">Critical</span></td>
-            <td class="step">Cycle Dimension through all seven values with Metric = Revenue.</td>
-            <td class="expect">Each produces a chart and a table. Month and Quarter draw a time series; the rest rank by value.</td>
+            <td class="step">Open Analytics on a student file (name, subject, marks, attendance, grade).</td>
+            <td class="expect">Opens on <b>Average marks by subject</b>. Metric offers marks and attendance; By offers subject, grade and name. <b>No</b> revenue, quantity, region or product anywhere.</td>
           </tr>
           <tr>
-            <td class="id">AN-02</td><td><span class="p p-high">High</span></td>
-            <td class="step">Cycle Aggregate through Sum, Average, Row count, Maximum.</td>
-            <td class="expect">Values change accordingly. Row count shows counts, not currency, and the header names what is measured.</td>
+            <td class="id">AN-02</td><td><span class="p p-crit">Critical</span></td>
+            <td class="step">Open Analytics on an order export with quantity and unit price but no revenue column, then on an HR file.</td>
+            <td class="expect">Sales opens on <b>Total revenue by category</b> (quantity × price, in the file's currency) and matches the Dashboard total; HR opens on average salary by department.</td>
           </tr>
           <tr>
             <td class="id">AN-03</td><td><span class="p p-high">High</span></td>
-            <td class="step">Switch the chart type across all four buttons.</td>
-            <td class="expect">Columns, trend line, share donut and ranked bars each render the same figures. The active button is visibly selected.</td>
+            <td class="step">Cycle Aggregate through Average, Sum, Row count, Median, Minimum, Maximum.</td>
+            <td class="expect">Values change accordingly. Row count hides Metric and shows plain counts; the title names what is measured. Share of total appears only for Sum and Row count.</td>
           </tr>
           <tr>
             <td class="id">AN-04</td><td><span class="p p-high">High</span></td>
-            <td class="step">Press Filter in the top bar, choose a region, then Clear filter.</td>
-            <td class="expect">Row counts drop and the subtitle names the region; clearing restores the full set. Only regions present in the file are offered.</td>
+            <td class="step">Choose a date column under By, then each Per option.</td>
+            <td class="expect">A time series in date order at that grain; Auto picks day, month or year from the span. The table adds “vs previous period”, reading “—” on the first row.</td>
           </tr>
           <tr>
-            <td class="id">AN-05</td><td><span class="p p-med">Medium</span></td>
-            <td class="step">Page through Tabular Data.</td>
-            <td class="expect">Six rows per page, the summary counts correctly, and the arrows disable at each end.</td>
+            <td class="id">AN-05</td><td><span class="p p-high">High</span></td>
+            <td class="step">Switch the chart type across all four buttons.</td>
+            <td class="expect">Columns, trend line, share donut and ranked bars each render the same figures. The donut shows at most four slices and says how many more are in the table.</td>
           </tr>
           <tr>
-            <td class="id">AN-06</td><td><span class="p p-med">Medium</span></td>
-            <td class="step">Check “Share of total” and “vs previous row” for a month series.</td>
-            <td class="expect">Shares sum to 100%; the first row's comparison reads “—” rather than a made-up number.</td>
+            <td class="id">AN-06</td><td><span class="p p-high">High</span></td>
+            <td class="step">Press Filter in the top bar, add two filters (e.g. subject = Physics, grade = F), remove one, then Clear filters.</td>
+            <td class="expect">Only values present in the file are offered; rows matched drop and the summary strip recomputes; clearing restores the full set.</td>
           </tr>
           <tr>
             <td class="id">AN-07</td><td><span class="p p-med">Medium</span></td>
-            <td class="step">Press AI Insights.</td>
-            <td class="expect">The assistant opens and asks about the current view, carrying the filter if one is set.</td>
+            <td class="step">Switch project while Analytics is open.</td>
+            <td class="expect">The toolbar resets to the new file's columns and defaults; nothing from the previous file lingers.</td>
           </tr>
           <tr>
             <td class="id">AN-08</td><td><span class="p p-med">Medium</span></td>
             <td class="step">Export the current view.</td>
-            <td class="expect">The CSV matches the table on screen, including the grouping column name.</td>
+            <td class="expect">The CSV matches the table on screen, including the grouping column's real header.</td>
           </tr>
         </tbody>
       </table>
@@ -853,7 +853,7 @@
     <div class="section-head">
       <h2>Data Explorer</h2>
       <span class="section-key">EXP</span>
-      <p>The grid where filters are typed by hand, so bad input has to be explained.</p>
+      <p>The grid shows the file as uploaded, and filters are typed by hand, so bad input has to be explained.</p>
     </div>
     <div class="table-scroll">
       <table>
@@ -862,19 +862,19 @@
         </thead>
         <tbody>
           <tr>
-            <td class="id">EXP-01</td><td><span class="p p-high">High</span></td>
-            <td class="step">Open the Explorer and sort by each column, ascending and descending.</td>
-            <td class="expect">Rows reorder; the sorted header shows its direction.</td>
+            <td class="id">EXP-01</td><td><span class="p p-crit">Critical</span></td>
+            <td class="step">Open the Explorer on a student file, then on an HR file.</td>
+            <td class="expect">The headers are the file's own (student_id, name, subject, marks… / EmpID, Department, Salary…) with every column present and values as written. No Order ID, Revenue or Status columns.</td>
           </tr>
           <tr>
             <td class="id">EXP-02</td><td><span class="p p-high">High</span></td>
-            <td class="step">Add a rule <code>revenue &gt; 1000</code>, then a second rule on a text column.</td>
-            <td class="expect">Both apply together; the matched count updates; each rule can be removed independently.</td>
+            <td class="step">Sort by a number, a date and a text column, both directions; then press File order.</td>
+            <td class="expect">Numbers sort by value (88 before 9), dates chronologically, text A–Z ignoring case; blanks always sort last. File order restores the upload order.</td>
           </tr>
           <tr>
             <td class="id">EXP-03</td><td><span class="p p-high">High</span></td>
-            <td class="step">Filter a text column using the <b>wrong case</b>, e.g. <code>status = shipped</code>.</td>
-            <td class="expect">It matches. <span class="p p-reg">Regression</span> — case-sensitive matching used to return zero rows and look like missing data.</td>
+            <td class="step">Add <code>marks &lt; 50</code>, then <code>subject = physics</code> (lower case).</td>
+            <td class="expect">Both apply together and the count updates; text matches ignoring case. Number and date columns offer comparison operators, text columns offer = != and contains.</td>
           </tr>
           <tr>
             <td class="id">EXP-04</td><td><span class="p p-med">Medium</span></td>
@@ -883,8 +883,13 @@
           </tr>
           <tr>
             <td class="id">EXP-05</td><td><span class="p p-med">Medium</span></td>
-            <td class="step">Page to the end of a large file.</td>
-            <td class="expect">Counts stay correct, the last page is not empty, and the table scrolls inside its own container — the page never scrolls sideways.</td>
+            <td class="step">Open the Datasets preview and the calendar button in the top bar for a file with a date column and one without.</td>
+            <td class="expect">The preview shows the first rows under the file's own headers. The calendar shows the date column's earliest and latest value, or says the file has no date column.</td>
+          </tr>
+          <tr>
+            <td class="id">EXP-06</td><td><span class="p p-med">Medium</span></td>
+            <td class="step">Open the Explorer for a project uploaded before files were kept.</td>
+            <td class="expect">A clear message asks for the file to be uploaded again. No crash.</td>
           </tr>
         </tbody>
       </table>

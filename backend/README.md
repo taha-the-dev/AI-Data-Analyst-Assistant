@@ -239,10 +239,11 @@ needs a signed-in session, and answers 401 without one.
 | GET | `/api/datasets/{id}` | One dataset with its full column profile |
 | POST | `/api/datasets/upload` | Upload a delimited file (up to 25 MB); profiles it, stores its rows, reports the field mapping |
 | DELETE | `/api/datasets/{id}` | Delete a dataset with its profile and its rows |
-| GET | `/api/explorer/columns` | Grid column definitions |
-| GET | `/api/explorer/rows` | Paged rows; sorting and repeatable filters |
+| GET | `/api/explorer/columns` | The file's own columns (keyed `c0`, `c1`…): header, type, role, unit, filter values, and the period its date column covers |
+| GET | `/api/explorer/rows` | Paged rows as uploaded; sort by any column, repeatable filters |
 | GET | `/api/dashboard` | A dashboard written for the file: its data type, tiles, charts, table, insights and data quality, all chosen from its own columns |
-| GET | `/api/analytics` | Aggregate figures for the file in context |
+| GET | `/api/analytics/fields` | The metrics, dimensions and filters the file supports, with defaults taken from what the dashboard recognised |
+| GET | `/api/analytics/run` | One column aggregated (`sum avg count min max median`) by another, with an optional date `bucket` and repeatable filters |
 | GET | `/api/chat/sessions` | Conversations, most recent first |
 | POST | `/api/chat/sessions` | Start a conversation |
 | GET | `/api/chat/sessions/{id}` | Turns, each with its spec and figures |
@@ -259,14 +260,17 @@ needs a signed-in session, and answers 401 without one.
 
 ### Filters
 
-Repeatable on `/api/explorer/rows`:
+Repeatable on `/api/explorer/rows` and `/api/analytics/run`. A column is named
+by its key or its header:
 
 ```
-?filter=revenue:gt:10000&filter=region:eq:North
+?filter=c3:gt:50&filter=subject:eq:physics
 ```
 
-Operators: `gt gte lt lte eq ne` (or the symbols `> >= < <= = !=`). An unknown
-column or a malformed filter returns 400 naming the columns that do exist.
+Operators: `eq ne gt gte lt lte contains`. Numbers and dates compare by value,
+text ignoring case. An unknown column or a malformed filter returns 400 naming
+the columns that do exist. Files uploaded before the original was kept return
+409 asking for the file to be uploaded again.
 
 ### Streaming
 

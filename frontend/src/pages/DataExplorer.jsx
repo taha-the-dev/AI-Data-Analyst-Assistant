@@ -1,76 +1,115 @@
 import { useState } from 'react'
 import { FixedCanvas } from '../components/AppShell'
-import { Button, EmptyState, ErrorState, TableSkeleton } from '../components/ui'
+import { Button, EmptyState, ErrorState, NoProject, TableSkeleton } from '../components/ui'
 import Icon from '../components/Icon'
 import Modal from '../components/Modal'
 import { api } from '../lib/api'
 import { useResource } from '../hooks/useResource'
 import { useDatasets } from '../context/AppContext'
-import { int, money } from '../lib/format'
+import { int, unitValue } from '../lib/format'
+
+/*
+ * The grid shows the file as it was uploaded: its own headers, every column,
+ * values as written. Sorting and filters follow each column's type, so marks
+ * sort as numbers, dates as dates and names alphabetically.
+ */
 
 const PAGE_SIZE = 25
 
 const OPS = [
-  { symbol: '>', code: 'gt' },
-  { symbol: '>=', code: 'gte' },
-  { symbol: '<', code: 'lt' },
-  { symbol: '<=', code: 'lte' },
-  { symbol: '=', code: 'eq' },
-  { symbol: '!=', code: 'ne' },
+  { symbol: '=', code: 'eq', kinds: ['number', 'date', 'text'] },
+  { symbol: '!=', code: 'ne', kinds: ['number', 'date', 'text'] },
+  { symbol: '>', code: 'gt', kinds: ['number', 'date'] },
+  { symbol: '>=', code: 'gte', kinds: ['number', 'date'] },
+  { symbol: '<', code: 'lt', kinds: ['number', 'date'] },
+  { symbol: '<=', code: 'lte', kinds: ['number', 'date'] },
+  { symbol: 'contains', code: 'contains', kinds: ['text'] },
 ]
 
-// The three raw palette colours these used were the only ones in the app that
-// a theme could not repaint.
-const statusDot = {
-  Shipped: 'bg-success',
-  Processing: 'bg-warning',
-  Active: 'bg-primary-container',
-}
-
-// The grid opens on the unfiltered file. Preset rules would be the one thing
-// on the screen that did not come from the data.
-const DEFAULT_FILTERS = []
-
+const opKind = (col) => (col?.numeric ? 'number' : col?.kind === 'date' ? 'date' : 'text')
+const opsFor = (col) => OPS.filter((o) => o.kinds.includes(opKind(col)))
 const symbolFor = (code) => OPS.find((o) => o.code === code)?.symbol ?? code
 
+/** A number the way its column writes it — "$1,250.00", "87%" — without shortening it. */
+function cellText(col, raw) {
+  const n = Number(String(raw).replace(/[^0-9.eE+-]/g, ''))
+  return Number.isFinite(n) && /\d/.test(raw) ? unitValue(n, col.unit, { compact: false }) : raw
+}
+
 export default function DataExplorer() {
-  const [filters, setFilters] = useState(DEFAULT_FILTERS)
-  const [sort, setSort] = useState({ key: 'revenue', dir: 'desc' })
+  const { activeId, datasets, loading: libraryLoading } = useDatasets()
+
+  if (!libraryLoading && datasets.length === 0) {
+    return (
+      <FixedCanvas className="p-md">
+        <div className="bg-surface-container-lowest border border-outline-variant rounded-lg">
+          <NoProject what="every row of the file, sortable and filterable" />
+        </div>
+      </FixedCanvas>
+    )
+  }
+
+  // Keyed on the file: another file has other columns, so sort and filters start over.
+  return <Grid key={activeId} datasetId={activeId} />
+}
+
+function Grid({ datasetId }) {
+  const [filters, setFilters] = useState([])
+  const [sort, setSort] = useState({ key: null, dir: 'asc' })
   const [page, setPage] = useState(1)
   const [addingRule, setAddingRule] = useState(false)
-  const [draft, setDraft] = useState({ column: 'revenue', op: 'gt', value: '' })
+  const [draft, setDraft] = useState({ column: '', op: 'eq', value: '' })
 
-  const { activeId } = useDatasets()
-  const columns = useResource(() => api.explorer.columns(), [])
+  const columns = useResource(
+    () => (datasetId ? api.explorer.columns(datasetId) : Promise.resolve(null)),
+    [datasetId]
+  )
 
   const filterParams = filters.map((f) => `${f.column}:${f.op}:${f.value}`)
   const rows = useResource(
     () =>
-      api.explorer.rows({
-        datasetId: activeId,
-        page,
-        pageSize: PAGE_SIZE,
-        sort: sort.key,
-        dir: sort.dir,
-        filter: filterParams,
-      }),
-    [activeId, page, sort.key, sort.dir, filterParams.join('|')]
+      datasetId
+        ? api.explorer.rows({
+            datasetId,
+            page,
+            pageSize: PAGE_SIZE,
+            sort: sort.key ?? undefined,
+            dir: sort.dir,
+            filter: filterParams,
+          })
+        : Promise.resolve(null),
+    [datasetId, page, sort.key, sort.dir, filterParams.join('|')]
   )
 
-  const toggleSort = (key) => {
-    setSort((s) => ({ key, dir: s.key === key && s.dir === 'desc' ? 'asc' : 'desc' }))
+  const cols = columns.data?.columns ?? []
+  const draftColumn = cols.find((c) => c.key === draft.column) ?? cols[0]
+
+  // First click sorts numbers and dates high-to-low and text A–Z; the next flips it.
+  const toggleSort = (col) => {
+    setSort((s) =>
+      s.key === col.key
+        ? { key: col.key, dir: s.dir === 'asc' ? 'desc' : 'asc' }
+        : { key: col.key, dir: col.numeric || col.kind === 'date' ? 'desc' : 'asc' }
+    )
     setPage(1)
   }
 
+  const openRule = () => {
+    const first = cols.find((c) => c.role !== 'identifier') ?? cols[0]
+    setDraft({ column: first?.key ?? '', op: opsFor(first)[0].code, value: '' })
+    setAddingRule(true)
+  }
+
   const addRule = () => {
-    if (!draft.value.trim()) return
-    setFilters((f) => [...f, { ...draft, id: `f${Date.now()}` }])
-    setDraft({ column: 'revenue', op: 'gt', value: '' })
+    if (!draft.value.trim() || !draftColumn) return
+    setFilters((f) => [
+      ...f,
+      { column: draftColumn.key, label: draftColumn.label, op: draft.op, value: draft.value.trim(), id: `f${Date.now()}` },
+    ])
     setAddingRule(false)
     setPage(1)
   }
 
-  const cols = columns.data ?? []
   const items = rows.data?.items ?? []
   const total = rows.data?.total ?? 0
   const pageCount = rows.data?.pageCount ?? 1
@@ -85,10 +124,15 @@ export default function DataExplorer() {
           }`}
         >
           <div className="flex items-center gap-xs">
-            <Button size="sm" icon="filter_list" onClick={() => setAddingRule(true)}>Filter</Button>
+            <Button size="sm" icon="filter_list" onClick={openRule} disabled={cols.length === 0}>Filter</Button>
+            {sort.key && (
+              <Button size="sm" variant="ghost" icon="swap_vert" onClick={() => { setSort({ key: null, dir: 'asc' }); setPage(1) }}>
+                File order
+              </Button>
+            )}
           </div>
           <span className="font-body-sm text-body-sm text-on-surface-variant tabular-nums">
-            {busy ? '…' : `${int(total)} rows`}
+            {busy ? '…' : `${int(total)} rows · ${cols.length} columns`}
           </span>
         </div>
 
@@ -100,11 +144,11 @@ export default function DataExplorer() {
                   <span className="font-label-bold text-stat-label text-outline uppercase">and</span>
                 )}
                 <div className="flex items-center bg-primary-fixed border border-primary-fixed-dim rounded px-2 py-1 gap-xs font-body-main text-body-sm">
-                  <span className="font-label-bold text-on-primary-fixed">{f.column}</span>
+                  <span className="font-label-bold text-on-primary-fixed">{f.label}</span>
                   <span className="text-primary-container px-1">{symbolFor(f.op)}</span>
                   <span className="text-on-primary-fixed">{f.value}</span>
                   <button
-                    aria-label={`Remove filter ${f.column} ${symbolFor(f.op)} ${f.value}`}
+                    aria-label={`Remove filter ${f.label} ${symbolFor(f.op)} ${f.value}`}
                     onClick={() => {
                       setFilters((list) => list.filter((x) => x.id !== f.id))
                       setPage(1)
@@ -122,19 +166,19 @@ export default function DataExplorer() {
 
       <div className="flex-1 bg-surface-container-lowest border border-outline-variant rounded-lg shadow-sm overflow-hidden flex flex-col relative min-h-0">
         {rows.error || columns.error ? (
-          <ErrorState error={rows.error ?? columns.error} onRetry={() => { rows.reload(); columns.reload() }} className="p-md" />
-        ) : busy ? (
+          <ErrorState error={columns.error ?? rows.error} onRetry={() => { rows.reload(); columns.reload() }} className="p-md" />
+        ) : busy && !rows.data ? (
           <TableSkeleton rows={10} />
         ) : items.length === 0 ? (
           <EmptyState
             icon="filter_alt_off"
-            title="No rows match these filters"
-            body="Every row was filtered out. Remove a rule to widen the result."
-            action={<Button onClick={() => { setFilters([]); setPage(1) }}>Clear all filters</Button>}
+            title={filters.length ? 'No rows match these filters' : 'This file has no rows'}
+            body={filters.length ? 'Every row was filtered out. Remove a rule to widen the result.' : 'The file has a header row but nothing beneath it.'}
+            action={filters.length ? <Button onClick={() => { setFilters([]); setPage(1) }}>Clear all filters</Button> : null}
           />
         ) : (
           <div className="table-container overflow-auto flex-1 w-full bg-surface-container-lowest relative">
-            <table className="w-full text-left border-collapse min-w-[1200px]">
+            <table className="w-full text-left border-collapse" style={{ minWidth: `${Math.max(640, 48 + cols.length * 150)}px` }}>
               <thead className="sticky top-0 bg-surface-container-low border-b border-outline-variant z-20">
                 <tr className="font-label-bold text-body-sm text-on-surface-variant uppercase tracking-wider">
                   <th
@@ -145,18 +189,18 @@ export default function DataExplorer() {
                   </th>
                   {cols.map((col) => {
                     const active = sort.key === col.key
-                    const highlight = col.key === 'revenue'
                     return (
                       <th
                         key={col.key}
                         scope="col"
                         aria-sort={active ? (sort.dir === 'asc' ? 'ascending' : 'descending') : 'none'}
+                        title={`${col.label} · ${col.role}${col.missing ? ` · ${int(col.missing)} blank` : ''}`}
                         className={`px-md py-2 border-r border-outline-variant whitespace-nowrap transition-colors group last:border-r-0 ${
-                          highlight ? 'bg-primary-fixed/30 text-on-surface' : 'bg-surface-container-low'
+                          active ? 'bg-primary-fixed/30 text-on-surface' : 'bg-surface-container-low'
                         }`}
                       >
                         <button
-                          onClick={() => toggleSort(col.key)}
+                          onClick={() => toggleSort(col)}
                           className={`flex items-center gap-1 w-full uppercase ${col.align === 'right' ? 'justify-end' : ''}`}
                         >
                           {col.label}
@@ -174,26 +218,15 @@ export default function DataExplorer() {
               <tbody className="font-code text-body-main text-on-surface divide-y divide-outline-variant/50">
                 {items.map((row, i) => (
                   <tr key={row.id} className="hover:bg-surface-bright transition-colors h-[40px] group">
-                    <td className="px-md border-r border-outline-variant/50 sticky-col text-center text-outline tabular-nums">
+                    <td
+                      className="px-md border-r border-outline-variant/50 sticky-col text-center text-outline tabular-nums"
+                      title={`Row ${int(row.id)} of the file`}
+                    >
                       {(page - 1) * PAGE_SIZE + i + 1}
                     </td>
-                    <td className="px-md border-r border-outline-variant/50 whitespace-nowrap text-on-surface-variant tabular-nums">{row.date}</td>
-                    <td className="px-md border-r border-outline-variant/50 whitespace-nowrap font-label-bold text-primary">{row.orderId}</td>
-                    <td className="px-md border-r border-outline-variant/50 whitespace-nowrap font-body-main">{row.customer}</td>
-                    <td className="px-md border-r border-outline-variant/50 whitespace-nowrap">{row.product}</td>
-                    <td className="px-md border-r border-outline-variant/50 whitespace-nowrap">
-                      <span className="bg-surface-container rounded px-1.5 py-0.5 text-[12px] text-on-surface-variant">{row.category}</span>
-                    </td>
-                    <td className="px-md border-r border-outline-variant/50 text-right tabular-nums">{row.qty}</td>
-                    <td className="px-md border-r border-outline-variant/50 text-right text-on-surface-variant tabular-nums">{money(row.price)}</td>
-                    <td className="px-md border-r border-outline-variant/50 text-right font-label-bold text-surface-tint bg-primary-fixed/10 tabular-nums">{money(row.revenue)}</td>
-                    <td className="px-md border-r border-outline-variant/50 whitespace-nowrap">{row.region}</td>
-                    <td className="px-md whitespace-nowrap">
-                      <div className="flex items-center gap-1.5">
-                        <span className={`w-2 h-2 rounded-full ${statusDot[row.status] ?? 'bg-outline'}`} />
-                        <span className="text-body-sm">{row.status}</span>
-                      </div>
-                    </td>
+                    {cols.map((col, c) => (
+                      <Cell key={col.key} col={col} raw={row.cells[c] ?? ''} sorted={sort.key === col.key} />
+                    ))}
                   </tr>
                 ))}
               </tbody>
@@ -241,7 +274,7 @@ export default function DataExplorer() {
         open={addingRule}
         onClose={() => setAddingRule(false)}
         title="Add a filter rule"
-        description="Rules combine with AND and are applied by the API."
+        description="Rules combine with AND. Numbers and dates compare by value; text matches ignoring case."
         footer={
           <>
             <Button onClick={() => setAddingRule(false)}>Cancel</Button>
@@ -253,8 +286,15 @@ export default function DataExplorer() {
           <label className="flex flex-col gap-xs">
             <span className="font-body-sm text-body-sm text-on-surface-variant">Column</span>
             <select
-              value={draft.column}
-              onChange={(e) => setDraft((d) => ({ ...d, column: e.target.value }))}
+              value={draftColumn?.key ?? ''}
+              onChange={(e) => {
+                const next = cols.find((c) => c.key === e.target.value)
+                setDraft((d) => ({
+                  ...d,
+                  column: e.target.value,
+                  op: opsFor(next).some((o) => o.code === d.op) ? d.op : opsFor(next)[0].code,
+                }))
+              }}
               className="h-9 bg-surface border border-outline-variant rounded-lg px-sm font-body-main text-body-main focus:outline-none focus:border-primary"
             >
               {cols.map((c) => (
@@ -269,7 +309,7 @@ export default function DataExplorer() {
               onChange={(e) => setDraft((d) => ({ ...d, op: e.target.value }))}
               className="h-9 bg-surface border border-outline-variant rounded-lg px-sm font-code text-code focus:outline-none focus:border-primary"
             >
-              {OPS.map((o) => (
+              {opsFor(draftColumn).map((o) => (
                 <option key={o.code} value={o.code}>{o.symbol}</option>
               ))}
             </select>
@@ -278,14 +318,56 @@ export default function DataExplorer() {
             <span className="font-body-sm text-body-sm text-on-surface-variant">Value</span>
             <input
               value={draft.value}
+              list={draftColumn?.options ? `options-${draftColumn.key}` : undefined}
               onChange={(e) => setDraft((d) => ({ ...d, value: e.target.value }))}
               onKeyDown={(e) => e.key === 'Enter' && addRule()}
-              placeholder="10000"
+              placeholder={
+                draftColumn?.options?.[0] ?? (draftColumn?.kind === 'date' ? '2026-01-31' : draftColumn?.numeric ? '50' : 'value')
+              }
               className="h-9 bg-surface border border-outline-variant rounded-lg px-sm font-body-main text-body-main focus:outline-none focus:border-primary"
             />
+            {draftColumn?.options && (
+              <datalist id={`options-${draftColumn.key}`}>
+                {draftColumn.options.map((o) => (
+                  <option key={o} value={o} />
+                ))}
+              </datalist>
+            )}
           </label>
         </div>
       </Modal>
     </FixedCanvas>
+  )
+}
+
+/** One cell, styled by what the column holds rather than by what it is called. */
+function Cell({ col, raw, sorted }) {
+  const base = `px-md border-r border-outline-variant/50 last:border-r-0 whitespace-nowrap ${sorted ? 'bg-primary-fixed/10' : ''}`
+
+  if (raw === '') return <td className={`${base} text-outline`}>—</td>
+
+  if (col.numeric)
+    return (
+      <td className={`${base} text-right tabular-nums ${sorted ? 'font-label-bold text-surface-tint' : ''}`}>
+        {cellText(col, raw)}
+      </td>
+    )
+
+  if (col.role === 'identifier') return <td className={`${base} font-label-bold text-primary`}>{raw}</td>
+
+  if (col.kind === 'date') return <td className={`${base} text-on-surface-variant tabular-nums`}>{raw}</td>
+
+  // A chip for a short list of repeated values (grades, subjects); a long list such as names reads better as text.
+  if (col.role === 'group' && col.distinct <= 12)
+    return (
+      <td className={base}>
+        <span className="bg-surface-container rounded px-1.5 py-0.5 text-[12px] text-on-surface-variant">{raw}</span>
+      </td>
+    )
+
+  return (
+    <td className={`${base} font-body-main max-w-[280px] truncate`} title={raw}>
+      {raw}
+    </td>
   )
 }

@@ -30,9 +30,11 @@ public static class DatasetAnalyzer
              "tenure", "manager", "attrition", "bonus", "overtime", "experience", "payroll", "staff", "leave"]),
     ];
 
-    public static DashboardDto Analyze(CsvProfiler.ParseResult parsed, IReadOnlyList<DatasetColumn> profile)
+    public static DashboardDto Analyze(CsvProfiler.ParseResult parsed, IReadOnlyList<DatasetColumn> profile) =>
+        Analyze(Frame.From(parsed, profile));
+
+    internal static DashboardDto Analyze(Frame frame)
     {
-        var frame = Frame.From(parsed, profile);
         var board = new Board(frame);
         var (domain, label) = Detect(frame);
 

@@ -52,6 +52,7 @@ builder.Services.AddScoped<ReportComposer>();
 builder.Services.AddScoped<IDatasetContext, DatasetContext>();
 builder.Services.AddScoped<SchemaSummary>();
 builder.Services.AddMemoryCache();
+builder.Services.AddScoped<SourceStore>();
 builder.Services.AddScoped<DashboardService>();
 
 // Planners. The engine only ever receives a QuerySpec, so which planner produced

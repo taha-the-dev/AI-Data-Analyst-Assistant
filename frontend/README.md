@@ -51,11 +51,11 @@ charts are inline SVG and flex boxes, drawn to the design's own spec.
 | `/` | Dashboard — tiles, charts, table and insights chosen from the file's own columns (students, sales, HR or any other data), plus data quality | `/api/dashboard` |
 | `/analyst` | AI Assistant — conversation left, analysis panel right | `/api/chat/*` (SSE) |
 | `/datasets` | Datasets — dropzone, library, file detail with a live row preview | `/api/datasets/*`, `/api/explorer/rows` |
-| `/analytics` | Analytics — metric/dimension/aggregate toolbar, chart, tabular data | `/api/query/run` |
+| `/analytics` | Analytics — any numeric column aggregated by any grouping or date column of the file, with filters, chart and table | `/api/analytics/*` |
 | `/reports`, `/reports/:id` | Reports directory and reader | `/api/reports/*` |
 | `/history` | Analysis history — every stored conversation | `/api/chat/sessions` |
 | `/settings` | Settings — account, theme, provider and model | `/api/auth/*`, `/api/settings`, `/api/providers` |
-| `/explorer` | Data Explorer — the full grid with filters | `/api/explorer/*` |
+| `/explorer` | Data Explorer — every row under the file's own headers, sorted and filtered by column type | `/api/explorer/*` |
 
 The rail carries the seven screens the design shows. Data Explorer is reachable
 from the Dashboard and Datasets screens.

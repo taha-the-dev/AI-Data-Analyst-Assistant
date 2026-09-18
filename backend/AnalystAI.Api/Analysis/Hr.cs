@@ -133,7 +133,7 @@ internal static class Hr
             var body = $"Attrition is {Fmt.Pct(overall)} across {Fmt.Int(leaverFlags!.Count(x => x.HasValue))} employees with a recorded status.";
             if (department is not null)
             {
-                var worst = AttritionBy(f, department, leaverFlags).FirstOrDefault();
+                var worst = AttritionBy(f, department, leaverFlags!).FirstOrDefault();
                 if (worst is not null && worst.Value > 0) body += $" It is highest in {worst.Label} ({worst.Value:0.#}%).";
             }
             b.Insight(3, overall >= 0.15 ? "alert" : "positive", "logout", "Attrition", body);

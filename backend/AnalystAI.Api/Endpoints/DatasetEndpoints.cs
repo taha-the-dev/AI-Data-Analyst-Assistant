@@ -132,7 +132,7 @@ public static class DatasetEndpoints
             db.Datasets.Add(dataset);
             await db.SaveChangesAsync(ct);
 
-            db.DatasetSources.Add(new DatasetSource { DatasetId = dataset.Id, Content = DashboardService.Compress(raw) });
+            db.DatasetSources.Add(new DatasetSource { DatasetId = dataset.Id, Content = SourceStore.Compress(raw) });
             raw = [];
             await db.SaveChangesAsync(ct);
             db.ChangeTracker.Clear();

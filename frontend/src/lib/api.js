@@ -132,13 +132,19 @@ export const api = {
     },
   },
 
+  /** The file as uploaded: its own columns (keyed c0, c1…) and its rows. */
   explorer: {
-    columns: () => request('/explorer/columns'),
+    columns: (datasetId) => request(`/explorer/columns${qs({ datasetId })}`),
     rows: (params = {}) => request(`/explorer/rows${qs(params)}`),
   },
 
   dashboard: (datasetId) => request(`/dashboard${qs({ datasetId })}`),
-  analytics: (datasetId) => request(`/analytics${qs({ datasetId })}`),
+
+  /** Metrics, dimensions and filters come from the file; run aggregates one column by another. */
+  analytics: {
+    fields: (datasetId) => request(`/analytics/fields${qs({ datasetId })}`),
+    run: (params = {}) => request(`/analytics/run${qs(params)}`),
+  },
 
   chat: {
     sessions: () => request('/chat/sessions'),
