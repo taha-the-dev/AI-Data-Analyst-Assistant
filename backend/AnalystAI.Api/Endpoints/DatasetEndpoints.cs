@@ -152,18 +152,28 @@ public static class DatasetEndpoints
             var dataset = await db.Datasets.FirstOrDefaultAsync(d => d.Id == id, ct);
             if (dataset is null) return Problems.NoDataset(id);
 
-            // The column profile and the stored copy of the file go with it. The
-            // conversations about it stay readable in History, no longer tied to
-            // a file; the next question asked in one ties it to the file in use.
+            // Everything about the file goes with it: its column profile, its
+            // stored copy, the assistant's conversations about it and the reports
+            // written from it. Reports name their file rather than point at it, so
+            // they stay while another file of the same name can still answer them.
+            var sessionIds = db.ChatSessions.Where(s => s.DatasetId == id).Select(s => s.Id);
+            var sameName = await db.Datasets.AnyAsync(d => d.Id != id && d.Name == dataset.Name, ct);
+
+            await using var tx = await db.Database.BeginTransactionAsync(ct);
+            await db.ChatMessages.Where(m => sessionIds.Contains(m.SessionId)).ExecuteDeleteAsync(ct);
+            await db.ChatSessions.Where(s => s.DatasetId == id).ExecuteDeleteAsync(ct);
+            if (!sameName)
+                await db.Reports.Where(r => r.DatasetName == dataset.Name).ExecuteDeleteAsync(ct);
             db.Datasets.Remove(dataset);
             await db.SaveChangesAsync(ct);
-            await db.ChatSessions.Where(s => s.DatasetId == id)
-                .ExecuteUpdateAsync(u => u.SetProperty(s => s.DatasetId, (int?)null), ct);
+            await db.UserSettings.Where(u => u.ActiveDatasetId == id)
+                .ExecuteUpdateAsync(u => u.SetProperty(x => x.ActiveDatasetId, (int?)null), ct);
+            await tx.CommitAsync(ct);
 
             return Results.NoContent();
         })
         .WithName("DeleteDataset")
-        .WithSummary("Delete a dataset with its column profile and its stored copy.");
+        .WithSummary("Delete a dataset with its column profile, stored copy, assistant conversations and reports.");
 
         return api;
     }

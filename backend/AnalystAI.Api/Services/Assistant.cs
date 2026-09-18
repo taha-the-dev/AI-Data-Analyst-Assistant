@@ -64,8 +64,8 @@ internal sealed class Assistant(
 
         // A conversation is about one file: once it has asked about one, every
         // later question in it is answered from that file, whichever is selected.
-        // One from before conversations were tied to a file, or whose file was
-        // deleted, takes the file it is asked about now.
+        // One from before conversations were tied to a file takes the file it
+        // is asked about now.
         var requested = session.DatasetId ?? datasetId;
         var id = await datasets.ResolveAsync(requested, ct);
         if (id is null) return (null, Problems.NoDataset(requested));

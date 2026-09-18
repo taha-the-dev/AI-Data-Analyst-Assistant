@@ -65,9 +65,9 @@ public class ChatSession : IOwned
     public string UserId { get; set; } = "";
     /// <summary>
     /// The file this conversation is about. Every question in it is answered
-    /// from this file, whichever one is selected when it is asked. Null for
-    /// conversations started before sessions were tied to a file, and for those
-    /// whose file has since been deleted.
+    /// from this file, whichever one is selected when it is asked, and it is
+    /// deleted with the file. Null for conversations started before sessions
+    /// were tied to a file.
     /// </summary>
     public int? DatasetId { get; set; }
     public string Title { get; set; } = "";

@@ -455,7 +455,7 @@ export default function Datasets() {
         title="Delete this dataset?"
         description={
           pendingDelete
-            ? `${pendingDelete.name} and its ${int(pendingDelete.rows)} rows will be removed. This cannot be undone.`
+            ? `${pendingDelete.name} and its ${int(pendingDelete.rows)} rows will be removed, along with the AI Assistant conversations about it and the reports written from it. This cannot be undone.`
             : ''
         }
         footer={
