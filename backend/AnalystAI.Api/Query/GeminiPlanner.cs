@@ -29,7 +29,32 @@ public class GeminiPlanner(
 
     private string? ApiKey => ResolveKey(configuration);
 
-    public string Model => configuration["Gemini:Model"] ?? "gemini-2.5-flash";
+    /// <summary>
+    /// Models this deployment offers, the default first. Google retires models
+    /// for new keys — gemini-2.5-flash answers 404 to a key made today — so
+    /// these are the current stable Flash models.
+    /// </summary>
+    public static readonly string[] Models =
+    [
+        "gemini-3.6-flash",
+        "gemini-3.8-flash",
+        "gemini-3.7-flash",
+        "gemini-3.5-flash-lite",
+    ];
+
+    /// <summary>The model chosen in Settings for this request. The resolver sets it.</summary>
+    public string? ChosenModel { get; set; }
+
+    /// <summary>The chosen model if this deployment offers it, else the configured one, else the default.</summary>
+    public string Model
+    {
+        get
+        {
+            if (ChosenModel is { } chosen && Models.Contains(chosen)) return chosen;
+            var configured = configuration["Gemini:Model"];
+            return string.IsNullOrWhiteSpace(configured) ? Models[0] : configured.Trim();
+        }
+    }
 
     /// <summary>
     /// The keyword plan, attributed to the keyword planner. Every path out of

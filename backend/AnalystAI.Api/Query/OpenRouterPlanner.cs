@@ -44,10 +44,15 @@ public partial class OpenRouterPlanner(
 
     private string? ApiKey => ResolveKey(configuration);
 
+    /// <summary>The model chosen in Settings for this request. The resolver sets it.</summary>
+    public string? ChosenModel { get; set; }
+
+    /// <summary>The chosen model if this deployment offers it, else the configured one, else the default.</summary>
     public string Model
     {
         get
         {
+            if (ChosenModel is { } chosen && Models.Contains(chosen)) return chosen;
             var configured = configuration["OpenRouter:Model"];
             return string.IsNullOrWhiteSpace(configured) ? Models[0] : configured.Trim();
         }

@@ -22,10 +22,16 @@ public class PlannerResolver(
 {
     public async Task<IQuestionPlanner> ResolveAsync(CancellationToken ct = default)
     {
-        var providerId = await db.UserSettings
+        var settings = await db.UserSettings
             .AsNoTracking()
-            .Select(s => s.ProviderId)
-            .FirstOrDefaultAsync(ct) ?? "keyword";
+            .Select(s => new { s.ProviderId, s.ModelName })
+            .FirstOrDefaultAsync(ct);
+        var providerId = settings?.ProviderId ?? "keyword";
+
+        // The model picked in Settings, not only the provider. A model the
+        // planner no longer offers is ignored there, in favour of its default.
+        gemini.ChosenModel = settings?.ModelName;
+        openRouter.ChosenModel = settings?.ModelName;
 
         switch (providerId)
         {

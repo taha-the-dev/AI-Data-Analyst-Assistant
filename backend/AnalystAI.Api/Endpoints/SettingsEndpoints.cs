@@ -19,7 +19,7 @@ public static class SettingsEndpoints
             ["rules-v1"], "Connected"),
         new("gemini", "Google Gemini",
             "Free tier at aistudio.google.com/apikey. Questions and column names are sent to Google; your rows are not.",
-            ["gemini-2.5-flash", "gemini-2.5-pro", "gemini-2.0-flash"],
+            GeminiPlanner.Models,
             GeminiPlanner.IsConfigured(configuration) ? "Connected" : "Needs key"),
         new("openrouter", "OpenRouter",
             "One key, many models. The question and your column names are sent to OpenRouter; your rows are not.",
