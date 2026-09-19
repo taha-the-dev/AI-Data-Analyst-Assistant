@@ -16,6 +16,15 @@ const TITLES = [
 ]
 
 /**
+ * Screens that carry their own controls, where the top bar's period, Filter
+ * and Export buttons would only repeat them or do nothing.
+ */
+const SCREENS_WITHOUT_ACTIONS = /^\/(analyst|datasets|settings)(\/|$)/
+
+/** Screens that choose their file from a picker in the bar rather than the tab strip. */
+const SCREENS_WITHOUT_TABS = /^\/$/
+
+/**
  * Frame shared by every screen: charcoal rail on the left, docked bar on top,
  * page canvas underneath.
  *
@@ -23,15 +32,6 @@ const TITLES = [
  * the AI Assistant pin to the viewport and scroll inside their own panes, which
  * is what the source design does for both.
  */
-/**
- * Screens that carry their own controls, where the top bar's period, Filter
- * and Export buttons would only repeat them or do nothing.
- */
-const SCREENS_WITHOUT_ACTIONS = /^\/(analyst|datasets|settings)(\/|$)/
-
-/** Screens with a file picker of their own, where the tab strip would repeat it. */
-const SCREENS_WITHOUT_TABS = /^\/$/
-
 export default function AppShell() {
   const [navOpen, setNavOpen] = useState(false)
   const { pathname } = useLocation()
@@ -107,11 +107,8 @@ export function FixedCanvas({ children, row = false, className = '' }) {
   )
 }
 
-/**
- * Page title block. `aside` sits opposite the title — the dashboard puts its
- * ask box there, the way the design does.
- */
-export function PageHeader({ title, description, action, aside }) {
+/** Page title block, with an optional action opposite the title. */
+export function PageHeader({ title, description, action }) {
   return (
     // The panels below animate in, and an animation on opacity and transform
     // makes its element a stacking context — which paints over anything the
@@ -122,7 +119,6 @@ export function PageHeader({ title, description, action, aside }) {
         {description && (
           <p className="font-body-main text-body-main text-on-surface-variant mt-xs">{description}</p>
         )}
-        {aside && <div className="mt-md">{aside}</div>}
       </div>
       {action}
     </div>

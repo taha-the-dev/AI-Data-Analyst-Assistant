@@ -4,7 +4,6 @@ import {
 } from '../components/ui'
 import Figure from '../components/Figure'
 import Icon from '../components/Icon'
-import ProjectPicker from '../components/ProjectPicker'
 import { api } from '../lib/api'
 import { useResource } from '../hooks/useResource'
 import { useDatasets, usePageActions } from '../context/AppContext'
@@ -89,7 +88,6 @@ export default function Dashboard() {
             : `${int(active.rows)} rows across ${active.columns} columns.`
           : 'Choose a project to analyse.'
       }
-      aside={<ProjectPicker />}
     />
   )
 

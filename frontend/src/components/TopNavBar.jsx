@@ -3,6 +3,7 @@ import Icon from './Icon'
 import { api } from '../lib/api'
 import { useDatasets, usePageActionsState } from '../context/AppContext'
 import { int } from '../lib/format'
+import ProjectPicker from './ProjectPicker'
 
 /** Closes a popover on an outside click or Escape. */
 function usePopover() {
@@ -139,6 +140,10 @@ export default function TopNavBar({ onOpenNav, showActions = true, showTabs = tr
         </button>
 
         {/* File tabs — the row of dataset names from the design, made to switch context. */}
+        {/* Where the tab strip is hidden, the file picker takes its place, so the
+            bar still names the file every figure below comes from. */}
+        {!showTabs && <ProjectPicker className="min-w-0" />}
+
         {showTabs && (
         <div
           className="flex items-center gap-md h-topbar min-w-0 overflow-x-auto no-scrollbar"

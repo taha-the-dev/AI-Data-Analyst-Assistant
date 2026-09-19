@@ -37,7 +37,7 @@ export default function ProjectPicker({ className = '' }) {
         onClick={() => setOpen((v) => !v)}
         aria-haspopup="listbox"
         aria-expanded={open}
-        className="inline-flex items-center gap-sm h-[32px] pl-sm pr-2 rounded-lg border border-outline-variant bg-surface-container-lowest hover:bg-surface-container-low transition-colors max-w-[280px]"
+        className="inline-flex items-center gap-sm h-[30px] pl-sm pr-2 rounded-lg border border-outline-variant bg-surface-container-lowest hover:bg-surface-container-low transition-colors max-w-[280px]"
       >
         <Icon name="folder_open" size={15} className="text-primary shrink-0" />
         <span className="font-body-sm text-body-sm text-on-surface-variant shrink-0">Project</span>
