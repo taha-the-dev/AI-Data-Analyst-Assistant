@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { PageCanvas, PageHeader } from '../components/AppShell'
 import { Button, ErrorState, IconButton, IconTile, Pagination, Panel, Skeleton, StatusChip } from '../components/ui'
@@ -7,22 +7,22 @@ import Modal from '../components/Modal'
 import { useToast } from '../components/Toast'
 import { api } from '../lib/api'
 import { useResource } from '../hooks/useResource'
-import { usePageActions } from '../context/AppContext'
+import { useDatasets, usePageActions } from '../context/AppContext'
 import { downloadCsv } from '../lib/csv'
 import { whenLabel } from '../lib/format'
 
 const PER_PAGE = 6
 
 /**
- * Every stored conversation, most recent first. These are the analyses the
- * assistant ran — each one still holds the spec and figures behind its answers,
- * so opening one restores the whole working.
+ * The stored conversations about the file selected in the top bar, most recent
+ * first. These are the analyses the assistant ran — each one still holds the
+ * spec and figures behind its answers, so opening one restores the whole working.
  */
 /** The line under a conversation's title: its summary, if it still has a true one. */
 function summaryOf(session) {
   const stale = session.messageCount > 0 && session.subtitle === 'No questions yet'
   const summary = stale ? '' : session.subtitle
-  return [summary, session.datasetName, whenLabel(session.updatedAt)].filter(Boolean).join(' · ')
+  return summary ? `${summary} · ${whenLabel(session.updatedAt)}` : whenLabel(session.updatedAt)
 }
 
 export default function History() {
@@ -33,11 +33,20 @@ export default function History() {
   const [searchOpen, setSearchOpen] = useState(false)
   const [pendingDelete, setPendingDelete] = useState(null)
 
-  const { data, error, loading, reload } = useResource(() => api.chat.sessions())
+  const { activeId, active, loading: filesLoading } = useDatasets()
+
+  // Only the selected file's conversations; switching file switches the list.
+  const { data, error, loading, reload } = useResource(
+    () => (activeId ? api.chat.sessions(activeId) : Promise.resolve([])),
+    [activeId]
+  )
   const sessions = data ?? []
 
+  // A new file starts on its first page.
+  useEffect(() => setPage(1), [activeId])
+
   const visible = query
-    ? sessions.filter((s) => `${s.title} ${s.subtitle} ${s.datasetName ?? ''}`.toLowerCase().includes(query.toLowerCase()))
+    ? sessions.filter((s) => `${s.title} ${s.subtitle}`.toLowerCase().includes(query.toLowerCase()))
     : sessions
 
   usePageActions(
@@ -48,7 +57,7 @@ export default function History() {
       onExport: sessions.length
         ? () =>
             downloadCsv(
-              'analysis-history',
+              `${active?.name ?? 'analysis'}-history`,
               [
                 { label: 'Title', value: (s) => s.title },
                 { label: 'Summary', value: (s) => s.subtitle },
@@ -59,7 +68,7 @@ export default function History() {
             )
         : undefined,
     }),
-    [data]
+    [data, active?.name]
   )
 
   const pageCount = Math.max(1, Math.ceil(visible.length / PER_PAGE))
@@ -101,7 +110,7 @@ export default function History() {
       <Panel className="overflow-hidden">
         {error ? (
           <ErrorState error={error} onRetry={reload} className="p-md" />
-        ) : loading ? (
+        ) : loading || filesLoading ? (
           <div className="p-md space-y-md">
             {Array.from({ length: 4 }).map((_, i) => (
               <Skeleton key={i} className="h-16 w-full rounded-lg" />
@@ -110,12 +119,18 @@ export default function History() {
         ) : visible.length === 0 ? (
           <div className="p-lg text-center">
             <p className="font-label-bold text-label-bold text-on-surface">
-              {query ? 'Nothing matched that search' : 'No analyses yet'}
+              {query
+                ? 'Nothing matched that search'
+                : active
+                  ? `No analyses of ${active.name} yet`
+                  : 'No file selected'}
             </p>
             <p className="font-body-main text-body-main text-on-surface-variant mt-xs">
               {query
                 ? 'Try a shorter term, or clear the filter.'
-                : 'Ask the assistant a question and the conversation is stored here.'}
+                : active
+                  ? 'Ask the assistant a question about this file and the conversation is stored here.'
+                  : 'Upload a file on the Datasets page, then ask the assistant about it.'}
             </p>
           </div>
         ) : (
@@ -167,7 +182,7 @@ export default function History() {
           summary={`Showing ${(page - 1) * PER_PAGE + 1}-${Math.min(
             page * PER_PAGE,
             visible.length
-          )} of ${visible.length} analyses`}
+          )} of ${visible.length} analyses of ${active?.name ?? 'this file'}`}
         />
       )}
 
