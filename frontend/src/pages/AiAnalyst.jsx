@@ -391,22 +391,34 @@ export default function AiAnalyst() {
             Every answer carries the figures behind it.
           </p>
           <div className="flex items-center gap-sm ml-auto">
-            <label className="sr-only" htmlFor="session-picker">
-              Conversation
-            </label>
-            <select
-              id="session-picker"
-              value={activeSession ?? ''}
-              onChange={(e) => openSession(e.target.value ? Number(e.target.value) : null)}
-              className="h-[30px] rounded-lg border border-outline-variant bg-surface-container-lowest px-3 font-body-main text-body-main text-on-surface focus:outline-none focus:border-primary-container"
-            >
-              {activeSession === null && <option value="">New conversation</option>}
-              {pickable.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.title}
-                </option>
-              ))}
-            </select>
+            {/* A menu of one conversation is a menu of the screen you are already
+                on, so below two this names the conversation instead. */}
+            {pickable.length > 1 ? (
+              <>
+              <label className="sr-only" htmlFor="session-picker">
+                Conversation
+              </label>
+              <select
+                id="session-picker"
+                value={activeSession ?? ''}
+                onChange={(e) => openSession(e.target.value ? Number(e.target.value) : null)}
+                className="h-[30px] rounded-lg border border-outline-variant bg-surface-container-lowest px-3 font-body-main text-body-main text-on-surface focus:outline-none focus:border-primary-container"
+              >
+                {activeSession === null && <option value="">New conversation</option>}
+                {pickable.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.title}
+                  </option>
+                ))}
+              </select>
+              </>
+            ) : (
+              activeSession !== null && (
+                <span className="font-body-main text-body-main text-on-surface-variant truncate max-w-[240px]">
+                  {currentTitle}
+                </span>
+              )
+            )}
             <Button
               onClick={() => setSaveName(currentTitle)}
               disabled={activeSession === null}

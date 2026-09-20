@@ -259,7 +259,32 @@ function ChartPanel({ chart, className = '', tall = false }) {
   )
 }
 
+/** "463,957.2", "$1,200", "12.5%" → a number; anything else → null. */
+function numeric(cell) {
+  const n = Number(String(cell).replace(/[^0-9.-]/g, ''))
+  return String(cell).trim() && Number.isFinite(n) && /\d/.test(cell) ? n : null
+}
+
+/**
+ * A table from the file. What a row is (its names, dates, categories) reads
+ * first, left-aligned; its figures follow, right-aligned, so the numbers line
+ * up on one edge instead of floating mid-table. When the rows are ranked by
+ * their first figure, a bar under it shows each value against the top one.
+ */
 function TablePanel({ table, className = '' }) {
+  // Labels before figures, keeping each group's own order.
+  const order = table.columns
+    .map((c, i) => ({ ...c, i }))
+    .sort((a, b) => (a.align === 'right') - (b.align === 'right') || a.i - b.i)
+
+  const lead = order.find((c) => c.align === 'right')
+  const values = lead ? table.rows.map((row) => numeric(row[lead.i])) : []
+  const ranked =
+    values.length > 1 &&
+    values.every((v) => v !== null && v >= 0) &&
+    values.every((v, k) => k === 0 || v <= values[k - 1])
+  const top = ranked ? values[0] : 0
+
   return (
     <Panel className={`p-md flex flex-col min-w-0 ${className}`}>
       <PanelHeader
@@ -272,13 +297,13 @@ function TablePanel({ table, className = '' }) {
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="bg-surface-container-low">
-              {table.columns.map((c, i) => (
+              {order.map((c, k) => (
                 <th
-                  key={`${c.label}-${i}`}
+                  key={`${c.label}-${c.i}`}
                   scope="col"
                   className={`font-label-bold text-stat-label uppercase text-on-surface-variant py-sm px-sm align-bottom ${
                     c.align === 'right' ? 'text-right' : ''
-                  } ${i === 0 ? 'rounded-l-lg' : ''} ${i === table.columns.length - 1 ? 'rounded-r-lg' : ''}`}
+                  } ${k === 0 ? 'rounded-l-lg' : ''} ${k === order.length - 1 ? 'rounded-r-lg' : ''}`}
                 >
                   {c.label}
                 </th>
@@ -292,19 +317,35 @@ function TablePanel({ table, className = '' }) {
                 className="hover:bg-surface-container-low/60 transition-colors animate-fade-up"
                 style={{ animationDelay: `${r * 40}ms` }}
               >
-                {row.map((cell, i) => {
-                  const right = table.columns[i]?.align === 'right'
+                {order.map((c) => {
+                  const cell = row[c.i]
+                  if (c.align !== 'right') {
+                    return (
+                      <td
+                        key={c.i}
+                        className="py-sm px-sm font-body-main text-body-main text-on-surface max-w-[220px] truncate"
+                        // Only a name long enough to be cut off needs spelling out on hover.
+                        title={String(cell).length > 28 ? cell : undefined}
+                      >
+                        {cell}
+                      </td>
+                    )
+                  }
+                  const bar = ranked && c === lead && top > 0
                   return (
                     <td
-                      key={i}
-                      className={`py-sm px-sm ${
-                        right
-                          ? 'text-right font-code text-code text-on-surface tabular-nums whitespace-nowrap'
-                          : 'font-body-main text-body-main text-on-surface max-w-[180px] truncate'
-                      }`}
-                      title={right ? undefined : cell}
+                      key={c.i}
+                      className="py-sm px-sm text-right font-body-main text-body-main text-on-surface tabular-nums whitespace-nowrap"
                     >
                       {cell}
+                      {bar && (
+                        <span aria-hidden="true" className="mt-1 ml-auto block h-[3px] w-[96px] rounded-full bg-surface-container-high overflow-hidden">
+                          <span
+                            className="block h-full rounded-full bg-primary-container ml-auto"
+                            style={{ width: `${Math.max(4, (values[r] / top) * 100)}%` }}
+                          />
+                        </span>
+                      )}
                     </td>
                   )
                 })}
